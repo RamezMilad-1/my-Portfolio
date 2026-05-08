@@ -6,6 +6,7 @@
 **/.next/
 **/build/
 **/coverage/
+**/*.tsbuildinfo
 
 # env
 **/.env

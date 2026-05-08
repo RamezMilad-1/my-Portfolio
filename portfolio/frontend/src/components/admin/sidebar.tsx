@@ -8,7 +8,6 @@ import {
   Image as ImageIcon,
   Users,
   User,
-  ScanLine,
   LogOut,
   Home,
 } from 'lucide-react';
@@ -24,7 +23,6 @@ const items = [
   { href: '/admin/media', label: 'Media', icon: ImageIcon },
   { href: '/admin/team', label: 'Team', icon: Users },
   { href: '/admin/profile', label: 'Profile', icon: User },
-  { href: '/admin/scan', label: 'Folder scan', icon: ScanLine },
 ];
 
 export function AdminSidebar() {

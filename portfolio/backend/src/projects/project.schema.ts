@@ -7,9 +7,6 @@ export type ProjectDocument = HydratedDocument<Project>;
 export class ProjectTeamLink {
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'TeamMember', required: true })
   memberId: Types.ObjectId;
-
-  @Prop({ default: '' })
-  roleInProject: string;
 }
 const ProjectTeamLinkSchema = SchemaFactory.createForClass(ProjectTeamLink);
 
@@ -25,10 +22,16 @@ export class Project {
   tagline: string;
 
   @Prop({ default: '' })
+  problem: string;
+
+  @Prop({ default: '' })
   description: string;
 
   @Prop({ default: '' })
   architecture: string;
+
+  @Prop({ default: '' })
+  outcome: string;
 
   @Prop({ type: [String], default: [] })
   tech: string[];
@@ -62,12 +65,6 @@ export class Project {
 
   @Prop({ default: 0 })
   position: number;
-
-  @Prop({ default: '' })
-  folderPath: string;
-
-  @Prop({ type: Date })
-  detectedAt?: Date;
 }
 
 export const ProjectSchema = SchemaFactory.createForClass(Project);

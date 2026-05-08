@@ -63,7 +63,6 @@ export class ProjectsService {
     if (team) {
       doc.team = team.map((t) => ({
         memberId: new Types.ObjectId(t.memberId),
-        roleInProject: t.roleInProject ?? '',
       }));
     }
     if (media) {
@@ -78,7 +77,6 @@ export class ProjectsService {
     if (dto.team) {
       update.team = dto.team.map((t) => ({
         memberId: new Types.ObjectId(t.memberId),
-        roleInProject: t.roleInProject ?? '',
       }));
     }
     if (dto.media) {

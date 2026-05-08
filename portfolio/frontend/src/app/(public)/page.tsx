@@ -20,11 +20,15 @@ export default function HomePage() {
   const hero = featured[0];
   const rest = featured.slice(1);
 
+  const techs = Array.from(
+    new Set((projects ?? []).flatMap((p) => p.tech ?? [])),
+  ).sort((a, b) => a.localeCompare(b));
+
   return (
     <>
       <Hero profile={profile} />
 
-      <SkillsMarquee skills={profile?.skills ?? []} />
+      <SkillsMarquee techs={techs} />
 
       {/* Featured work */}
       <section className="mx-auto max-w-6xl px-4 py-24 sm:px-6 md:py-32">

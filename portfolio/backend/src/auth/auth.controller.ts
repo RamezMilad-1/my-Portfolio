@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -39,6 +40,9 @@ export class AuthController {
     return this.cfg.get<string>('COOKIE_NAME', 'ramez_session');
   }
 
+  // Stricter rate limit on login: 5 attempts per minute per IP.
+  // Defense against brute-force on the single admin password.
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('login')
   @HttpCode(200)
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {

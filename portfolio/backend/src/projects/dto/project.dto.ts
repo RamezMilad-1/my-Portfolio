@@ -13,7 +13,6 @@ import { PartialType } from '@nestjs/mapped-types';
 
 export class TeamLinkDto {
   @IsString() memberId: string;
-  @IsOptional() @IsString() roleInProject?: string;
 }
 
 export class CreateProjectDto {
@@ -26,8 +25,10 @@ export class CreateProjectDto {
   @IsString() name: string;
 
   @IsOptional() @IsString() tagline?: string;
+  @IsOptional() @IsString() problem?: string;
   @IsOptional() @IsString() description?: string;
   @IsOptional() @IsString() architecture?: string;
+  @IsOptional() @IsString() outcome?: string;
   @IsOptional() @IsArray() @IsString({ each: true }) tech?: string[];
   @IsOptional() @IsArray() @IsString({ each: true }) features?: string[];
   @IsOptional() @IsString() githubUrl?: string;
@@ -40,7 +41,6 @@ export class CreateProjectDto {
   @IsOptional() @IsBoolean() isFeatured?: boolean;
   @IsOptional() @IsEnum(['draft', 'published']) status?: 'draft' | 'published';
   @IsOptional() @IsInt() position?: number;
-  @IsOptional() @IsString() folderPath?: string;
 }
 
 export class UpdateProjectDto extends PartialType(CreateProjectDto) {}

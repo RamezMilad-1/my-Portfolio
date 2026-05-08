@@ -1,13 +1,11 @@
 'use client';
 
 import { motion, useReducedMotion } from 'framer-motion';
-import type { SkillCategory } from '@/lib/types';
 
-export function SkillsMarquee({ skills }: { skills: SkillCategory[] }) {
+export function SkillsMarquee({ techs }: { techs: string[] }) {
   const prefersReduced = useReducedMotion();
-  const flat = skills.flatMap((c) => c.items.map((i) => i.name));
-  if (!flat.length) return null;
-  const items = [...flat, ...flat, ...flat]; // triple for seamless loop
+  if (!techs.length) return null;
+  const items = [...techs, ...techs, ...techs]; // triple for seamless loop
 
   return (
     <section className="relative overflow-hidden border-y border-[hsl(var(--border))] bg-[hsl(var(--muted))]/30 py-7">

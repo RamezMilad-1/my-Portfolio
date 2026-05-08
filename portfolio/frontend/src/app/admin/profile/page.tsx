@@ -1,29 +1,23 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { Plus, Trash2 } from 'lucide-react';
 import { useProfile, useUpdateProfile } from '@/lib/api/profile';
 import { Input, Textarea } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useUploadMedia } from '@/lib/api/media';
-
-const skillItem = z.object({ name: z.string(), level: z.string().optional() });
-const skillCategory = z.object({ category: z.string(), items: z.array(skillItem) });
-const timelineEntry = z.object({
-  year: z.string(),
-  title: z.string(),
-  body: z.string().optional(),
-});
 
 const schema = z.object({
   displayName: z.string().min(1),
   headline: z.string().min(1),
   bio: z.string().optional(),
+  education: z.string().optional(),
+  availability: z.string().optional(),
   email: z.string().optional(),
   avatarUrl: z.string().optional(),
   resumeUrl: z.string().optional(),
@@ -33,8 +27,6 @@ const schema = z.object({
     x: z.string().optional(),
     website: z.string().optional(),
   }),
-  skills: z.array(skillCategory),
-  timeline: z.array(timelineEntry),
 });
 type Form = z.infer<typeof schema>;
 
@@ -49,12 +41,12 @@ export default function AdminProfilePage() {
       displayName: '',
       headline: '',
       bio: '',
+      education: '',
+      availability: '',
       email: '',
       avatarUrl: '',
       resumeUrl: '',
       socials: { github: '', linkedin: '', x: '', website: '' },
-      skills: [],
-      timeline: [],
     },
   });
 
@@ -64,6 +56,8 @@ export default function AdminProfilePage() {
         displayName: profile.displayName,
         headline: profile.headline,
         bio: profile.bio ?? '',
+        education: profile.education ?? '',
+        availability: profile.availability ?? '',
         email: profile.email ?? '',
         avatarUrl: profile.avatarUrl ?? '',
         resumeUrl: profile.resumeUrl ?? '',
@@ -73,14 +67,9 @@ export default function AdminProfilePage() {
           x: profile.socials?.x ?? '',
           website: profile.socials?.website ?? '',
         },
-        skills: profile.skills ?? [],
-        timeline: profile.timeline ?? [],
       });
     }
   }, [profile, form]);
-
-  const skills = useFieldArray({ control: form.control, name: 'skills' });
-  const timeline = useFieldArray({ control: form.control, name: 'timeline' });
 
   const onSubmit = async (values: Form) => {
     try {
@@ -111,7 +100,25 @@ export default function AdminProfilePage() {
     }
   };
 
-  if (isLoading) return <p className="text-sm">Loading…</p>;
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <Skeleton className="h-3 w-12" />
+          <Skeleton className="mt-3 h-9 w-32" />
+        </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ))}
+        </div>
+        <Skeleton className="h-32 w-full" />
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -136,6 +143,22 @@ export default function AdminProfilePage() {
         <div className="space-y-1.5 md:col-span-2">
           <Label htmlFor="bio">Bio</Label>
           <Textarea id="bio" rows={5} {...form.register('bio')} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="education">Education</Label>
+          <Input
+            id="education"
+            placeholder="B.Sc. Computer Science · GUC · Expected 2027"
+            {...form.register('education')}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="availability">Availability</Label>
+          <Input
+            id="availability"
+            placeholder="Open to internships and junior roles in Cairo / remote"
+            {...form.register('availability')}
+          />
         </div>
       </div>
 
@@ -190,119 +213,9 @@ export default function AdminProfilePage() {
         </div>
       </div>
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label>Skills</Label>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => skills.append({ category: '', items: [] })}
-          >
-            <Plus className="h-3.5 w-3.5" /> Add category
-          </Button>
-        </div>
-        {skills.fields.map((cat, ci) => (
-          <SkillCategoryEditor
-            key={cat.id}
-            categoryIndex={ci}
-            form={form}
-            onRemoveCategory={() => skills.remove(ci)}
-          />
-        ))}
-      </div>
-
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label>Timeline</Label>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => timeline.append({ year: '', title: '', body: '' })}
-          >
-            <Plus className="h-3.5 w-3.5" /> Add entry
-          </Button>
-        </div>
-        <ul className="space-y-2">
-          {timeline.fields.map((t, i) => (
-            <li
-              key={t.id}
-              className="grid grid-cols-1 gap-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 sm:grid-cols-[100px_1fr_auto]"
-            >
-              <Input {...form.register(`timeline.${i}.year`)} placeholder="2025" />
-              <div className="space-y-2">
-                <Input {...form.register(`timeline.${i}.title`)} placeholder="Title" />
-                <Input {...form.register(`timeline.${i}.body`)} placeholder="Optional details" />
-              </div>
-              <Button type="button" variant="ghost" size="icon" onClick={() => timeline.remove(i)}>
-                <Trash2 className="h-3.5 w-3.5 text-red-500" />
-              </Button>
-            </li>
-          ))}
-        </ul>
-      </div>
-
       <div className="flex justify-end">
         <Button type="submit">Save profile</Button>
       </div>
     </form>
-  );
-}
-
-function SkillCategoryEditor({
-  categoryIndex,
-  form,
-  onRemoveCategory,
-}: {
-  categoryIndex: number;
-  form: ReturnType<typeof useForm<Form>>;
-  onRemoveCategory: () => void;
-}) {
-  const items = useFieldArray({
-    control: form.control,
-    name: `skills.${categoryIndex}.items`,
-  });
-
-  return (
-    <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3">
-      <div className="flex items-center gap-2">
-        <Input
-          className="flex-1"
-          {...form.register(`skills.${categoryIndex}.category`)}
-          placeholder="Category"
-        />
-        <Button type="button" variant="ghost" size="icon" onClick={onRemoveCategory}>
-          <Trash2 className="h-3.5 w-3.5 text-red-500" />
-        </Button>
-      </div>
-      <ul className="mt-2 space-y-1">
-        {items.fields.map((it, i) => (
-          <li key={it.id} className="flex gap-2">
-            <Input
-              {...form.register(`skills.${categoryIndex}.items.${i}.name`)}
-              placeholder="Skill"
-            />
-            <Input
-              className="w-32"
-              {...form.register(`skills.${categoryIndex}.items.${i}.level`)}
-              placeholder="Level"
-            />
-            <Button type="button" variant="ghost" size="icon" onClick={() => items.remove(i)}>
-              <Trash2 className="h-3.5 w-3.5 text-red-500" />
-            </Button>
-          </li>
-        ))}
-      </ul>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="mt-2"
-        onClick={() => items.append({ name: '', level: '' })}
-      >
-        <Plus className="h-3.5 w-3.5" /> Add skill
-      </Button>
-    </div>
   );
 }

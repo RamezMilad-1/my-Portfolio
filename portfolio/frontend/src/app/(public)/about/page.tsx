@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { Mail, FileDown, Github, Linkedin } from 'lucide-react';
 import { useProfile } from '@/lib/api/profile';
 import { uploadsUrl } from '@/lib/utils';
@@ -12,8 +11,19 @@ export default function AboutPage() {
 
   if (isLoading || !profile) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-20 sm:px-6">
-        <div className="h-12 w-2/3 animate-pulse rounded-md bg-[hsl(var(--muted))]" />
+      <div className="mx-auto max-w-4xl px-4 py-20 sm:px-6">
+        <div className="h-3 w-24 animate-pulse rounded-md bg-[hsl(var(--muted))]" />
+        <div className="mt-4 h-14 w-2/3 animate-pulse rounded-md bg-[hsl(var(--muted))]" />
+        <div className="mt-4 h-6 w-1/2 animate-pulse rounded-md bg-[hsl(var(--muted))]" />
+        <div className="mt-12 grid grid-cols-1 gap-10 md:grid-cols-12">
+          <div className="aspect-square w-full animate-pulse rounded-[28px] bg-[hsl(var(--muted))] md:col-span-4" />
+          <div className="space-y-3 md:col-span-8">
+            <div className="h-4 w-full animate-pulse rounded bg-[hsl(var(--muted))]" />
+            <div className="h-4 w-11/12 animate-pulse rounded bg-[hsl(var(--muted))]" />
+            <div className="h-4 w-10/12 animate-pulse rounded bg-[hsl(var(--muted))]" />
+            <div className="h-4 w-9/12 animate-pulse rounded bg-[hsl(var(--muted))]" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -88,7 +98,6 @@ export default function AboutPage() {
       </section>
 
       <div className="mx-auto max-w-4xl px-4 py-20 sm:px-6 md:py-28">
-        {/* avatar + bio side-by-side */}
         <div className="grid grid-cols-1 gap-10 md:grid-cols-12 md:gap-12">
           <Reveal className="md:col-span-4">
             <div className="ring-lift sticky top-24 aspect-square w-full overflow-hidden rounded-[28px] border border-[hsl(var(--border))] bg-[hsl(var(--muted))]">
@@ -115,7 +124,32 @@ export default function AboutPage() {
             </div>
           </Reveal>
 
-          <Reveal delay={0.1} className="md:col-span-8">
+          <Reveal delay={0.1} className="md:col-span-8 space-y-12">
+            {profile.education || profile.availability ? (
+              <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {profile.education ? (
+                  <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[hsl(var(--muted-foreground))]">
+                      Education
+                    </p>
+                    <p className="mt-2 text-sm text-[hsl(var(--foreground))]">
+                      {profile.education}
+                    </p>
+                  </div>
+                ) : null}
+                {profile.availability ? (
+                  <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[hsl(var(--muted-foreground))]">
+                      Availability
+                    </p>
+                    <p className="mt-2 text-sm text-[hsl(var(--foreground))]">
+                      {profile.availability}
+                    </p>
+                  </div>
+                ) : null}
+              </section>
+            ) : null}
+
             {profile.bio ? (
               <section>
                 <p className="text-xs font-medium uppercase tracking-[0.2em] text-[hsl(var(--muted-foreground))]">
@@ -124,78 +158,6 @@ export default function AboutPage() {
                 <p className="mt-4 whitespace-pre-line text-base leading-relaxed text-[hsl(var(--foreground))] md:text-lg">
                   {profile.bio}
                 </p>
-              </section>
-            ) : null}
-
-            {profile.skills?.length ? (
-              <section className="mt-12">
-                <p className="text-xs font-medium uppercase tracking-[0.2em] text-[hsl(var(--muted-foreground))]">
-                  Skills
-                </p>
-                <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  {profile.skills.map((cat, i) => (
-                    <motion.div
-                      key={cat.category}
-                      initial={{ opacity: 0, y: 12 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.06, duration: 0.5 }}
-                      className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5"
-                    >
-                      <p className="font-display text-sm font-semibold tracking-tight">
-                        {cat.category}
-                      </p>
-                      <ul className="mt-3 space-y-1.5">
-                        {cat.items.map((s) => (
-                          <li
-                            key={s.name}
-                            className="flex items-center justify-between text-sm"
-                          >
-                            <span className="text-[hsl(var(--foreground))]">{s.name}</span>
-                            {s.level ? (
-                              <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-[hsl(var(--muted-foreground))]">
-                                {s.level}
-                              </span>
-                            ) : null}
-                          </li>
-                        ))}
-                      </ul>
-                    </motion.div>
-                  ))}
-                </div>
-              </section>
-            ) : null}
-
-            {profile.timeline?.length ? (
-              <section className="mt-12">
-                <p className="text-xs font-medium uppercase tracking-[0.2em] text-[hsl(var(--muted-foreground))]">
-                  Timeline
-                </p>
-                <ol className="relative mt-6 space-y-7 border-l-2 border-[hsl(var(--border))] pl-7">
-                  {profile.timeline.map((t, i) => (
-                    <motion.li
-                      key={i}
-                      initial={{ opacity: 0, x: -8 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.06, duration: 0.5 }}
-                      className="relative"
-                    >
-                      <span className="absolute -left-[33px] top-1.5 h-3.5 w-3.5 rounded-full border-2 border-[hsl(var(--background))] bg-[hsl(var(--accent))] shadow-md" />
-                      <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[hsl(var(--muted-foreground))]">
-                        {t.year}
-                      </p>
-                      <p className="mt-1 font-medium text-[hsl(var(--foreground))]">
-                        {t.title}
-                      </p>
-                      {t.body ? (
-                        <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
-                          {t.body}
-                        </p>
-                      ) : null}
-                    </motion.li>
-                  ))}
-                </ol>
               </section>
             ) : null}
           </Reveal>

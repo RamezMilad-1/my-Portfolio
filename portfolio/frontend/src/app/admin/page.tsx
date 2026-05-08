@@ -6,7 +6,7 @@ import { useMediaList } from '@/lib/api/media';
 import { useTeam } from '@/lib/api/team';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ScanLine, FolderKanban, Image as ImageIcon, Users } from 'lucide-react';
+import { Plus, FolderKanban, Image as ImageIcon, Users } from 'lucide-react';
 
 export default function AdminDashboardPage() {
   const { data: projects } = useProjectsAll();
@@ -44,9 +44,9 @@ export default function AdminDashboardPage() {
           <p className="text-sm text-[hsl(var(--muted-foreground))]">Admin</p>
           <h1 className="font-display text-3xl font-semibold tracking-tight">Dashboard</h1>
         </div>
-        <Button asChild variant="outline">
-          <Link href="/admin/scan">
-            <ScanLine className="h-4 w-4" /> Scan project folders
+        <Button asChild>
+          <Link href="/admin/projects/new">
+            <Plus className="h-4 w-4" /> New project
           </Link>
         </Button>
       </div>

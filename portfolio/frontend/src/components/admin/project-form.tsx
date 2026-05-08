@@ -11,6 +11,7 @@ import { Input, Textarea } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
   useCreateProject,
   useUpdateProject,
@@ -24,8 +25,10 @@ const schema = z.object({
   slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'lowercase, digits, dashes'),
   name: z.string().min(1),
   tagline: z.string().optional(),
+  problem: z.string().optional(),
   description: z.string().optional(),
   architecture: z.string().optional(),
+  outcome: z.string().optional(),
   tech: z.array(z.string()).default([]),
   features: z.array(z.string()).default([]),
   githubUrl: z.string().optional(),
@@ -35,7 +38,7 @@ const schema = z.object({
   status: z.enum(['draft', 'published']).default('published'),
   position: z.number().int().default(0),
   team: z
-    .array(z.object({ memberId: z.string(), roleInProject: z.string().optional().default('') }))
+    .array(z.object({ memberId: z.string() }))
     .default([]),
   media: z.array(z.string()).default([]),
 });
@@ -67,8 +70,10 @@ export function ProjectForm({ project }: Props) {
       slug: project?.slug ?? '',
       name: project?.name ?? '',
       tagline: project?.tagline ?? '',
+      problem: project?.problem ?? '',
       description: project?.description ?? '',
       architecture: project?.architecture ?? '',
+      outcome: project?.outcome ?? '',
       tech: project?.tech ?? [],
       features: project?.features ?? [],
       githubUrl: project?.githubUrl ?? '',
@@ -80,7 +85,6 @@ export function ProjectForm({ project }: Props) {
       team:
         project?.team?.map((t) => ({
           memberId: typeof t.memberId === 'string' ? t.memberId : t.memberId._id,
-          roleInProject: t.roleInProject,
         })) ?? [],
       media: project?.media?.map((m) => m._id) ?? [],
     },
@@ -93,7 +97,7 @@ export function ProjectForm({ project }: Props) {
 
   const [techInput, setTechInput] = useState('');
   const [featureInput, setFeatureInput] = useState('');
-  const [showMediaPicker, setShowMediaPicker] = useState(false);
+  const [pendingMediaDelete, setPendingMediaDelete] = useState<Media | null>(null);
 
   const onSubmit = async (values: Form) => {
     try {
@@ -139,7 +143,7 @@ export function ProjectForm({ project }: Props) {
 
   const addTeammate = (memberId: string) => {
     if (teamLinks.find((l) => l.memberId === memberId)) return;
-    setValue('team', [...teamLinks, { memberId, roleInProject: '' }], { shouldDirty: true });
+    setValue('team', [...teamLinks, { memberId }], { shouldDirty: true });
   };
   const removeTeammate = (memberId: string) => {
     setValue('team', teamLinks.filter((l) => l.memberId !== memberId), { shouldDirty: true });
@@ -305,6 +309,16 @@ export function ProjectForm({ project }: Props) {
       </div>
 
       <div className="space-y-1.5">
+        <Label htmlFor="problem">Problem (1–2 sentences — what does this project solve?)</Label>
+        <Textarea
+          id="problem"
+          rows={3}
+          placeholder="Concert-goers in Berlin had no reliable way to discover and book multi-tier tickets in one place."
+          {...register('problem')}
+        />
+      </div>
+
+      <div className="space-y-1.5">
         <Label htmlFor="description">Description (markdown)</Label>
         <Textarea id="description" rows={6} {...register('description')} />
       </div>
@@ -314,16 +328,46 @@ export function ProjectForm({ project }: Props) {
         <Textarea id="architecture" rows={6} {...register('architecture')} />
       </div>
 
-      <TeamPicker teamRoster={teamRoster} teamLinks={teamLinks} onAdd={addTeammate} onRemove={removeTeammate} setValue={setValue} />
+      <div className="space-y-1.5">
+        <Label htmlFor="outcome">Outcome (what shipped, who used it, what you learned — 1–3 sentences)</Label>
+        <Textarea
+          id="outcome"
+          rows={3}
+          placeholder="Used by ~40 students during the spring semester demo. Cut booking time from minutes to seconds and taught me Mongo transactions."
+          {...register('outcome')}
+        />
+      </div>
+
+      <TeamPicker teamRoster={teamRoster} teamLinks={teamLinks} onAdd={addTeammate} onRemove={removeTeammate} />
 
       <MediaPicker
         media={mediaList ?? []}
         selected={selectedMedia ?? []}
         onToggle={toggleMedia}
         onUpload={handleUploadClick}
-        onDelete={async (id) => {
-          if (!confirm('Delete this media file?')) return;
-          await delMedia.mutateAsync(id);
+        onDelete={(media) => setPendingMediaDelete(media)}
+      />
+
+      <ConfirmDialog
+        open={!!pendingMediaDelete}
+        onOpenChange={(open) => !open && setPendingMediaDelete(null)}
+        title="Delete this media file?"
+        description={
+          pendingMediaDelete?.originalName
+            ? `"${pendingMediaDelete.originalName}" will be permanently removed from your library.`
+            : 'This file will be permanently removed from your library.'
+        }
+        confirmLabel="Delete"
+        destructive
+        onConfirm={async () => {
+          if (!pendingMediaDelete) return;
+          try {
+            await delMedia.mutateAsync(pendingMediaDelete._id);
+            toast.success('Deleted');
+            setPendingMediaDelete(null);
+          } catch {
+            toast.error('Could not delete');
+          }
         }}
       />
 
@@ -345,43 +389,26 @@ function TeamPicker({
   teamLinks,
   onAdd,
   onRemove,
-  setValue,
 }: {
   teamRoster: TeamMember[] | undefined;
-  teamLinks: { memberId: string; roleInProject?: string }[];
+  teamLinks: { memberId: string }[];
   onAdd: (id: string) => void;
   onRemove: (id: string) => void;
-  setValue: (
-    name: 'team',
-    value: { memberId: string; roleInProject?: string }[],
-    options?: { shouldDirty?: boolean },
-  ) => void;
 }) {
   const byId = new Map((teamRoster ?? []).map((m) => [m._id, m]));
 
   return (
     <div className="space-y-2">
-      <Label>Team</Label>
+      <Label>Collaborators</Label>
       <div className="space-y-2">
         {teamLinks.map((link) => {
           const m = byId.get(link.memberId);
           return (
             <div
               key={link.memberId}
-              className="flex flex-wrap items-center gap-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-2"
+              className="flex items-center justify-between gap-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2"
             >
               <span className="text-sm font-medium">{m?.name ?? link.memberId}</span>
-              <Input
-                placeholder="Role in this project"
-                className="flex-1"
-                value={link.roleInProject ?? ''}
-                onChange={(e) => {
-                  const next = teamLinks.map((l) =>
-                    l.memberId === link.memberId ? { ...l, roleInProject: e.target.value } : l,
-                  );
-                  setValue('team', next, { shouldDirty: true });
-                }}
-              />
               <Button type="button" variant="ghost" size="icon" onClick={() => onRemove(link.memberId)}>
                 <Trash2 className="h-3.5 w-3.5 text-red-500" />
               </Button>
@@ -398,12 +425,12 @@ function TeamPicker({
         }}
         className="h-10 w-full rounded-md border border-[hsl(var(--input))] bg-transparent px-3 text-sm"
       >
-        <option value="">Add a team member…</option>
+        <option value="">Add a collaborator…</option>
         {(teamRoster ?? [])
           .filter((m) => !teamLinks.find((l) => l.memberId === m._id))
           .map((m) => (
             <option key={m._id} value={m._id}>
-              {m.name} {m.role ? `· ${m.role}` : ''}
+              {m.name}
             </option>
           ))}
       </select>
@@ -422,7 +449,7 @@ function MediaPicker({
   selected: string[];
   onToggle: (id: string) => void;
   onUpload: (file: File) => Promise<void>;
-  onDelete: (id: string) => Promise<void>;
+  onDelete: (media: Media) => void;
 }) {
   return (
     <div className="space-y-3">
@@ -465,7 +492,7 @@ function MediaPicker({
               </button>
               <button
                 type="button"
-                onClick={() => onDelete(m._id)}
+                onClick={() => onDelete(m)}
                 className="absolute right-1 top-1 hidden rounded-full bg-black/70 p-1 text-white group-hover:block"
                 aria-label="Delete media"
               >

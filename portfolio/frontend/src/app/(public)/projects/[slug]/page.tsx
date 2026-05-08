@@ -30,8 +30,15 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ slug: 
   if (isLoading) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-        <div className="h-8 w-2/3 animate-pulse rounded-md bg-[hsl(var(--muted))]" />
-        <div className="mt-4 h-6 w-1/3 animate-pulse rounded-md bg-[hsl(var(--muted))]" />
+        <div className="h-3 w-32 animate-pulse rounded-md bg-[hsl(var(--muted))]" />
+        <div className="mt-6 h-16 w-3/4 animate-pulse rounded-md bg-[hsl(var(--muted))]" />
+        <div className="mt-4 h-6 w-1/2 animate-pulse rounded-md bg-[hsl(var(--muted))]" />
+        <div className="mt-8 flex gap-2">
+          <div className="h-7 w-20 animate-pulse rounded-full bg-[hsl(var(--muted))]" />
+          <div className="h-7 w-24 animate-pulse rounded-full bg-[hsl(var(--muted))]" />
+          <div className="h-7 w-16 animate-pulse rounded-full bg-[hsl(var(--muted))]" />
+        </div>
+        <div className="mt-12 aspect-[16/9] w-full animate-pulse rounded-[28px] bg-[hsl(var(--muted))]" />
       </div>
     );
   }
@@ -108,7 +115,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ slug: 
               ))}
             </div>
 
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-wrap items-center gap-3">
               {project.liveUrl ? (
                 <Magnetic>
                   <Button asChild size="lg" className="rounded-full px-7 shadow-lg">
@@ -131,6 +138,11 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ slug: 
                   </a>
                 </Button>
               ) : null}
+              {!project.liveUrl && project.githubUrl ? (
+                <span className="rounded-full border border-dashed border-[hsl(var(--border))] px-3 py-1 text-xs text-[hsl(var(--muted-foreground))]">
+                  Source available — live demo not currently hosted
+                </span>
+              ) : null}
             </div>
           </Reveal>
         </div>
@@ -150,9 +162,30 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ slug: 
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 md:py-28">
         <div className="grid grid-cols-1 gap-16 lg:grid-cols-12">
           <div className="space-y-16 lg:col-span-8">
+            {project.problem || project.outcome || project.role || project.architecture ? (
+              <Reveal>
+                <SectionHeading num="01" title="Case study" />
+                <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {project.problem ? (
+                    <CaseStudyCard label="Problem" body={project.problem} />
+                  ) : null}
+                  {project.role ? (
+                    <CaseStudyCard label="My contribution" body={project.role} />
+                  ) : null}
+                  {project.outcome ? (
+                    <CaseStudyCard
+                      label="Outcome"
+                      body={project.outcome}
+                      className={project.problem || project.role ? '' : 'sm:col-span-2'}
+                    />
+                  ) : null}
+                </div>
+              </Reveal>
+            ) : null}
+
             {project.description ? (
               <Reveal>
-                <SectionHeading num="01" title="About" />
+                <SectionHeading num="02" title="About" />
                 <div className="prose-soft mt-6 max-w-none text-base md:text-lg">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {project.description}
@@ -163,7 +196,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ slug: 
 
             {project.architecture ? (
               <Reveal>
-                <SectionHeading num="02" title="Architecture" />
+                <SectionHeading num="03" title="Architecture" />
                 <div className="prose-soft mt-6 max-w-none">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {project.architecture}
@@ -174,7 +207,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ slug: 
 
             {project.features?.length ? (
               <Reveal>
-                <SectionHeading num="03" title="Features" />
+                <SectionHeading num="04" title="Features" />
                 <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {project.features.map((f, i) => (
                     <motion.li
@@ -195,7 +228,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ slug: 
 
             {project.media?.length ? (
               <Reveal>
-                <SectionHeading num="04" title="Media" />
+                <SectionHeading num="05" title="Media" />
                 <div className="mt-6">
                   <MediaGallery media={project.media} />
                 </div>
@@ -204,7 +237,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ slug: 
 
             {project.team?.length ? (
               <Reveal>
-                <SectionHeading num="05" title="Team" />
+                <SectionHeading num="06" title="Collaborators" />
                 <div className="mt-6">
                   <TeamGrid team={project.team} />
                 </div>
@@ -257,16 +290,6 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ slug: 
                       </dd>
                     </div>
                   ) : null}
-                  {project.folderPath ? (
-                    <DetailRow
-                      label="Repo path"
-                      value={
-                        <code className="break-all text-xs text-[hsl(var(--muted-foreground))]">
-                          {project.folderPath}
-                        </code>
-                      }
-                    />
-                  ) : null}
                 </dl>
               </div>
             </Reveal>
@@ -305,6 +328,29 @@ function SectionHeading({ num, title }: { num: string; title: string }) {
       <h2 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
         {title}
       </h2>
+    </div>
+  );
+}
+
+function CaseStudyCard({
+  label,
+  body,
+  className = '',
+}: {
+  label: string;
+  body: string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 ${className}`}
+    >
+      <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[hsl(var(--muted-foreground))]">
+        {label}
+      </p>
+      <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-[hsl(var(--foreground))]">
+        {body}
+      </p>
     </div>
   );
 }

@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef } from 'react';
-import Link from 'next/link';
 import {
   motion,
   useMotionValue,
@@ -138,9 +137,7 @@ export function ProjectCard({ project, index = 0, variant = 'default' }: Props) 
               isFeature ? 'text-2xl font-semibold md:text-3xl' : 'text-lg font-semibold'
             }`}
           >
-            <Link href={`/projects/${project.slug}`} className="link-underline">
-              {project.name}
-            </Link>
+            {project.name}
           </h3>
           {project.tagline ? (
             <p className="mt-2 line-clamp-2 text-sm text-[hsl(var(--muted-foreground))]">

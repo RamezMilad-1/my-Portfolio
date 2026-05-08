@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
 import { AdminsModule } from './admins/admins.module';
@@ -9,11 +11,15 @@ import { ProfileModule } from './profile/profile.module';
 import { ProjectsModule } from './projects/projects.module';
 import { MediaModule } from './media/media.module';
 import { TeamModule } from './team/team.module';
-import { ScannerModule } from './scanner/scanner.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot([
+      // Global default: 100 requests per minute per IP. Sufficient for normal
+      // public-portfolio traffic; stricter limits live on individual routes.
+      { ttl: 60_000, limit: 100 },
+    ]),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (cfg: ConfigService) => ({
@@ -35,7 +41,9 @@ import { ScannerModule } from './scanner/scanner.module';
     ProjectsModule,
     MediaModule,
     TeamModule,
-    ScannerModule,
+  ],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
 export class AppModule {}

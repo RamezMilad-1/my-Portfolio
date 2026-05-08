@@ -1,190 +1,177 @@
-# Ramez Milad — Portfolio (local build)
+# Ramez Milad — Portfolio
 
-A premium personal portfolio with a built-in admin CMS, mirroring the HR System's tech stack: **Next.js 16 + React 19 + Tailwind 4** front end, **NestJS 11 + Mongoose + MongoDB** back end, two processes, JWT-in-cookie auth.
+A personal portfolio with a built-in admin CMS. **Local-only** — runs on your Mac against a local MongoDB. Each showcased project lives in its own GitHub repo and is linked out by URL; the portfolio doesn't host them.
 
-The portfolio also runs each showcased project locally on a dedicated port, so the **"Open project"** button on every project detail page lands on a working app — no dependency on Vercel/Railway availability.
+## Stack
+
+- **Frontend** — Next.js 16 (App Router) · React 19 · Tailwind 4 · TanStack Query · Axios · Framer Motion · Radix UI
+- **Backend** — NestJS 11 · Mongoose · MongoDB · JWT-in-cookie auth
+- **Storage** — Files on disk under `portfolio/backend/uploads/` (avatars, project galleries, resume)
 
 ## Layout
 
 ```
-ramez-portfolio (this folder)
-├── portfolio/
-│   ├── frontend/   Next.js 16 + Tailwind 4 + TanStack Query + Axios + Framer Motion
-│   └── backend/    NestJS 11 + Mongoose + MongoDB + JWT-in-cookie
-│
-├── projects/       Git submodules pointing at the existing GitHub repos
-│   ├── events-ticketing-system-berlin       (RamezMilad-1)
-│   ├── nyc-collision-studio                 (RamezMilad-1)
-│   ├── restaurant-reservation-system        (kiroreda963)
-│   └── semester-5-software-project          (WefhLNUE — HR System with 18 nested submodules)
-│
-├── run-all.ps1     One-shot launcher for the whole system
-└── _legacy/        One-time backup of the original project folders (delete when comfortable)
+my-Portfolio/
+└── portfolio/
+    ├── frontend/   Next.js public site + admin UI
+    └── backend/    NestJS API
 ```
+
+Backend modules: `auth`, `admins`, `profile`, `projects`, `media`, `team`.
 
 ## Prerequisites
 
-1. **Node.js 20 or 22** (`node -v`).
-2. **MongoDB 8.x Community** running on `localhost:27017`.
-   - The installer is at the workspace root: `mongodb-windows-x86_64-8.2.7-signed.msi`.
-   - Run it, choose **Complete**, and enable "Install MongoDB as a Service" (default).
-   - Verify by running `mongosh` — should connect to `localhost:27017`.
-3. **Git** (already used to clone the submodules).
+```sh
+brew install node mongodb-community
+brew services start mongodb-community
+mongosh    # confirms MongoDB is up at localhost:27017
+```
 
-## Unified data layer
+Node 20 or 22 recommended.
 
-All apps share **one MongoDB instance** on `localhost:27017`. Inside that instance each app uses its own database — necessary because their schemas are different (an `EarlyHub.users` row is structured differently from a `BellaVista.users` row, and merging them would corrupt data).
+## One-time setup
 
-| App                 | Database                  |
-|---------------------|---------------------------|
-| Portfolio           | `ramez_portfolio`         |
-| EarlyHub            | `EventBooking`            |
-| Bella Vista         | `bellavista`              |
-| HR System           | `hr_system`               |
-| NYC Collision Studio| _(none — static data)_    |
-
-Open MongoDB Compass against `mongodb://localhost:27017` and you'll see all five DBs side-by-side.
-
-## Port map
-
-| App                  | Frontend           | Backend         |
-|----------------------|--------------------|-----------------|
-| Portfolio            | `:3000`            | `:3001`         |
-| EarlyHub             | `:4002`            | `:4001`         |
-| Bella Vista          | `:4004`            | `:4003`         |
-| HR System            | `:4006`            | `:4005`         |
-| NYC Collision Studio | https://nyc-collision-studio.vercel.app  (no local server) | — |
-
-## Quick start (zero to working)
-
-### 1. First-time only — seed the portfolio DB and create your admin
-
-```powershell
+```sh
+# Backend
 cd portfolio/backend
-copy .env.example .env
+cp .env.example .env
 npm install
-npm run db:seed          # profile + 4 known projects
+npm run db:seed          # profile + 4 sample projects
 npm run create-admin     # prompts for email + password
+
+# Frontend
+cd ../frontend
+cp .env.local.example .env.local
+npm install
 ```
 
-(If you've done this already, skip this section.)
+## Daily run (two terminals)
 
-### 2. Boot everything
+```sh
+# Terminal 1 — backend
+cd portfolio/backend
+npm run start:dev        # → http://localhost:3001
 
-```powershell
-.\run-all.ps1
+# Terminal 2 — frontend
+cd portfolio/frontend
+npm run dev              # → http://localhost:3000
 ```
 
-The launcher:
+Open `http://localhost:3000` for the public site, `http://localhost:3000/login` for the admin.
 
-- Checks MongoDB is running and starts it if not.
-- Runs `npm install` in any app whose `node_modules` is missing (3 sub-projects on first run — takes a few minutes).
-- Spawns 8 PowerShell windows, one per service, each named `ramez-portfolio :: <service>`.
-- Prints the URL list when done.
+## What the admin can do
 
-Then open **http://localhost:3000** and click any project card → **Open project** to launch the live app on its dedicated port.
+Sign in at `/login`, then use the sidebar:
 
-### 3. Stop everything
-
-```powershell
-.\run-all.ps1 -Stop
-```
-
-This kills any process holding ports 3000, 3001, 4001-4006.
-
-### Skip-install for daily use
-
-Once each app has its `node_modules`:
-
-```powershell
-.\run-all.ps1 -SkipInstall
-```
-
-## Surgical-design principles
-
-- **Submodules untouched against GitHub.** No tracked file in any of the 4 project repos has been modified. `git submodule foreach 'git status --porcelain'` is empty (modulo the gitignored `.env` files we drop in).
-- **EarlyHub's tracked `frontend/.env`** points at `:3001` (their original local default). The launcher overrides `VITE_API_BASE_URL` via shell env at runtime, so the file stays clean.
-- **Vite ports** are passed via `--port 4002 --strictPort` etc. on the command line, not via project config files.
-- **NestJS ports** are read from `process.env.PORT`, set in each project's local `.env` file (gitignored by their own `.gitignore`).
-
-## Daily dev (without the launcher)
-
-If you want hot-reload visible in VS Code's integrated terminals:
-
-```powershell
-# Portfolio backend
-cd portfolio/backend       ; npm run start:dev
-
-# Portfolio frontend
-cd portfolio/frontend      ; npm run dev
-
-# EarlyHub backend
-cd projects/events-ticketing-system-berlin/backend     ; npm run dev
-
-# EarlyHub frontend (note the env override + port)
-cd projects/events-ticketing-system-berlin/frontend
-$env:VITE_API_BASE_URL = "http://localhost:4001/api/v1"
-npm run dev -- --port 4002 --strictPort
-
-# Bella Vista backend
-cd projects/restaurant-reservation-system/backend      ; npm run start:dev
-
-# Bella Vista frontend
-cd projects/restaurant-reservation-system/frontend     ; npm run dev -- --port 4004 --strictPort
-
-# HR System backend
-cd projects/semester-5-software-project/backend        ; npm run start:dev
-
-# HR System frontend
-cd projects/semester-5-software-project/frontend       ; npm run dev -- --port 4006
-```
-
-## What the portfolio admin can do
-
-1. Open `/login`, sign in with the credentials from `npm run create-admin`.
-2. The admin sidebar exposes:
-   - **Dashboard** — counts + quick links.
-   - **Projects** — table with create / edit / delete. The editor handles tagline, description (markdown), architecture write-up, tech list, features list, GitHub & live URLs, role, **media gallery** (upload + select), **team picker**.
-   - **Media** — drop zone for images / videos. Files land in `portfolio/backend/uploads/`.
-   - **Team** — roster of people you can attach to multiple projects.
-   - **Profile** — edit bio, headline, avatar, resume URL, social links, skills, timeline.
-   - **Folder scan** — walks `projects/*`, detects tech stack, lets you import any new folder as a draft project.
+- **Dashboard** — counts and quick links
+- **Projects** — create, edit, delete, reorder. Each project has tagline, problem, description, architecture, outcome, tech tags, features list, GitHub URL, optional live URL, role, media gallery, team picker, draft/published status
+- **Media** — drop-zone uploader for images and videos. Files land in `portfolio/backend/uploads/`. Used for project galleries and avatars
+- **Team** — minimal collaborator roster (name + GitHub + LinkedIn) you can attach to multiple projects
+- **Profile** — edit display name, headline, bio, education, availability, email, avatar, resume, and social links
 
 ## Adding a new project
 
-1. Drop the new project folder into `projects/`, ideally as a Git submodule:
-   ```powershell
-   git submodule add https://github.com/<user>/<repo>.git projects/<name>
-   ```
-2. Add a `.env` file in the new project pointing at MongoDB (mirroring the existing ones).
-3. Add an entry to `run-all.ps1`'s `$services` array on a free port (4007+).
-4. In the portfolio admin, open `/admin/scan` → **Run scan** → **Import**.
-5. The project lands as a draft. Edit it, set `liveUrl` to `http://localhost:<your port>`, set status `published`.
+1. Sign in at `/login` → **Projects** → **New project**.
+2. Fill in name, slug (e.g. `my-cool-app`), tagline, problem, description, architecture, outcome, tech list, features, role, GitHub URL.
+3. (Optional) **Live URL** — leave blank for now. The detail page shows a "live demo not currently hosted" badge instead of a broken button. Fill it in later if you deploy the project.
+4. Upload screenshots/videos in the **Media** section of the project form, or pick from previously uploaded ones.
+5. Set **Status: published** and save. Mark **Featured** if you want it on the homepage.
 
-## Submodule maintenance
+## Changing your profile photo
 
-```powershell
-# After a fresh clone of this repo
-git submodule update --init --recursive
+Admin → **Profile** → click **Upload** next to **Avatar**, pick the image, then **Save profile**. The file is stored under `portfolio/backend/uploads/images/` and the homepage hero updates immediately.
 
-# Pull every submodule's latest main
-git submodule update --remote --merge
+## Notes
 
-# Verify all submodules are checked out
-git submodule status
-```
+- The admin's JWT lives in an httpOnly cookie (`ramez_session`). Unauthenticated requests to `/admin/*` redirect to `/login`.
+- Skills shown on the homepage are auto-derived from the union of all projects' tech tags — no manual skills list to maintain.
+- Project `liveUrl` is just a string field. Empty by default; the public UI handles missing demos gracefully.
+- Uploads are gitignored. Don't commit large media into the repo.
 
-## Notes & deliberate decisions
+## Security hardening (already in place)
 
-- The portfolio repo (this directory) is a local Git repo with **no remote**. You can `git remote add origin …` whenever you want to publish — submodule SHAs travel with it.
-- "Open project" opens the local app in a **new tab** (`target="_blank"`). The portfolio is never replaced or iframed.
-- The admin's JWT lives in an httpOnly cookie (`ramez_session`). The Next.js proxy redirects unauthenticated `/admin/*` to `/login`. Every protected NestJS route is also guarded independently with `JwtAuthGuard`.
-- Media files are stored on disk under `portfolio/backend/uploads/`. Gitignored.
+- `helmet` for HTTP response security headers (X-Frame-Options, X-Content-Type-Options, Referrer-Policy, etc.)
+- `@nestjs/throttler` global rate limit (100 req/min/IP) plus a stricter limit on `/auth/login` (5 attempts/min/IP) to defeat brute-force
+- `ValidationPipe` with `whitelist: true` + `forbidNonWhitelisted: true` rejects any unknown fields in request bodies
+- Login passwords hashed with `bcrypt`
+- JWT in `httpOnly` cookie (XSS-proof) with configurable `secure` and `sameSite` for cross-origin production deploys
+- `trust proxy` enabled so client IPs are accurate behind Vercel / Render / Railway / Nginx
+- File uploads limited to 100MB with a MIME allowlist; filenames are random UUIDs (no path traversal)
+- Backend logs a loud `[SECURITY WARN]` at startup if `JWT_SECRET` is missing or still the placeholder
 
 ## When you're ready to deploy
 
-1. `git remote add origin … && git push -u origin main`.
-2. Switch the portfolio's `MONGO_URI` to a MongoDB Atlas free-tier cluster (and update the URLs file similarly).
-3. Deploy `portfolio/frontend` to Vercel and `portfolio/backend` to Render or Railway.
-4. Set `COOKIE_SECURE=true` and `COOKIE_SAMESITE=none` in the portfolio backend `.env` for cross-origin cookies.
-5. The 4 showcased projects keep their existing remotes (or redeploy them however you prefer); update each project's `liveUrl` row in the portfolio DB to point at the public URL.
+**Fill in your real content via the admin first.** Your local screenshots, problem/outcome text, avatar, and resume are reusable — only the database and uploaded files are per-environment.
+
+### 1. Generate a real JWT secret
+
+```sh
+node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"
+```
+
+Copy the output. **Do not put it in any file in the repo** — it goes into your hosting platform's env-var settings.
+
+### 2. Set up MongoDB Atlas (free tier)
+
+Create a free M0 cluster at [cloud.mongodb.com](https://cloud.mongodb.com), add a database user, allow access from `0.0.0.0/0` (or restrict to your backend host's IP), and copy the connection string. It looks like:
+
+```
+mongodb+srv://<user>:<password>@cluster0.xxxxx.mongodb.net/ramez_portfolio?retryWrites=true&w=majority
+```
+
+### 3. Production env vars
+
+Set these on the **backend host** (Render / Railway / Fly), NOT in any `.env` in the repo:
+
+```
+PORT=                      # usually set by the host automatically
+MONGO_URI=mongodb+srv://…  # from step 2
+JWT_SECRET=…               # from step 1
+NODE_ENV=production
+COOKIE_NAME=ramez_session
+COOKIE_DOMAIN=             # leave empty for cross-origin Vercel + Render
+COOKIE_SECURE=true
+COOKIE_SAMESITE=none
+CORS_ORIGIN=https://your-portfolio-domain.com
+UPLOADS_DIR=./uploads      # only matters if your host gives you a persistent disk
+```
+
+`COOKIE_SECURE=true` and `COOKIE_SAMESITE=none` are **required** when frontend and backend live on different domains. Without them the auth cookie won't be sent.
+
+On the **frontend host** (Vercel):
+
+```
+NEXT_PUBLIC_API_BASE=https://your-backend-host.example.com/api/v1
+NEXT_PUBLIC_UPLOADS_BASE=https://your-backend-host.example.com
+NEXT_PUBLIC_SITE_NAME=Ramez Milad
+```
+
+### 4. Deploy
+
+- **Frontend → Vercel** (free). Push the repo, set env vars, deploy.
+- **Backend → Render** (free) or **Railway** ($5/mo). Build: `npm install && npm run build`. Start: `npm run start:prod`.
+- For uploads to survive deploys on Render, attach a **Persistent Disk** ($1/mo, 1GB) mounted at `/opt/render/project/src/uploads`. Without this, uploads disappear on every redeploy.
+
+### 5. Migrate your local content to Atlas
+
+```sh
+# locally, after you've filled in everything you want via admin
+mongodump --uri="mongodb://localhost:27017/ramez_portfolio" --out=./dump
+
+# then push to Atlas
+mongorestore --uri="<your atlas connection string>" --nsFrom="ramez_portfolio.*" --nsTo="ramez_portfolio.*" ./dump
+```
+
+Or paste content manually into the production admin — only takes ~30 minutes for 4 projects + 1 profile.
+
+### 6. Re-upload media
+
+The image and video files in `portfolio/backend/uploads/` live on your laptop's disk; the database stores paths to them. When you deploy, re-upload the same files via the production admin's Media uploader.
+
+### 7. Final checks
+
+- Visit your production URL → public site renders
+- `/login` → sign in with your admin credentials → admin dashboard loads
+- Tail backend logs to confirm **no JWT_SECRET warning** at startup
+- Try 6 wrong logins in quick succession → 6th gets HTTP 429
+- `curl -I https://your-backend.../api/v1/projects` → response includes `x-frame-options`, `referrer-policy`, etc.

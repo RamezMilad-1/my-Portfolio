@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { Project } from '../types';
+import type { Project, ProjectInput } from '../types';
 
 export const projectsKeys = {
   all: ['projects'] as const,
@@ -51,7 +51,7 @@ export function useProjectById(id: string) {
 export function useCreateProject() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: Partial<Project>) => {
+    mutationFn: async (payload: ProjectInput) => {
       const { data } = await api.post<Project>('/projects', payload);
       return data;
     },
@@ -64,7 +64,7 @@ export function useCreateProject() {
 export function useUpdateProject() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, payload }: { id: string; payload: Partial<Project> }) => {
+    mutationFn: async ({ id, payload }: { id: string; payload: ProjectInput }) => {
       const { data } = await api.put<Project>(`/projects/${id}`, payload);
       return data;
     },

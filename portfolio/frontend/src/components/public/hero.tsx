@@ -33,6 +33,8 @@ export function Hero({ profile }: { profile: Profile | null | undefined }) {
   const headline =
     profile?.headline ??
     '3rd-year Computer Science (Software Engineering) student. Full-stack developer working in TypeScript, React, NestJS, and MongoDB.';
+  const availability = profile?.availability?.trim();
+  const education = profile?.education?.trim();
 
   return (
     <section
@@ -57,8 +59,19 @@ export function Hero({ profile }: { profile: Profile | null | undefined }) {
               <span className="absolute inset-0 animate-ping rounded-full bg-[hsl(var(--accent))] opacity-75" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[hsl(var(--accent))]" />
             </span>
-            available for collaboration
+            {availability || 'available for collaboration'}
           </motion.span>
+
+          {education ? (
+            <motion.p
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.08, ease: easing }}
+              className="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-[hsl(var(--muted-foreground))]"
+            >
+              {education}
+            </motion.p>
+          ) : null}
 
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
@@ -99,15 +112,22 @@ export function Hero({ profile }: { profile: Profile | null | undefined }) {
             </Magnetic>
 
             {profile?.resumeUrl ? (
-              <Button asChild variant="outline" size="lg" className="rounded-full px-6">
-                <a
-                  href={uploadsUrl(profile.resumeUrl)}
-                  target="_blank"
-                  rel="noopener noreferrer"
+              <Magnetic>
+                <Button
+                  asChild
+                  size="lg"
+                  variant="secondary"
+                  className="rounded-full px-7 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.45)]"
                 >
-                  <FileDown className="h-4 w-4" /> Resume
-                </a>
-              </Button>
+                  <a
+                    href={uploadsUrl(profile.resumeUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <FileDown className="h-4 w-4" /> Resume
+                  </a>
+                </Button>
+              </Magnetic>
             ) : (
               <Button asChild variant="outline" size="lg" className="rounded-full px-6">
                 <Link href="/about">About me</Link>

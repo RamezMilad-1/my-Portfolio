@@ -6,7 +6,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
   return (
     <>
       <Nav />
-      <main>
+      <main id="main-content">
         <PageTransition>{children}</PageTransition>
       </main>
       <Footer />

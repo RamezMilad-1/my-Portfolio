@@ -12,6 +12,10 @@ const PROJECTS = [
     name: 'EarlyHub — Berlin Events Ticketing',
     tagline:
       'Multi-tier ticketing platform for concerts, theatre, sports, and conferences in Berlin.',
+    problem:
+      'Concert and event-goers in Berlin had no consolidated platform that supported multi-tier tickets, theatre seat picking, and organizer self-service in one flow.',
+    outcome:
+      'Shipped a working three-role MERN system with 6 admin/organizer/user flows, complete OTP password recovery, and Mongo-transaction-safe booking. Taught me JWT-in-cookie auth and Mongo transactions in production conditions.',
     description:
       'A full-stack MERN application that lets visitors discover events in Berlin and book tickets in seconds. Three roles (Standard User, Organizer, System Admin), JWT-in-cookie auth with OTP password recovery, multi-tier tickets, theater seat selection, an outlets directory, and a complete admin dashboard.',
     architecture:
@@ -26,18 +30,21 @@ const PROJECTS = [
       'OTP password recovery via email (3-step wizard)',
     ],
     githubUrl: 'https://github.com/RamezMilad-1/events-ticketing-system-berlin',
-    liveUrl: 'http://localhost:4002',
+    liveUrl: '',
     role: 'Full-stack developer',
     isFeatured: true,
     status: 'published',
     position: 0,
-    folderPath: 'projects/events-ticketing-system-berlin',
   },
   {
     slug: 'nyc-collision-studio',
     name: 'NYC Collision Studio',
     tagline:
       'Interactive analysis of NYC motor vehicle collisions with downloadable PDF reports.',
+    problem:
+      'NYC Open Data on motor vehicle collisions is huge and fragmented across two datasets — there was no fast, interactive way for a non-analyst to explore patterns and export findings.',
+    outcome:
+      'Live on Vercel with sub-second loads thanks to build-time pre-aggregations. Practical experience with full data-pipeline ownership: cleaning in Jupyter, modeling in Python, visualizing in React + Plotly.',
     description:
       'End-to-end data engineering and analysis project on NYC Open Data. Cleaned and merged the Crashes and Persons datasets via Jupyter, then built a single-page React + Plotly application that lets users explore patterns, contributing factors, and temporal trends and export findings as PDF.',
     architecture:
@@ -55,13 +62,16 @@ const PROJECTS = [
     isFeatured: true,
     status: 'published',
     position: 1,
-    folderPath: 'projects/nyc-collision-studio',
   },
   {
     slug: 'bella-vista-restaurant',
     name: 'Bella Vista — Restaurant Reservation System',
     tagline:
       'End-to-end reservation, menu, and order management for a fictitious restaurant.',
+    problem:
+      'Restaurants juggle bookings, menus, orders, and feedback across separate tools — Bella Vista demonstrates a unified flow for diners and admins in one app.',
+    outcome:
+      'Coordinated work across a 3-person team to ship a cohesive React 19 + NestJS app, with Cypress covering the critical booking and order flows. First time leading test strategy on a team project.',
     description:
       'Bella Vista lets diners browse the menu, book tables with date/time selection, place orders, and leave reviews; admins manage menu, reservations, orders, and feedback through a dedicated dashboard. Built as a team project with React 19, NestJS, and MongoDB. Cypress covers the critical user flows.',
     architecture:
@@ -77,18 +87,21 @@ const PROJECTS = [
       'Cypress E2E coverage',
     ],
     githubUrl: 'https://github.com/kiroreda963/restaurant-reservation-system',
-    liveUrl: 'http://localhost:4004',
+    liveUrl: '',
     role: 'Full-stack developer (team project)',
     isFeatured: true,
     status: 'published',
     position: 2,
-    folderPath: 'projects/restaurant-reservation-system',
   },
   {
     slug: 'hr-system-semester-5',
     name: 'HR System — Semester 5 Software Project',
     tagline:
       'Enterprise-grade HR platform: profiles, leaves, payroll, performance, recruitment, time-management.',
+    problem:
+      'A university-grade HR platform that needed to mirror real-world enterprise complexity: role-based access, document workflows, e-signatures, and multi-module separation of concerns.',
+    outcome:
+      'Most ambitious project to date — 18 git submodules, 9 backend + 9 frontend modules, role-based access for 4 user types, integrated DocuSeal e-signatures, and PDFKit-generated documents. Forced me to think hard about modular ownership at scale.',
     description:
       'Most ambitious project to date. A modular HR system covering employee profiles, change-request workflows, leaves, payroll (configuration / execution / tracking), performance, recruitment, and time-management. Architected as 18 git submodules so each module is an independent repo with its own history. Built as a team under the WefhLNUE organization.',
     architecture:
@@ -121,12 +134,11 @@ const PROJECTS = [
       'PDF generation for letters and reports',
     ],
     githubUrl: 'https://github.com/WefhLNUE/semester-5-software-project',
-    liveUrl: 'http://localhost:4006',
+    liveUrl: '',
     role: 'Full-stack developer (team project, multiple modules)',
     isFeatured: true,
     status: 'published',
     position: 3,
-    folderPath: 'projects/semester-5-software-project',
   },
 ];
 
@@ -145,57 +157,13 @@ async function run() {
       displayName: 'Ramez Milad',
       headline: '3rd-year Computer Science student · Software Engineering major',
       bio: 'Full-stack developer with a focus on TypeScript, React, NestJS, and modern data-heavy interfaces. I build production-grade student projects that ship.',
+      education: 'B.Sc. Computer Science · Software Engineering major · 3rd year',
+      availability: 'Open to internships and junior roles in Cairo / remote',
       email: '',
       socials: {
         github: 'https://github.com/RamezMilad-1',
         linkedin: '',
       },
-      skills: [
-        {
-          category: 'Frontend',
-          items: [
-            { name: 'React', level: 'advanced' },
-            { name: 'Next.js', level: 'advanced' },
-            { name: 'TypeScript', level: 'advanced' },
-            { name: 'Tailwind CSS', level: 'advanced' },
-            { name: 'TanStack Query', level: 'intermediate' },
-          ],
-        },
-        {
-          category: 'Backend',
-          items: [
-            { name: 'Node.js', level: 'advanced' },
-            { name: 'NestJS', level: 'advanced' },
-            { name: 'Express', level: 'advanced' },
-            { name: 'JWT auth', level: 'advanced' },
-            { name: 'REST API design', level: 'advanced' },
-          ],
-        },
-        {
-          category: 'Data',
-          items: [
-            { name: 'MongoDB / Mongoose', level: 'advanced' },
-            { name: 'Python (data engineering)', level: 'intermediate' },
-            { name: 'Plotly / Recharts', level: 'intermediate' },
-          ],
-        },
-        {
-          category: 'Tooling',
-          items: [
-            { name: 'Git / submodules', level: 'advanced' },
-            { name: 'Vite', level: 'advanced' },
-            { name: 'Cypress', level: 'intermediate' },
-            { name: 'Vercel / Railway', level: 'intermediate' },
-          ],
-        },
-      ],
-      timeline: [
-        { year: '2024', title: 'Started 3rd year — Software Engineering major' },
-        { year: '2024', title: 'Built EarlyHub events platform (MERN, JWT, OTP)' },
-        { year: '2025', title: 'Shipped NYC Collision Studio to Vercel' },
-        { year: '2025', title: 'Co-built Bella Vista restaurant system (React + NestJS)' },
-        { year: '2026', title: 'Co-built HR System — 18-submodule modular architecture' },
-      ],
     });
     console.log('[seed] profile created');
   } else {
