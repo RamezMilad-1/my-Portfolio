@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
 import '../styles/globals.css';
 import { Providers } from '@/components/providers';
-import { CustomCursor } from '@/components/motion/cursor';
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: {
@@ -18,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={cn("dark", "font-sans", geist.variable)} style={{ colorScheme: 'dark' }} suppressHydrationWarning>
       <body className="min-h-dvh antialiased">
         <a
           href="#main-content"
@@ -27,7 +30,6 @@ export default function RootLayout({
           Skip to content
         </a>
         <Providers>{children}</Providers>
-        <CustomCursor />
       </body>
     </html>
   );

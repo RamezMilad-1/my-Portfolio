@@ -41,6 +41,12 @@ export class CreateProjectDto {
   @IsOptional() @IsBoolean() isFeatured?: boolean;
   @IsOptional() @IsEnum(['draft', 'published']) status?: 'draft' | 'published';
   @IsOptional() @IsInt() position?: number;
+
+  @IsOptional() @IsArray() @IsString({ each: true }) gallery?: string[];
+  @IsOptional() @IsArray() @IsString({ each: true }) highlights?: string[];
+  @IsOptional() @IsString() liveLabel?: string;
+  @IsOptional() @IsString() sourceLabel?: string;
+  @IsOptional() @IsString() category?: string;
 }
 
 export class UpdateProjectDto extends PartialType(CreateProjectDto) {}

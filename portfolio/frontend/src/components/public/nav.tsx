@@ -1,25 +1,27 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { LayoutDashboard } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Menu, X } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { ThemeToggle } from '../theme-toggle';
-import { useMe } from '@/lib/api/auth';
-import { Button } from '../ui/button';
 
-const items = [
-  { href: '/', label: 'Home' },
-  { href: '/projects', label: 'Projects' },
-  { href: '/about', label: 'About' },
+const SECTIONS: { id: string; label: string }[] = [
+  { id: 'home', label: 'Home' },
+  { id: 'about', label: 'About' },
+  { id: 'portfolio', label: 'Portfolio' },
+  { id: 'contact', label: 'Contact' },
 ];
 
 export function Nav() {
   const pathname = usePathname();
-  const { data: me } = useMe();
+  const router = useRouter();
+  const isHome = pathname === '/';
+
   const [scrolled, setScrolled] = useState(false);
+  const [activeId, setActiveId] = useState<string>('home');
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -28,38 +30,82 @@ export function Nav() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  useEffect(() => {
+    if (!isHome) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]) setActiveId(visible[0].target.id);
+      },
+      {
+        rootMargin: '-30% 0px -55% 0px',
+        threshold: [0, 0.2, 0.4, 0.6, 0.8, 1],
+      },
+    );
+
+    SECTIONS.forEach((s) => {
+      const el = document.getElementById(s.id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [isHome]);
+
+  const handleClick = (id: string) => {
+    setOpen(false);
+    if (!isHome) {
+      router.push(`/#${id}`);
+      return;
+    }
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <header
       className={cn(
-        'sticky top-0 z-40 transition-all duration-300',
+        'fixed inset-x-0 top-0 z-50 transition-all duration-300',
         scrolled
-          ? 'glass-strong border-b border-[hsl(var(--border))]'
+          ? 'border-b border-[hsl(var(--brand-violet)/0.15)] bg-[hsl(var(--background)/0.65)] backdrop-blur-xl'
           : 'border-b border-transparent',
       )}
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4 sm:px-6">
         <Link
           href="/"
-          className="font-display flex items-center gap-2 text-base font-semibold tracking-tight"
+          className="font-display flex items-center gap-2 text-base font-bold tracking-tight"
+          onClick={(e) => {
+            if (isHome) {
+              e.preventDefault();
+              handleClick('home');
+            }
+          }}
         >
           <span
             aria-hidden
-            className="inline-block h-2.5 w-2.5 rounded-full bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--accent-secondary))]"
-          />
-          <span className="gradient-text">Ramez Milad</span>
+            className="relative inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] text-[10px] font-bold text-white shadow-[0_4px_20px_-4px_hsl(var(--brand-violet)/0.6)]"
+          >
+            R
+          </span>
+          <span className="ek-gradient-text-static">Ramez Milad</span>
         </Link>
 
-        <nav className="relative ml-2 hidden flex-1 items-center gap-1 sm:flex">
-          {items.map((it) => {
-            const active = it.href === '/' ? pathname === '/' : pathname?.startsWith(it.href);
+        <nav className="relative ml-2 hidden flex-1 items-center gap-1 md:flex">
+          {SECTIONS.map((s) => {
+            const active = isHome && activeId === s.id;
             return (
-              <Link
-                key={it.href}
-                href={it.href}
+              <button
+                key={s.id}
+                onClick={() => handleClick(s.id)}
                 className={cn(
                   'relative rounded-full px-3.5 py-1.5 text-sm transition-colors',
                   active
-                    ? 'text-[hsl(var(--foreground))]'
+                    ? 'text-white'
                     : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]',
                 )}
               >
@@ -67,26 +113,56 @@ export function Nav() {
                   <motion.span
                     layoutId="nav-pill"
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    className="absolute inset-0 rounded-full bg-[hsl(var(--muted))]"
+                    className="absolute inset-0 rounded-full bg-gradient-to-r from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))]"
                   />
                 ) : null}
-                <span className="relative z-10">{it.label}</span>
-              </Link>
+                <span className="relative z-10">{s.label}</span>
+              </button>
             );
           })}
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          {me ? (
-            <Button asChild variant="outline" size="sm" className="rounded-full">
-              <Link href="/admin">
-                <LayoutDashboard className="h-3.5 w-3.5" /> Admin
-              </Link>
-            </Button>
-          ) : null}
-          <ThemeToggle />
+          <button
+            type="button"
+            aria-label="Toggle menu"
+            onClick={() => setOpen((o) => !o)}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[hsl(var(--border))] md:hidden"
+          >
+            {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </button>
         </div>
       </div>
+
+      <AnimatePresence>
+        {open ? (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className="mx-4 mb-2 rounded-2xl border border-[hsl(var(--brand-violet)/0.18)] bg-[hsl(var(--background)/0.92)] p-2 backdrop-blur-xl md:hidden"
+          >
+            {SECTIONS.map((s) => {
+              const active = isHome && activeId === s.id;
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => handleClick(s.id)}
+                  className={cn(
+                    'block w-full rounded-xl px-4 py-2.5 text-left text-sm transition-colors',
+                    active
+                      ? 'bg-gradient-to-r from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] text-white'
+                      : 'text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))]',
+                  )}
+                >
+                  {s.label}
+                </button>
+              );
+            })}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </header>
   );
 }

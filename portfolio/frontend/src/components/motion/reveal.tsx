@@ -1,43 +1,47 @@
 'use client';
 
-import { motion, useReducedMotion, type HTMLMotionProps } from 'framer-motion';
+import { motion, type HTMLMotionProps } from 'framer-motion';
 import { ReactNode } from 'react';
+import { useScrollReveal, type ScrollRevealOptions } from './use-scroll-reveal';
 
-interface RevealProps extends Omit<HTMLMotionProps<'div'>, 'children'> {
+interface RevealProps
+  extends Omit<HTMLMotionProps<'div'>, 'children'>,
+    ScrollRevealOptions {
   children: ReactNode;
   delay?: number;
-  y?: number;
-  once?: boolean;
+  duration?: number;
 }
 
-/**
- * Fades + lifts a block as it scrolls into view.
- * Disables motion entirely if the user prefers reduced motion.
- */
+// Re-fires on every entry, with a softer reverse animation on exit. See
+// useScrollReveal for the underlying behavior.
 export function Reveal({
   children,
   delay = 0,
-  y = 24,
-  once = true,
+  duration = 0.7,
+  y,
+  x,
+  margin,
+  amount,
+  exitFactor,
+  exitOpacity,
   className,
   ...rest
 }: RevealProps) {
-  const prefersReduced = useReducedMotion();
-
-  if (prefersReduced) {
-    return (
-      <div className={className} {...(rest as React.HTMLAttributes<HTMLDivElement>)}>
-        {children}
-      </div>
-    );
-  }
+  const { ref, initial, animate } = useScrollReveal<HTMLDivElement>({
+    y,
+    x,
+    margin,
+    amount,
+    exitFactor,
+    exitOpacity,
+  });
 
   return (
     <motion.div
-      initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once, margin: '-80px' }}
-      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay }}
+      ref={ref}
+      initial={initial}
+      animate={animate}
+      transition={{ duration, ease: [0.22, 1, 0.36, 1], delay }}
       className={className}
       {...rest}
     >

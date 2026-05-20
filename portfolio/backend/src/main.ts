@@ -42,7 +42,16 @@ async function bootstrap() {
   // ---- Security middleware ----
   // helmet adds X-Frame-Options, X-Content-Type-Options, Referrer-Policy,
   // Strict-Transport-Security, and a basic Content-Security-Policy.
-  app.use(helmet());
+  // CORP defaults to 'same-origin' which blocks the frontend (a separate
+  // origin) from loading uploaded images via <img>. Relax to 'cross-origin'
+  // so /uploads/* can be embedded by the portfolio frontend.
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      crossOriginEmbedderPolicy: false,
+      contentSecurityPolicy: false,
+    }),
+  );
   app.use(cookieParser());
 
   app.setGlobalPrefix('api/v1');

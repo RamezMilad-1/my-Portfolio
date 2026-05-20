@@ -1,65 +1,93 @@
 'use client';
 
 import Link from 'next/link';
+import { Github, Linkedin, Mail, Twitter, Globe, Heart } from 'lucide-react';
 import { useProfile } from '@/lib/api/profile';
-import { Github, Linkedin, Mail, Twitter } from 'lucide-react';
 
 export function Footer() {
   const { data } = useProfile();
   const socials = data?.socials ?? {};
   const year = new Date().getFullYear();
+  const name = data?.displayName ?? 'Ramez Milad';
 
   return (
-    <footer className="mt-24 border-t border-[hsl(var(--border))] py-10">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-4 sm:flex-row sm:px-6">
-        <p className="text-sm text-[hsl(var(--muted-foreground))]">
-          © {year} {data?.displayName ?? 'Ramez Milad'}. Built with Next.js, NestJS, and MongoDB.
-        </p>
+    <footer className="relative mt-24 border-t border-[hsl(var(--brand-violet)/0.15)] py-12">
+      <div className="absolute inset-x-0 top-0 mx-auto h-px max-w-md bg-gradient-to-r from-transparent via-[hsl(var(--brand-violet))] to-transparent" />
+
+      <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 sm:px-6">
+        <Link
+          href="/"
+          className="font-display inline-flex items-center gap-2 text-base font-bold tracking-tight"
+        >
+          <span
+            aria-hidden
+            className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] text-[10px] font-bold text-white"
+          >
+            R
+          </span>
+          <span className="ek-gradient-text-static">{name}</span>
+        </Link>
+
         <div className="flex items-center gap-3">
           {socials.github ? (
-            <a
-              href={socials.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="GitHub"
-              className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-            >
-              <Github className="h-5 w-5" />
-            </a>
+            <SocialIcon href={socials.github} label="GitHub">
+              <Github className="h-4 w-4" />
+            </SocialIcon>
           ) : null}
           {socials.linkedin ? (
-            <a
-              href={socials.linkedin}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="LinkedIn"
-              className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-            >
-              <Linkedin className="h-5 w-5" />
-            </a>
+            <SocialIcon href={socials.linkedin} label="LinkedIn">
+              <Linkedin className="h-4 w-4" />
+            </SocialIcon>
           ) : null}
           {socials.x ? (
-            <a
-              href={socials.x}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="X / Twitter"
-              className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-            >
-              <Twitter className="h-5 w-5" />
-            </a>
+            <SocialIcon href={socials.x} label="X / Twitter">
+              <Twitter className="h-4 w-4" />
+            </SocialIcon>
+          ) : null}
+          {socials.website ? (
+            <SocialIcon href={socials.website} label="Website">
+              <Globe className="h-4 w-4" />
+            </SocialIcon>
           ) : null}
           {data?.email ? (
-            <Link
-              href={`mailto:${data.email}`}
-              aria-label="Email"
-              className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-            >
-              <Mail className="h-5 w-5" />
-            </Link>
+            <SocialIcon href={`mailto:${data.email}`} label="Email">
+              <Mail className="h-4 w-4" />
+            </SocialIcon>
           ) : null}
         </div>
+
+        <p className="text-center text-xs text-[hsl(var(--muted-foreground))]">
+          © {year} {name}. Built with{' '}
+          <Heart
+            className="inline h-3 w-3 fill-[hsl(var(--brand-violet))] text-[hsl(var(--brand-violet))]"
+            aria-label="love"
+          />{' '}
+          using Next.js, NestJS &amp; MongoDB.
+        </p>
       </div>
     </footer>
+  );
+}
+
+function SocialIcon({
+  href,
+  label,
+  children,
+}: {
+  href: string;
+  label: string;
+  children: React.ReactNode;
+}) {
+  const external = !href.startsWith('mailto:');
+  return (
+    <a
+      href={href}
+      target={external ? '_blank' : undefined}
+      rel={external ? 'noopener noreferrer' : undefined}
+      aria-label={label}
+      className="ek-glass flex h-9 w-9 items-center justify-center rounded-full text-[hsl(var(--muted-foreground))] transition-all duration-300 hover:-translate-y-0.5 hover:text-[hsl(var(--brand-violet))] ek-glow"
+    >
+      {children}
+    </a>
   );
 }

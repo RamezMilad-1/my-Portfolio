@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
+import { Plus, Trash2, X } from 'lucide-react';
 import { useProfile, useUpdateProfile } from '@/lib/api/profile';
 import { Input, Textarea } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,6 +28,12 @@ const schema = z.object({
     x: z.string().optional(),
     website: z.string().optional(),
   }),
+  headlines: z.array(z.string()).default([]),
+  stats: z.object({
+    yearsCoding: z.number().int().min(0).optional(),
+    projectsShipped: z.number().int().min(0).optional(),
+    technologies: z.number().int().min(0).optional(),
+  }),
 });
 type Form = z.infer<typeof schema>;
 
@@ -47,8 +54,13 @@ export default function AdminProfilePage() {
       avatarUrl: '',
       resumeUrl: '',
       socials: { github: '', linkedin: '', x: '', website: '' },
+      headlines: [],
+      stats: {},
     },
   });
+
+  const headlines = form.watch('headlines');
+  const [headlineInput, setHeadlineInput] = useState('');
 
   useEffect(() => {
     if (profile) {
@@ -67,13 +79,25 @@ export default function AdminProfilePage() {
           x: profile.socials?.x ?? '',
           website: profile.socials?.website ?? '',
         },
+        headlines: profile.headlines ?? [],
+        stats: {
+          yearsCoding: profile.stats?.yearsCoding,
+          projectsShipped: profile.stats?.projectsShipped,
+          technologies: profile.stats?.technologies,
+        },
       });
     }
   }, [profile, form]);
 
   const onSubmit = async (values: Form) => {
     try {
-      await update.mutateAsync(values);
+      // strip empty stat fields so they're omitted from the patch
+      const stats = Object.fromEntries(
+        Object.entries(values.stats).filter(
+          ([, v]) => typeof v === 'number' && !Number.isNaN(v),
+        ),
+      );
+      await update.mutateAsync({ ...values, stats });
       toast.success('Profile updated');
     } catch {
       toast.error('Could not save');
@@ -98,6 +122,20 @@ export default function AdminProfilePage() {
     } catch {
       toast.error('Upload failed');
     }
+  };
+
+  const addHeadline = () => {
+    const v = headlineInput.trim();
+    if (!v) return;
+    form.setValue('headlines', [...headlines, v], { shouldDirty: true });
+    setHeadlineInput('');
+  };
+  const removeHeadline = (i: number) => {
+    form.setValue(
+      'headlines',
+      headlines.filter((_, idx) => idx !== i),
+      { shouldDirty: true },
+    );
   };
 
   if (isLoading) {
@@ -137,7 +175,7 @@ export default function AdminProfilePage() {
           <Input id="email" {...form.register('email')} />
         </div>
         <div className="space-y-1.5 md:col-span-2">
-          <Label htmlFor="headline">Headline</Label>
+          <Label htmlFor="headline">Headline (fallback for typewriter)</Label>
           <Input id="headline" {...form.register('headline')} />
         </div>
         <div className="space-y-1.5 md:col-span-2">
@@ -156,9 +194,88 @@ export default function AdminProfilePage() {
           <Label htmlFor="availability">Availability</Label>
           <Input
             id="availability"
-            placeholder="Open to internships and junior roles in Cairo / remote"
+            placeholder="Available for internships"
             {...form.register('availability')}
           />
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <div>
+          <Label>Typewriter phrases</Label>
+          <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
+            These rotate in the hero, typed letter-by-letter. Add several short
+            roles (e.g. &quot;Full-Stack Developer&quot;, &quot;CS Student&quot;,
+            &quot;React enthusiast&quot;). If empty, the headline above is used.
+          </p>
+        </div>
+        <ul className="space-y-2">
+          {headlines.map((h, i) => (
+            <li key={i} className="flex items-center gap-2">
+              <span className="flex-1 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-sm">
+                {h}
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => removeHeadline(i)}
+              >
+                <Trash2 className="h-3.5 w-3.5 text-red-500" />
+              </Button>
+            </li>
+          ))}
+        </ul>
+        <div className="flex gap-2">
+          <Input
+            value={headlineInput}
+            onChange={(e) => setHeadlineInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addHeadline();
+              }
+            }}
+            placeholder="Full-Stack Developer"
+          />
+          <Button type="button" variant="outline" onClick={addHeadline}>
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <div>
+          <Label>Stats (optional overrides)</Label>
+          <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
+            Leave a field blank to let the site compute it automatically.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="yearsCoding">Years coding</Label>
+            <Input
+              id="yearsCoding"
+              type="number"
+              {...form.register('stats.yearsCoding', { valueAsNumber: true })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="projectsShipped">Projects shipped</Label>
+            <Input
+              id="projectsShipped"
+              type="number"
+              {...form.register('stats.projectsShipped', { valueAsNumber: true })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="technologies">Technologies</Label>
+            <Input
+              id="technologies"
+              type="number"
+              {...form.register('stats.technologies', { valueAsNumber: true })}
+            />
+          </div>
         </div>
       </div>
 

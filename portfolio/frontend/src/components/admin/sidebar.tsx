@@ -10,16 +10,17 @@ import {
   User,
   LogOut,
   Home,
+  Award,
 } from 'lucide-react';
 import { useLogout, useMe } from '@/lib/api/auth';
 import { Button } from '../ui/button';
-import { ThemeToggle } from '../theme-toggle';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 const items = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/admin/projects', label: 'Projects', icon: FolderKanban },
+  { href: '/admin/certificates', label: 'Certificates', icon: Award },
   { href: '/admin/media', label: 'Media', icon: ImageIcon },
   { href: '/admin/team', label: 'Team', icon: Users },
   { href: '/admin/profile', label: 'Profile', icon: User },
@@ -73,7 +74,6 @@ export function AdminSidebar() {
               <Home className="h-3.5 w-3.5" /> Site
             </Link>
           </Button>
-          <ThemeToggle />
           <Button variant="outline" size="sm" onClick={handleLogout} aria-label="Sign out">
             <LogOut className="h-3.5 w-3.5" />
           </Button>

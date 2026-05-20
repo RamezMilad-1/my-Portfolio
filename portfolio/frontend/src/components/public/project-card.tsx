@@ -10,6 +10,7 @@ import {
 } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
 import { Badge } from '../ui/badge';
+import { useScrollReveal } from '../motion/use-scroll-reveal';
 import { uploadsUrl } from '@/lib/utils';
 import type { Project } from '@/lib/types';
 
@@ -24,6 +25,10 @@ interface Props {
 export function ProjectCard({ project, index = 0, variant = 'default' }: Props) {
   const ref = useRef<HTMLAnchorElement>(null);
   const prefersReduced = useReducedMotion();
+  const { ref: revealRef, initial, animate } = useScrollReveal<HTMLDivElement>({
+    y: 20,
+    margin: '-50px',
+  });
 
   // tilt — pointer-driven 3D rotate
   const rx = useMotionValue(0);
@@ -57,9 +62,9 @@ export function ProjectCard({ project, index = 0, variant = 'default' }: Props) 
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-50px' }}
+      ref={revealRef}
+      initial={initial}
+      animate={animate}
       transition={{ duration: 0.7, delay: index * 0.06, ease: easing }}
       style={{ perspective: 1000 }}
       className="h-full"

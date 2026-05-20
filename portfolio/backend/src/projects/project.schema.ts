@@ -65,6 +65,21 @@ export class Project {
 
   @Prop({ default: 0 })
   position: number;
+
+  @Prop({ type: [String], default: [] })
+  gallery: string[];
+
+  @Prop({ type: [String], default: [] })
+  highlights: string[];
+
+  @Prop({ default: 'Live Demo' })
+  liveLabel: string;
+
+  @Prop({ default: 'Source' })
+  sourceLabel: string;
+
+  @Prop({ default: '' })
+  category: string;
 }
 
 export const ProjectSchema = SchemaFactory.createForClass(Project);

@@ -31,8 +31,13 @@ const schema = z.object({
   outcome: z.string().optional(),
   tech: z.array(z.string()).default([]),
   features: z.array(z.string()).default([]),
+  highlights: z.array(z.string()).default([]),
+  gallery: z.array(z.string()).default([]),
   githubUrl: z.string().optional(),
   liveUrl: z.string().optional(),
+  liveLabel: z.string().optional(),
+  sourceLabel: z.string().optional(),
+  category: z.string().optional(),
   role: z.string().optional(),
   isFeatured: z.boolean().default(false),
   status: z.enum(['draft', 'published']).default('published'),
@@ -76,8 +81,13 @@ export function ProjectForm({ project }: Props) {
       outcome: project?.outcome ?? '',
       tech: project?.tech ?? [],
       features: project?.features ?? [],
+      highlights: project?.highlights ?? [],
+      gallery: project?.gallery ?? [],
       githubUrl: project?.githubUrl ?? '',
       liveUrl: project?.liveUrl ?? '',
+      liveLabel: project?.liveLabel ?? '',
+      sourceLabel: project?.sourceLabel ?? '',
+      category: project?.category ?? '',
       role: project?.role ?? '',
       isFeatured: project?.isFeatured ?? false,
       status: project?.status ?? 'published',
@@ -92,11 +102,15 @@ export function ProjectForm({ project }: Props) {
 
   const tech = watch('tech');
   const features = watch('features');
+  const highlights = watch('highlights');
+  const gallery = watch('gallery');
   const teamLinks = watch('team');
   const selectedMedia = watch('media');
 
   const [techInput, setTechInput] = useState('');
   const [featureInput, setFeatureInput] = useState('');
+  const [highlightInput, setHighlightInput] = useState('');
+  const [galleryInput, setGalleryInput] = useState('');
   const [pendingMediaDelete, setPendingMediaDelete] = useState<Media | null>(null);
 
   const onSubmit = async (values: Form) => {
@@ -139,6 +153,44 @@ export function ProjectForm({ project }: Props) {
   };
   const removeFeature = (i: number) => {
     setValue('features', features.filter((_, idx) => idx !== i), { shouldDirty: true });
+  };
+
+  const addHighlight = () => {
+    const v = highlightInput.trim();
+    if (!v) return;
+    setValue('highlights', [...highlights, v], { shouldDirty: true });
+    setHighlightInput('');
+  };
+  const removeHighlight = (i: number) => {
+    setValue(
+      'highlights',
+      highlights.filter((_, idx) => idx !== i),
+      { shouldDirty: true },
+    );
+  };
+
+  const addGalleryUrl = () => {
+    const v = galleryInput.trim();
+    if (!v) return;
+    if (gallery.includes(v)) return;
+    setValue('gallery', [...gallery, v], { shouldDirty: true });
+    setGalleryInput('');
+  };
+  const removeGalleryUrl = (i: number) => {
+    setValue(
+      'gallery',
+      gallery.filter((_, idx) => idx !== i),
+      { shouldDirty: true },
+    );
+  };
+  const handleGalleryUpload = async (file: File) => {
+    try {
+      const created = await upload.mutateAsync({ file, projectId: project?._id });
+      setValue('gallery', [...gallery, created.url], { shouldDirty: true });
+      toast.success('Image added to gallery');
+    } catch {
+      toast.error('Upload failed');
+    }
   };
 
   const addTeammate = (memberId: string) => {
@@ -195,6 +247,30 @@ export function ProjectForm({ project }: Props) {
         <div className="space-y-1.5">
           <Label htmlFor="liveUrl">Live URL</Label>
           <Input id="liveUrl" {...register('liveUrl')} placeholder="https://..." />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="sourceLabel">Source button label</Label>
+          <Input
+            id="sourceLabel"
+            {...register('sourceLabel')}
+            placeholder="Source (default)"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="liveLabel">Live button label</Label>
+          <Input
+            id="liveLabel"
+            {...register('liveLabel')}
+            placeholder="Live Demo (default)"
+          />
+        </div>
+        <div className="space-y-1.5 md:col-span-2">
+          <Label htmlFor="category">Category (optional)</Label>
+          <Input
+            id="category"
+            {...register('category')}
+            placeholder="web · mobile · data · …"
+          />
         </div>
       </div>
 
@@ -303,6 +379,101 @@ export function ProjectForm({ project }: Props) {
             placeholder="Multi-tier ticket booking…"
           />
           <Button type="button" variant="outline" onClick={addFeature}>
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Key highlights (short, punchy bullets — used on cards & detail page)</Label>
+        <ul className="space-y-2">
+          {highlights.map((h, i) => (
+            <li key={i} className="flex items-center gap-2">
+              <span className="flex-1 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-sm">
+                {h}
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => removeHighlight(i)}
+              >
+                <Trash2 className="h-3.5 w-3.5 text-red-500" />
+              </Button>
+            </li>
+          ))}
+        </ul>
+        <div className="flex gap-2">
+          <Input
+            value={highlightInput}
+            onChange={(e) => setHighlightInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addHighlight();
+              }
+            }}
+            placeholder="Cuts booking time from 3 minutes to 5 seconds"
+          />
+          <Button type="button" variant="outline" onClick={addHighlight}>
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label>Gallery (extra screenshots for the project detail carousel)</Label>
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-[hsl(var(--border))] px-3 py-1.5 text-xs hover:bg-[hsl(var(--muted))]">
+            <Plus className="h-3.5 w-3.5" /> Upload image
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={async (e) => {
+                const f = e.target.files?.[0];
+                if (f) await handleGalleryUpload(f);
+                e.target.value = '';
+              }}
+            />
+          </label>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+          {gallery.map((url, i) => (
+            <div
+              key={`${url}-${i}`}
+              className="group relative overflow-hidden rounded-md border border-[hsl(var(--border))]"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={uploadsUrl(url)}
+                alt=""
+                className="aspect-video w-full object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => removeGalleryUrl(i)}
+                className="absolute right-1 top-1 hidden rounded-full bg-black/70 p-1 text-white group-hover:block"
+                aria-label="Remove from gallery"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <Input
+            value={galleryInput}
+            onChange={(e) => setGalleryInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addGalleryUrl();
+              }
+            }}
+            placeholder="/uploads/images/screenshot.png  or  https://…"
+          />
+          <Button type="button" variant="outline" onClick={addGalleryUrl}>
             <Plus className="h-4 w-4" />
           </Button>
         </div>

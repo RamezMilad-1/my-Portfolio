@@ -1,3 +1,9 @@
+export interface ProfileStats {
+  yearsCoding?: number;
+  projectsShipped?: number;
+  technologies?: number;
+}
+
 export interface Profile {
   _id?: string;
   displayName: string;
@@ -9,6 +15,8 @@ export interface Profile {
   avatarUrl: string;
   resumeUrl: string;
   socials: Record<string, string>;
+  headlines?: string[];
+  stats?: ProfileStats;
 }
 
 export interface TeamMember {
@@ -55,6 +63,11 @@ export interface Project {
   isFeatured: boolean;
   status: 'draft' | 'published';
   position: number;
+  gallery?: string[];
+  highlights?: string[];
+  liveLabel?: string;
+  sourceLabel?: string;
+  category?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -78,5 +91,34 @@ export interface ProjectInput {
   isFeatured?: boolean;
   status?: 'draft' | 'published';
   position?: number;
+  gallery?: string[];
+  highlights?: string[];
+  liveLabel?: string;
+  sourceLabel?: string;
+  category?: string;
 }
 
+export interface Certificate {
+  _id: string;
+  title: string;
+  issuer: string;
+  issuedAt: string;
+  credentialUrl: string;
+  imageUrl: string;
+  description: string;
+  position: number;
+  isPublished: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CertificateInput {
+  title?: string;
+  issuer?: string;
+  issuedAt?: string;
+  credentialUrl?: string;
+  imageUrl?: string;
+  description?: string;
+  position?: number;
+  isPublished?: boolean;
+}
