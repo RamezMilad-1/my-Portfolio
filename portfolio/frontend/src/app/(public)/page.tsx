@@ -192,7 +192,7 @@ export default function HomePage() {
             initial={metricsReveal.initial}
             animate={metricsReveal.animate}
             transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-3"
+            className="mt-10 grid grid-cols-2 gap-2.5 md:grid-cols-3"
           >
             <MetricCard
               icon={<GraduationCap className="h-5 w-5" />}
@@ -255,7 +255,7 @@ export default function HomePage() {
                   />
                 ) : (
                   <>
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                       {visibleProjects.map((p, i) => (
                         <ProjectCardV2 key={p._id} project={p} index={i} />
                       ))}
@@ -279,7 +279,7 @@ export default function HomePage() {
                 certificates.length === 0 ? (
                   <EmptyState message="No certificates yet — check back soon." />
                 ) : (
-                  <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                     {certificates.map((c, i) => (
                       <CertificateCard
                         key={c._id}
@@ -316,7 +316,7 @@ export default function HomePage() {
             subtitle="Open to internships, well-scoped student projects, and ambitious side projects."
           />
 
-          <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="mt-10 grid grid-cols-1 gap-3 md:grid-cols-2">
             {profile?.email ? (
               <ContactCard
                 icon={<Mail className="h-5 w-5" />}
@@ -425,26 +425,31 @@ function MetricCard({
   const isNumeric = typeof value === 'number';
   return (
     <motion.div
-      whileHover={{ y: -2 }}
+      whileHover={{ y: -3 }}
       transition={{ type: 'spring', stiffness: 320, damping: 22 }}
-      className="ek-glass relative overflow-hidden rounded-2xl p-4 ek-glow"
+      className="group ek-glass ek-card-sheen ek-ring-conic ek-glow relative overflow-hidden rounded-xl p-3.5"
     >
-      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[hsl(var(--brand-violet-soft)/0.14)] text-[hsl(var(--brand-indigo))]">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-[hsl(var(--brand-violet)/0.10)] opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
+      />
+      <div className="ek-icon-tile relative h-8 w-8 [&_svg]:h-4 [&_svg]:w-4">
         {icon}
       </div>
       {isNumeric ? (
-        <p className="font-display mt-3 text-2xl font-bold text-[hsl(var(--foreground))] md:text-3xl">
+        <p className="font-display relative mt-2.5 text-xl font-bold tracking-tight text-[hsl(220_25%_96%)] md:text-2xl">
           {value}
           {suffix}
         </p>
       ) : (
-        <p className="mt-3 text-sm font-medium leading-snug text-[hsl(var(--foreground))]">
+        <p className="relative mt-2.5 text-[13px] font-medium leading-snug text-[hsl(220_25%_94%)]">
           {value}
         </p>
       )}
-      <p className="mt-1.5 text-[10px] font-semibold uppercase tracking-widest text-[hsl(var(--muted-foreground))]">
+      <p className="relative mt-1 text-[9.5px] font-semibold uppercase tracking-[0.18em] text-[hsl(220_15%_68%)]">
         {label}
       </p>
+      <span aria-hidden className="ek-underline relative mt-2" />
     </motion.div>
   );
 }
@@ -467,19 +472,24 @@ function ContactCard({
   onAction?: () => void;
 }) {
   return (
-    <div className="group ek-glass relative flex items-center gap-3.5 rounded-2xl p-4 transition-all duration-300 hover:-translate-y-0.5 ek-glow">
-      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(var(--brand-indigo)/0.16)] to-[hsl(var(--brand-violet-soft)/0.16)] text-[hsl(var(--brand-indigo))]">
+    <div className="group ek-glass ek-card-sheen ek-ring-conic ek-glow relative flex items-center gap-3 overflow-hidden rounded-xl p-3 transition-transform duration-300 hover:-translate-y-1">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-[hsl(var(--brand-violet)/0.10)] opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
+      />
+      <div className="ek-icon-tile relative h-9 w-9 flex-shrink-0 [&_svg]:h-4 [&_svg]:w-4">
         {icon}
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(var(--muted-foreground))]">
+      <div className="relative min-w-0 flex-1">
+        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[hsl(220_15%_68%)]">
           {label}
         </p>
+        <span aria-hidden className="ek-underline mt-1" />
         <a
           href={href}
           target={external ? '_blank' : undefined}
           rel={external ? 'noopener noreferrer' : undefined}
-          className="mt-0.5 block truncate text-sm font-medium text-[hsl(var(--foreground))] transition-colors hover:text-[hsl(var(--brand-indigo))]"
+          className="mt-1 block truncate text-sm font-medium text-[hsl(220_25%_94%)] transition-colors duration-300 hover:text-white"
         >
           {value}
         </a>
@@ -488,7 +498,7 @@ function ContactCard({
         <button
           type="button"
           onClick={onAction}
-          className="rounded-full border border-[hsl(var(--brand-violet-soft)/0.30)] px-3 py-1 text-xs font-semibold text-[hsl(var(--brand-indigo))] transition-colors hover:bg-[hsl(var(--brand-violet-soft)/0.10)]"
+          className="relative rounded-full border border-white/15 bg-white/[0.04] px-3 py-1 text-xs font-semibold text-[hsl(220_25%_92%)] backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/10 hover:text-white active:scale-[0.97]"
         >
           {action}
         </button>

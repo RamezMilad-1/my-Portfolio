@@ -75,21 +75,21 @@ export function ProjectCard({ project, index = 0, variant = 'default' }: Props) 
         onMouseMove={handleMove}
         onMouseLeave={reset}
         style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
-        className="group relative block h-full overflow-hidden rounded-3xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] transition-shadow duration-500 hover:shadow-[0_20px_60px_-15px_hsl(var(--accent)/0.35)]"
+        className="group ek-glass ek-card-sheen ek-ring-conic ek-glow relative block h-full overflow-hidden rounded-2xl transition-[box-shadow,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1"
       >
-        {/* hover gradient halo */}
+        {/* soft white halo on hover (replaces magenta glow) */}
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 -z-0 opacity-0 transition-opacity duration-700 group-hover:opacity-100"
           style={{
             background:
-              'radial-gradient(60% 50% at 50% 0%, hsl(var(--accent) / 0.18) 0%, transparent 70%)',
+              'radial-gradient(60% 50% at 50% 0%, hsl(0 0% 100% / 0.06) 0%, transparent 70%)',
           }}
         />
 
         <div
-          className={`relative overflow-hidden bg-[hsl(var(--muted))] ${
-            isFeature ? 'aspect-[16/10] md:aspect-[16/9]' : 'aspect-[16/10]'
+          className={`relative overflow-hidden bg-[linear-gradient(135deg,hsl(244_30%_18%/0.85)_0%,hsl(225_30%_12%/0.85)_60%,hsl(275_35%_20%/0.85)_100%)] ${
+            isFeature ? 'aspect-[16/10] md:aspect-[16/9]' : 'aspect-[16/9]'
           }`}
         >
           {cover ? (
@@ -98,22 +98,20 @@ export function ProjectCard({ project, index = 0, variant = 'default' }: Props) 
               <img
                 src={cover}
                 alt={project.name}
-                className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
+                className="h-full w-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.07]"
               />
               <div
                 aria-hidden
-                className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/0 to-transparent"
+                className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[hsl(220_40%_4%/0.55)] via-[hsl(220_40%_4%/0.05)] to-transparent"
               />
             </>
           ) : (
-            <div
-              className="flex h-full w-full items-center justify-center"
-              style={{
-                background:
-                  'linear-gradient(135deg, hsl(var(--accent) / 0.18), hsl(var(--accent-secondary) / 0.16) 50%, hsl(var(--accent-tertiary) / 0.14))',
-              }}
-            >
-              <span className="font-display text-5xl font-semibold tracking-tight text-[hsl(var(--foreground))]/30">
+            <div className="relative flex h-full w-full items-center justify-center">
+              <div
+                aria-hidden
+                className="absolute inset-0 bg-[radial-gradient(60%_70%_at_50%_40%,hsl(0_0%_100%/0.10),transparent_70%)]"
+              />
+              <span className="font-display relative text-5xl font-semibold tracking-tight text-[hsl(220_25%_88%)]/85">
                 {project.name
                   .split(' ')
                   .slice(0, 2)
@@ -125,38 +123,38 @@ export function ProjectCard({ project, index = 0, variant = 'default' }: Props) 
           )}
 
           {/* corner badge */}
-          <div className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--background))]/85 text-[hsl(var(--foreground))] opacity-0 backdrop-blur transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 translate-x-1 -translate-y-1">
+          <div className="absolute right-4 top-4 flex h-10 w-10 -translate-y-1 translate-x-1 items-center justify-center rounded-full border border-white/15 bg-[hsl(220_30%_8%/0.55)] text-white opacity-0 shadow-[0_6px_18px_-8px_hsl(220_40%_4%/0.6)] backdrop-blur-md transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-0 group-hover:translate-y-0 group-hover:border-white/30 group-hover:bg-[hsl(220_30%_14%/0.75)] group-hover:opacity-100">
             <ArrowUpRight className="h-4 w-4" />
           </div>
 
           {project.role ? (
-            <div className="absolute bottom-4 left-4 rounded-full bg-[hsl(var(--background))]/85 px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-[hsl(var(--foreground))] backdrop-blur">
+            <div className="absolute bottom-4 left-4 rounded-full border border-white/15 bg-[hsl(220_30%_8%/0.55)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[hsl(220_25%_92%)] backdrop-blur-md">
               {project.role}
             </div>
           ) : null}
         </div>
 
-        <div className="relative z-10 p-6">
+        <div className="relative z-10 p-4">
           <h3
-            className={`font-display tracking-tight ${
-              isFeature ? 'text-2xl font-semibold md:text-3xl' : 'text-lg font-semibold'
+            className={`font-display tracking-tight text-[hsl(220_25%_94%)] transition-colors duration-300 group-hover:text-white ${
+              isFeature ? 'text-xl font-semibold md:text-2xl' : 'text-[15px] font-semibold'
             }`}
           >
             {project.name}
           </h3>
           {project.tagline ? (
-            <p className="mt-2 line-clamp-2 text-sm text-[hsl(var(--muted-foreground))]">
+            <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-[hsl(220_15%_72%)]">
               {project.tagline}
             </p>
           ) : null}
-          <div className="mt-5 flex flex-wrap gap-1.5">
+          <div className="mt-3 flex flex-wrap gap-1">
             {project.tech.slice(0, isFeature ? 7 : 5).map((t) => (
-              <Badge key={t} variant="outline" className="rounded-full text-[10px]">
+              <Badge key={t} variant="outline" className="ek-tag border-0 px-2.5">
                 {t}
               </Badge>
             ))}
             {project.tech.length > (isFeature ? 7 : 5) ? (
-              <Badge variant="outline" className="rounded-full text-[10px]">
+              <Badge variant="outline" className="ek-tag-muted border-0 px-2.5">
                 +{project.tech.length - (isFeature ? 7 : 5)}
               </Badge>
             ) : null}

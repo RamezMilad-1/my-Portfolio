@@ -35,7 +35,7 @@ export const GradientButton = forwardRef<HTMLButtonElement, Props>(
       size === 'lg' ? 'h-12 px-7 text-sm' : 'h-10 px-5 text-sm';
 
     const base =
-      'group relative inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--brand-violet))]';
+      'group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full font-semibold tracking-[0.01em] transition-[transform,box-shadow,background-color,background-position] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--brand-violet))] focus-visible:ring-offset-[hsl(var(--background))] [&_svg]:transition-transform [&_svg]:duration-300 [&_svg]:ease-[cubic-bezier(0.22,1,0.36,1)] hover:[&_svg]:translate-x-0.5 [&>span]:relative [&>span]:z-[1]';
 
     const variantClasses =
       variant === 'primary'

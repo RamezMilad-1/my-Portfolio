@@ -1,12 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { motion, useInView, useReducedMotion } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 import {
   ArrowRight,
-  Braces,
-  Code2,
-  Cpu,
   FileDown,
   Github,
   Linkedin,
@@ -17,8 +14,27 @@ import {
 import { Typewriter } from './typewriter';
 import { StatusBadge } from './status-badge';
 import { GradientButton } from './gradient-button';
+import { IconCloud } from '@/components/magicui/icon-cloud';
 import type { Profile } from '@/lib/types';
 import { uploadsUrl } from '@/lib/utils';
+
+const techCloudSlugs = [
+  'typescript',
+  'javascript',
+  'react',
+  'nextdotjs',
+  'nodedotjs',
+  'nestjs',
+  'postgresql',
+  'mongodb',
+  'tailwindcss',
+  'docker',
+  'git',
+  'github',
+];
+const techCloudImages = techCloudSlugs.map(
+  (slug) => `https://cdn.simpleicons.org/${slug}/${slug}`,
+);
 
 const easing = [0.22, 1, 0.36, 1] as const;
 
@@ -52,20 +68,10 @@ interface Props {
 }
 
 export function Hero({ profile }: Props) {
-  const name = profile?.displayName ?? 'Ramez Milad';
-  const initials = name
-    .split(' ')
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
-
   const availability = profile?.availability?.trim() || 'Open to opportunities';
   const { role, typewriterPhrases, subtitle } = buildHeroCopy(profile);
   const socials = profile?.socials ?? {};
   const techPills = ['TypeScript', 'React', 'Next.js', 'NestJS'];
-
-  const prefersReducedMotion = useReducedMotion();
 
   const sectionRef = useRef<HTMLElement | null>(null);
   const inView = useInView(sectionRef, { amount: 0.4 });
@@ -103,7 +109,7 @@ export function Hero({ profile }: Props) {
             transition={{ duration: 0.8, delay: 0.1, ease: easing }}
             className="font-display mt-5 text-[clamp(2rem,5.5vw,3.75rem)] font-bold leading-[1.05] tracking-tight"
           >
-            <span className="ek-gradient-text block">{role}</span>
+            <span className="ek-hero-title block">{role}</span>
           </motion.h1>
 
           <motion.div
@@ -136,10 +142,7 @@ export function Hero({ profile }: Props) {
             className="mt-6 flex flex-wrap gap-2"
           >
             {techPills.map((t) => (
-              <span
-                key={t}
-                className="rounded-md border border-[hsl(var(--brand-violet-soft)/0.30)] bg-[hsl(var(--brand-violet-soft)/0.06)] px-3 py-1 text-xs font-semibold text-[hsl(var(--brand-indigo))]"
-              >
+              <span key={t} className="ek-pill">
                 {t}
               </span>
             ))}
@@ -211,96 +214,12 @@ export function Hero({ profile }: Props) {
           </motion.div>
         </motion.div>
 
-        {/* Right: avatar + orbital CS-themed motion */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, ease: easing, delay: 0.2 }}
-          className="relative flex justify-center md:justify-end"
-        >
-          <div className="relative h-60 w-60 sm:h-72 sm:w-72 md:h-80 md:w-80">
-            {/* soft indigo→violet halo behind the photo */}
-            <div className="absolute -inset-4 rounded-full bg-gradient-to-tr from-[hsl(var(--brand-indigo)/0.28)] to-[hsl(var(--brand-violet-soft)/0.28)] opacity-60 blur-3xl animate-pulse-glow" />
-
-            {/* Photo (bobs gently) */}
-            <motion.div
-              animate={prefersReducedMotion ? undefined : { y: [0, -8, 0] }}
-              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-              className="relative h-full w-full"
-            >
-              <div className="relative h-full w-full overflow-hidden rounded-full border-2 border-[hsl(var(--brand-violet-soft)/0.40)] bg-gradient-to-br from-[hsl(var(--brand-indigo)/0.12)] to-[hsl(var(--brand-violet-soft)/0.12)] shadow-[0_30px_80px_-22px_hsl(var(--brand-violet-soft)/0.32)]">
-                {profile?.avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={uploadsUrl(profile.avatarUrl)}
-                    alt={name}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center">
-                    <span className="font-display text-[6rem] font-bold tracking-tight">
-                      <span className="ek-gradient-text-static">{initials}</span>
-                    </span>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-
-            {/* Subtle static decorative rings — always visible (cheap) */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 rounded-full border border-[hsl(var(--brand-violet-soft)/0.16)]"
-            />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -inset-3 rounded-full border border-[hsl(var(--brand-indigo)/0.12)]"
-            />
-
-            {/* Orbital CS icons — disabled under prefers-reduced-motion */}
-            {!prefersReducedMotion ? (
-              <>
-                <OrbitIcon duration={18} radius="-inset-1" reverse={false}>
-                  <Code2 className="h-3.5 w-3.5 text-[hsl(var(--brand-indigo))]" />
-                </OrbitIcon>
-                <OrbitIcon duration={26} radius="-inset-6" reverse={true}>
-                  <Braces className="h-3.5 w-3.5 text-[hsl(var(--brand-violet-soft))]" />
-                </OrbitIcon>
-                <OrbitIcon duration={34} radius="-inset-10" reverse={false}>
-                  <Cpu className="h-3.5 w-3.5 text-[hsl(var(--brand-indigo))]" />
-                </OrbitIcon>
-              </>
-            ) : null}
-          </div>
-        </motion.div>
-      </div>
-    </section>
-  );
-}
-
-function OrbitIcon({
-  duration,
-  radius,
-  reverse,
-  children,
-}: {
-  duration: number;
-  radius: string;
-  reverse: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <motion.div
-      aria-hidden
-      animate={{ rotate: reverse ? -360 : 360 }}
-      transition={{ duration, repeat: Infinity, ease: 'linear' }}
-      className={`pointer-events-none absolute ${radius} rounded-full`}
-    >
-      <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2">
-        <div className="flex h-7 w-7 items-center justify-center rounded-full border border-[hsl(var(--brand-violet-soft)/0.35)] bg-[hsl(var(--card))] shadow-[0_4px_14px_-4px_hsl(0_0%_0%/0.5)]">
-          {children}
+        {/* Right: tech icon cloud */}
+        <div className="relative flex size-full items-center justify-center overflow-visible md:justify-end md:pr-2 lg:pr-6">
+          <IconCloud images={techCloudImages} />
         </div>
       </div>
-    </motion.div>
+    </section>
   );
 }
 

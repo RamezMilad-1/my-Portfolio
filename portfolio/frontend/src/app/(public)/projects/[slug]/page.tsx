@@ -1,10 +1,10 @@
 'use client';
 
-import { use, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowLeft,
   Check,
@@ -13,6 +13,7 @@ import {
   ExternalLink,
   Github,
   Sparkles,
+  X,
 } from 'lucide-react';
 import { useProject } from '@/lib/api/projects';
 import { TeamGrid } from '@/components/public/team-grid';
@@ -30,7 +31,9 @@ export default function ProjectDetailPage({
   const { data: project, isLoading, error } = useProject(slug);
 
   const [galleryIdx, setGalleryIdx] = useState(0);
+  const [direction, setDirection] = useState(0);
   const [coverErrored, setCoverErrored] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   // Show skeleton while data is loading OR while we have neither data nor a
   // concrete error (e.g. cache-warming, hydration window).
@@ -79,6 +82,20 @@ export default function ProjectDetailPage({
   const showCover = !showGallery && !!cover && !coverErrored;
   const safeIdx = Math.min(galleryIdx, Math.max(0, galleryImages.length - 1));
 
+  const goTo = (next: number) => {
+    const len = galleryImages.length;
+    if (len === 0) return;
+    const normalized = ((next % len) + len) % len;
+    setDirection(normalized === safeIdx ? 0 : normalized > safeIdx ? 1 : -1);
+    setGalleryIdx(normalized);
+  };
+
+  const slideVariants = {
+    enter: (dir: number) => ({ x: dir > 0 ? 28 : dir < 0 ? -28 : 0, opacity: 0 }),
+    center: { x: 0, opacity: 1 },
+    exit: (dir: number) => ({ x: dir > 0 ? -28 : dir < 0 ? 28 : 0, opacity: 0 }),
+  };
+
   return (
     <article className="pt-20">
       {/* ──────── Hero ──────── */}
@@ -92,22 +109,37 @@ export default function ProjectDetailPage({
           </Link>
 
           <div className="mt-6">
-            <div className="flex flex-wrap items-center gap-2">
-              {project.category ? (
-                <span className="rounded-full border border-[hsl(var(--brand-violet-soft)/0.25)] bg-[hsl(var(--brand-violet-soft)/0.06)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-[hsl(var(--brand-indigo))]">
-                  {project.category}
-                </span>
-              ) : null}
+            {/* Kicker — short gradient line + label, "magazine masthead" feel */}
+            <div className="flex items-center gap-3">
+              <span
+                aria-hidden
+                className="h-[2px] w-10 rounded-full bg-gradient-to-r from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] shadow-[0_0_10px_-2px_hsl(var(--brand-violet)/0.55)]"
+              />
+              <span className="text-[10px] font-bold uppercase tracking-[0.28em] text-[hsl(var(--brand-violet-soft))]">
+                {project.category ? `Project · ${project.category}` : 'Project'}
+              </span>
+            </div>
+
+            <h1 className="font-display mt-3 text-[clamp(2rem,5vw,3.5rem)] font-bold leading-[1.05] tracking-tight">
+              <span className="ek-gradient-text">{project.name}</span>
+            </h1>
+
+            {/* Iconic underline — gradient bar that fades, with a glowing endcap dot */}
+            <div className="relative mt-4 flex items-center gap-2">
+              <span
+                aria-hidden
+                className="h-[3px] w-40 rounded-full bg-gradient-to-r from-[hsl(var(--brand-indigo))] via-[hsl(var(--brand-violet))] to-transparent shadow-[0_0_14px_-2px_hsl(var(--brand-violet)/0.55)]"
+              />
+              <span
+                aria-hidden
+                className="-ml-2 h-2 w-2 rounded-full bg-[hsl(var(--brand-violet))] shadow-[0_0_12px_2px_hsl(var(--brand-violet)/0.55)]"
+              />
               {project.role ? (
-                <span className="rounded-full border border-[hsl(var(--border))] px-2.5 py-1 text-[11px] font-medium text-[hsl(var(--muted-foreground))]">
+                <span className="ml-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--muted-foreground))]">
                   {project.role}
                 </span>
               ) : null}
             </div>
-
-            <h1 className="font-display mt-4 text-[clamp(2rem,5vw,3.5rem)] font-bold leading-[1.05] tracking-tight">
-              <span className="ek-gradient-text">{project.name}</span>
-            </h1>
 
             {project.tagline ? (
               <p className="mt-4 max-w-3xl text-base leading-relaxed text-[hsl(var(--muted-foreground))] md:text-lg">
@@ -120,7 +152,7 @@ export default function ProjectDetailPage({
                 {project.tech.map((t) => (
                   <span
                     key={t}
-                    className="rounded-full border border-[hsl(var(--brand-violet-soft)/0.22)] bg-[hsl(var(--brand-violet-soft)/0.06)] px-2.5 py-0.5 text-[11px] font-medium text-[hsl(var(--brand-indigo))]"
+                    className="rounded-full border border-[hsl(var(--brand-violet-soft)/0.28)] bg-[hsl(var(--brand-violet-soft)/0.07)] px-2.5 py-0.5 text-[11px] font-medium text-[hsl(var(--brand-violet-soft))] shadow-[inset_0_1px_0_hsl(0_0%_100%/0.06)]"
                   >
                     {t}
                   </span>
@@ -161,90 +193,143 @@ export default function ProjectDetailPage({
       {/* ──────── Cover / Gallery ──────── */}
       {showGallery || showCover ? (
         <section className="px-4 sm:px-6">
-          <div className="mx-auto max-w-5xl">
-            <div className="ek-glass relative overflow-hidden rounded-2xl">
-              <div className="relative aspect-[16/10] w-full bg-black">
-                {showGallery ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    key={galleryImages[safeIdx]}
-                    src={galleryImages[safeIdx]}
-                    alt={`${project.name} screenshot ${safeIdx + 1}`}
-                    className="h-full w-full object-cover"
-                  />
-                ) : showCover ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={cover!}
-                    alt={project.name}
-                    onError={() => setCoverErrored(true)}
-                    className="h-full w-full object-cover"
-                  />
-                ) : null}
+          <div className="mx-auto max-w-3xl">
+            <div className="relative">
+              {/* Soft ambient halo behind the frame */}
+              <div
+                aria-hidden
+                className="pointer-events-none absolute -inset-10 rounded-[2.5rem] bg-[radial-gradient(55%_50%_at_50%_45%,hsl(var(--brand-violet-soft)/0.22),transparent_72%)] blur-3xl"
+              />
 
+              {/* Whitish frosted-glass shell — image flush to the top edge */}
+              <div
+                className="relative overflow-hidden rounded-[1.75rem] border border-white/25 backdrop-blur-2xl"
+                style={{
+                  background:
+                    'linear-gradient(180deg, hsl(0 0% 100% / 0.16) 0%, hsl(0 0% 100% / 0.08) 45%, hsl(0 0% 100% / 0.05) 100%)',
+                  boxShadow:
+                    'inset 0 1px 0 hsl(0 0% 100% / 0.40), inset 0 -1px 0 hsl(0 0% 100% / 0.10), 0 24px 60px -24px hsl(220 40% 2% / 0.55), 0 6px 18px -10px hsl(220 40% 2% / 0.45)',
+                }}
+              >
+                {/* Image stage — flush to top, sides; no inner padding above the image */}
+                <div
+                  className="relative aspect-[16/10] w-full overflow-hidden"
+                  style={{
+                    background:
+                      'radial-gradient(120% 80% at 50% 0%, hsl(0 0% 100% / 0.18), transparent 60%), linear-gradient(180deg, hsl(0 0% 100% / 0.06), hsl(0 0% 100% / 0.01))',
+                  }}
+                >
+                  {showGallery ? (
+                    <AnimatePresence initial={false} custom={direction} mode="sync">
+                      <motion.img
+                        key={galleryImages[safeIdx]}
+                        src={galleryImages[safeIdx]}
+                        alt={`${project.name} screenshot ${safeIdx + 1}`}
+                        onClick={() => setLightboxOpen(true)}
+                        custom={direction}
+                        variants={slideVariants}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        transition={{
+                          x: { type: 'spring', stiffness: 240, damping: 32 },
+                          opacity: { duration: 0.32, ease: [0.22, 1, 0.36, 1] },
+                        }}
+                        className="absolute inset-0 h-full w-full cursor-zoom-in object-contain drop-shadow-[0_14px_24px_hsl(220_40%_2%/0.35)]"
+                      />
+                    </AnimatePresence>
+                  ) : showCover ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={cover!}
+                      alt={project.name}
+                      onClick={() => setLightboxOpen(true)}
+                      onError={() => setCoverErrored(true)}
+                      className="absolute inset-0 h-full w-full cursor-zoom-in object-contain drop-shadow-[0_14px_24px_hsl(220_40%_2%/0.35)]"
+                    />
+                  ) : null}
+
+                  {/* Subtle top-edge highlight, hairline-thin */}
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                  />
+
+                  {showGallery && galleryImages.length > 1 ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => goTo(safeIdx - 1)}
+                        aria-label="Previous"
+                        className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/50 bg-white/70 text-[hsl(220_30%_18%)] shadow-[0_8px_22px_-8px_hsl(220_40%_2%/0.35)] backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white hover:text-[hsl(var(--brand-indigo))]"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => goTo(safeIdx + 1)}
+                        aria-label="Next"
+                        className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/50 bg-white/70 text-[hsl(220_30%_18%)] shadow-[0_8px_22px_-8px_hsl(220_40%_2%/0.35)] backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white hover:text-[hsl(var(--brand-indigo))]"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                      <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/40 bg-white/60 px-2.5 py-1.5 shadow-[0_6px_18px_-8px_hsl(220_40%_2%/0.35)] backdrop-blur-md">
+                        {galleryImages.map((_, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => goTo(i)}
+                            aria-label={`Go to image ${i + 1}`}
+                            className={`h-1.5 rounded-full transition-all duration-300 ${
+                              i === safeIdx
+                                ? 'w-6 bg-gradient-to-r from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] shadow-[0_0_10px_-1px_hsl(var(--brand-violet)/0.55)]'
+                                : 'w-1.5 bg-[hsl(220_15%_55%/0.55)] hover:bg-[hsl(220_15%_35%/0.75)]'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  ) : null}
+                </div>
+
+                {/* Bottom "film strip" — only when gallery has >1 image */}
                 {showGallery && galleryImages.length > 1 ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setGalleryIdx(
-                          (i) =>
-                            (i - 1 + galleryImages.length) % galleryImages.length,
-                        )
-                      }
-                      aria-label="Previous"
-                      className="absolute left-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition-colors hover:bg-black/80"
-                    >
-                      <ChevronLeft className="h-5 w-5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setGalleryIdx((i) => (i + 1) % galleryImages.length)
-                      }
-                      aria-label="Next"
-                      className="absolute right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition-colors hover:bg-black/80"
-                    >
-                      <ChevronRight className="h-5 w-5" />
-                    </button>
-                    <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-1.5">
-                      {galleryImages.map((_, i) => (
-                        <button
-                          key={i}
+                  <div className="relative border-t border-white/20 bg-white/[0.06] px-3 py-2.5 backdrop-blur-md">
+                    {/* Counter on the right */}
+                    <div className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 rounded-full bg-white/40 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-[hsl(220_30%_18%)] backdrop-blur sm:flex">
+                      <span className="text-[hsl(var(--brand-indigo))]">
+                        {safeIdx + 1}
+                      </span>
+                      <span className="text-[hsl(220_15%_45%)]">/</span>
+                      <span>{galleryImages.length}</span>
+                    </div>
+
+                    <div className="flex gap-2 overflow-x-auto pr-0 sm:pr-14">
+                      {galleryImages.map((src, i) => (
+                        <motion.button
+                          key={`${src}-${i}`}
                           type="button"
-                          onClick={() => setGalleryIdx(i)}
-                          aria-label={`Go to image ${i + 1}`}
-                          className={`h-1.5 rounded-full transition-all ${
+                          onClick={() => goTo(i)}
+                          whileHover={{ y: -2 }}
+                          transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+                          className={`relative h-11 w-16 flex-shrink-0 overflow-hidden rounded-md border bg-white/40 backdrop-blur transition-all duration-300 ${
                             i === safeIdx
-                              ? 'w-6 bg-white'
-                              : 'w-1.5 bg-white/50 hover:bg-white/80'
+                              ? 'border-[hsl(var(--brand-indigo)/0.65)] opacity-100 shadow-[0_0_0_1px_hsl(var(--brand-indigo)/0.30),0_6px_14px_-6px_hsl(var(--brand-violet)/0.45)]'
+                              : 'border-white/40 opacity-65 hover:border-white/70 hover:opacity-100'
                           }`}
-                        />
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={src}
+                            alt=""
+                            className="h-full w-full object-contain p-0.5"
+                          />
+                        </motion.button>
                       ))}
                     </div>
-                  </>
+                  </div>
                 ) : null}
               </div>
-
-              {showGallery && galleryImages.length > 1 ? (
-                <div className="flex gap-2 overflow-x-auto p-3">
-                  {galleryImages.map((src, i) => (
-                    <button
-                      key={`${src}-${i}`}
-                      type="button"
-                      onClick={() => setGalleryIdx(i)}
-                      className={`relative h-14 w-20 flex-shrink-0 overflow-hidden rounded-md transition-all ${
-                        i === safeIdx
-                          ? 'ring-2 ring-[hsl(var(--brand-indigo))]'
-                          : 'opacity-55 hover:opacity-100'
-                      }`}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={src} alt="" className="h-full w-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              ) : null}
             </div>
           </div>
         </section>
@@ -422,7 +507,125 @@ export default function ProjectDetailPage({
           </GradientButton>
         </div>
       </section>
+
+      {/* ──────── Image lightbox ──────── */}
+      <ImageLightbox
+        open={lightboxOpen}
+        images={showGallery ? galleryImages : cover ? [cover] : []}
+        index={showGallery ? safeIdx : 0}
+        onClose={() => setLightboxOpen(false)}
+        onNavigate={(i) => goTo(i)}
+        alt={project.name}
+      />
     </article>
+  );
+}
+
+function ImageLightbox({
+  open,
+  images,
+  index,
+  onClose,
+  onNavigate,
+  alt,
+}: {
+  open: boolean;
+  images: string[];
+  index: number;
+  onClose: () => void;
+  onNavigate: (i: number) => void;
+  alt: string;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowRight' && images.length > 1) {
+        onNavigate((index + 1) % images.length);
+      }
+      if (e.key === 'ArrowLeft' && images.length > 1) {
+        onNavigate((index - 1 + images.length) % images.length);
+      }
+    };
+    document.addEventListener('keydown', handler);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handler);
+      document.body.style.overflow = '';
+    };
+  }, [open, index, images.length, onClose, onNavigate]);
+
+  const src = images[index];
+
+  return (
+    <AnimatePresence>
+      {open && src ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={onClose}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md sm:p-8"
+        >
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+            aria-label="Close"
+            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition-all hover:scale-105 hover:bg-white/20"
+          >
+            <X className="h-5 w-5" />
+          </button>
+
+          {images.length > 1 ? (
+            <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onNavigate((index - 1 + images.length) % images.length);
+                }}
+                aria-label="Previous"
+                className="absolute left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition-all hover:scale-105 hover:bg-white/20 sm:left-6"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onNavigate((index + 1) % images.length);
+                }}
+                aria-label="Next"
+                className="absolute right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition-all hover:scale-105 hover:bg-white/20 sm:right-6"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+              <div className="absolute bottom-5 left-1/2 z-10 -translate-x-1/2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-white backdrop-blur-md">
+                {index + 1} / {images.length}
+              </div>
+            </>
+          ) : null}
+
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={src}
+              src={src}
+              alt={alt}
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              onClick={(e) => e.stopPropagation()}
+              className="max-h-[90vh] max-w-[92vw] cursor-zoom-out rounded-xl object-contain shadow-[0_30px_80px_-20px_hsl(220_40%_2%/0.8)]"
+            />
+          </AnimatePresence>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
   );
 }
 

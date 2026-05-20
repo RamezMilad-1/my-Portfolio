@@ -315,12 +315,12 @@ function TechGridItem({ tech, index }: { tech: string; index: number }) {
       initial={initial}
       animate={animate}
       transition={{ duration: 0.4, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
-      className="group ek-glass relative flex flex-col items-center gap-3 rounded-2xl px-4 py-6 transition-all duration-300 hover:-translate-y-1 ek-glow"
+      className="group ek-glass ek-card-sheen ek-glow relative flex flex-col items-center gap-2 rounded-xl px-3 py-4 transition-transform duration-300 hover:-translate-y-1"
     >
-      <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-[hsl(var(--brand-indigo)/0.18)] to-[hsl(var(--brand-violet)/0.18)]">
+      <div className="ek-icon-tile flex h-12 w-12">
         <TechIcon name={tech} />
       </div>
-      <p className="text-center text-sm font-medium text-[hsl(var(--foreground))]">
+      <p className="text-center text-[13px] font-medium text-[hsl(220_25%_92%)]">
         {tech}
       </p>
     </motion.div>

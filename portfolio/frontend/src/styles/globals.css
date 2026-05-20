@@ -99,8 +99,8 @@
   }
 
   ::selection {
-    background-color: hsl(var(--accent));
-    color: hsl(var(--accent-foreground));
+    background-color: hsl(0 0% 100%);
+    color: hsl(220 40% 8%);
   }
 
   /* Unified focus ring — only shows for keyboard users, not mouse clicks. */
@@ -264,30 +264,239 @@
 }
 
 @layer utilities {
-  /* Glassy card surface used by ek-glass cards across the site */
+  /*
+   * Card system — light, calm, premium glass on a dark navy base.
+   * Reads as "translucent slate" with a soft white edge, not as a saturated
+   * violet block. Accent hue is cool indigo (244°), not pink-violet (275°),
+   * so the glow stays elegant instead of magenta.
+   */
   .ek-glass {
     position: relative;
-    background-color: hsl(var(--card) / 0.55);
-    border: 1px solid hsl(var(--brand-violet-soft) / 0.18);
-    backdrop-filter: saturate(160%) blur(14px);
-    -webkit-backdrop-filter: saturate(160%) blur(14px);
+    background-color: hsl(232 28% 15% / 0.62);
+    background-image:
+      linear-gradient(180deg, hsl(0 0% 100% / 0.05) 0%, hsl(0 0% 100% / 0.015) 55%, transparent 100%),
+      radial-gradient(120% 80% at 0% 0%, hsl(0 0% 100% / 0.05), transparent 55%),
+      radial-gradient(110% 80% at 50% 115%, hsl(var(--brand-indigo) / 0.10), transparent 65%);
+    border: 1px solid hsl(0 0% 100% / 0.10);
+    backdrop-filter: saturate(150%) blur(18px);
+    -webkit-backdrop-filter: saturate(150%) blur(18px);
     box-shadow:
-      inset 0 1px 0 hsl(var(--brand-violet-soft) / 0.08),
-      0 1px 2px hsl(0 0% 0% / 0.18);
+      inset 0 1px 0 hsl(0 0% 100% / 0.10),
+      inset 0 -1px 0 hsl(var(--brand-indigo) / 0.08),
+      0 2px 4px hsl(220 40% 2% / 0.45),
+      0 10px 24px -10px hsl(220 40% 2% / 0.55),
+      0 22px 50px -22px hsl(220 40% 2% / 0.65);
   }
 
-  /* Hover lift + violet glow */
+  /* Accent underline used inside cards (under label text).
+     Sits as a thin pill that animates from cool slate to violet on
+     parent-group hover. Width also expands a touch. */
+  .ek-underline {
+    display: block;
+    height: 3px;
+    width: 34px;
+    border-radius: 9999px;
+    background: linear-gradient(
+      90deg,
+      hsl(var(--brand-indigo) / 0.70),
+      hsl(var(--brand-violet) / 0.55)
+    );
+    box-shadow: 0 0 8px -2px hsl(var(--brand-violet) / 0.35);
+    transition:
+      width 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      background 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .group:hover .ek-underline {
+    width: 52px;
+    background: linear-gradient(
+      90deg,
+      hsl(var(--brand-indigo)),
+      hsl(var(--brand-violet))
+    );
+    box-shadow: 0 0 14px -2px hsl(var(--brand-violet) / 0.65);
+  }
+
+  /* Hover lift — soft dark depth + subtle indigo rim. No pink glow. */
   .ek-glow {
     transition:
-      box-shadow 320ms ease,
-      border-color 320ms ease,
-      transform 320ms ease;
+      box-shadow 360ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 360ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 360ms cubic-bezier(0.22, 1, 0.36, 1);
   }
   .ek-glow:hover {
-    border-color: hsl(var(--brand-violet-soft) / 0.34);
+    border-color: hsl(0 0% 100% / 0.18);
+    background-color: hsl(220 28% 22% / 0.62);
     box-shadow:
-      0 12px 32px -16px hsl(var(--brand-violet) / 0.45),
-      inset 0 1px 0 hsl(var(--brand-violet-soft) / 0.14);
+      inset 0 1px 0 hsl(0 0% 100% / 0.16),
+      0 0 0 1px hsl(var(--brand-indigo) / 0.18),
+      0 24px 50px -22px hsl(220 40% 4% / 0.70),
+      0 0 36px -12px hsl(var(--brand-indigo) / 0.30);
+  }
+
+  /* Card top highlight — a soft whitish sheen, not violet */
+  .ek-card-sheen {
+    position: relative;
+  }
+  .ek-card-sheen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+      linear-gradient(
+        180deg,
+        hsl(0 0% 100% / 0.10) 0%,
+        hsl(0 0% 100% / 0.02) 14%,
+        transparent 28%
+      );
+    pointer-events: none;
+    opacity: 0.85;
+  }
+
+  /* Conic ring used on featured cards / metric tiles on hover.
+     Restrained: cool indigo with a single soft violet stop. */
+  .ek-ring-conic {
+    position: relative;
+    isolation: isolate;
+  }
+  .ek-ring-conic::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(
+      from 140deg,
+      hsl(0 0% 100% / 0.0),
+      hsl(0 0% 100% / 0.18) 18%,
+      hsl(var(--brand-indigo) / 0.45) 38%,
+      hsl(var(--brand-violet) / 0.30) 52%,
+      hsl(var(--brand-indigo) / 0.35) 66%,
+      hsl(0 0% 100% / 0.12) 82%,
+      hsl(0 0% 100% / 0.0)
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 420ms cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .ek-ring-conic:hover::before {
+    opacity: 0.85;
+  }
+
+  /* Soft moving highlight that sweeps across a card on hover (replaces
+     heavy violet halos). Pair with .ek-glass containers. */
+  .ek-card-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .ek-card-shine::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(
+      115deg,
+      transparent 35%,
+      hsl(0 0% 100% / 0.08) 50%,
+      transparent 65%
+    );
+    transform: translateX(-100%);
+    transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .ek-card-shine:hover::before {
+    transform: translateX(100%);
+  }
+
+  /* Light, neutral tag used inside cards (project tech chips, etc.) */
+  .ek-tag {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    border: 1px solid hsl(var(--brand-indigo) / 0.35);
+    background:
+      linear-gradient(
+        135deg,
+        hsl(var(--brand-indigo) / 0.18),
+        hsl(var(--brand-violet) / 0.14)
+      );
+    padding: 0.15rem 0.6rem;
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: hsl(220 30% 94%);
+    box-shadow:
+      inset 0 1px 0 hsl(0 0% 100% / 0.10),
+      0 1px 4px -1px hsl(var(--brand-indigo) / 0.25);
+    transition:
+      background 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .ek-tag:hover {
+    border-color: hsl(var(--brand-indigo) / 0.60);
+    background:
+      linear-gradient(
+        135deg,
+        hsl(var(--brand-indigo) / 0.28),
+        hsl(var(--brand-violet) / 0.22)
+      );
+    color: hsl(0 0% 100%);
+    box-shadow:
+      inset 0 1px 0 hsl(0 0% 100% / 0.14),
+      0 2px 8px -2px hsl(var(--brand-violet) / 0.45);
+  }
+
+  /* Muted variant for the "+N" overflow chip */
+  .ek-tag-muted {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    border: 1px solid hsl(0 0% 100% / 0.08);
+    background: hsl(0 0% 100% / 0.025);
+    padding: 0.1rem 0.55rem;
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: hsl(220 15% 65%);
+  }
+
+  /* Neutral icon container used in stat / contact cards.
+     Reads as "frosted slate" with a faint indigo wash, not as a violet block. */
+  .ek-icon-tile {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    border: 1px solid hsl(0 0% 100% / 0.12);
+    background:
+      linear-gradient(180deg, hsl(0 0% 100% / 0.10), hsl(0 0% 100% / 0.02)),
+      hsl(220 28% 24% / 0.65);
+    color: hsl(220 30% 92%);
+    box-shadow:
+      inset 0 1px 0 hsl(0 0% 100% / 0.16),
+      0 6px 16px -10px hsl(220 40% 4% / 0.65);
+    transition:
+      transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 280ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .group:hover .ek-icon-tile {
+    transform: scale(1.04);
+    border-color: hsl(var(--brand-indigo) / 0.40);
+    box-shadow:
+      inset 0 1px 0 hsl(0 0% 100% / 0.22),
+      0 10px 24px -10px hsl(220 40% 4% / 0.70),
+      0 0 0 1px hsl(var(--brand-indigo) / 0.22);
   }
 
   /* Animated brand gradient text */
@@ -295,14 +504,40 @@
     background: linear-gradient(
       120deg,
       hsl(var(--brand-indigo)) 0%,
-      hsl(var(--brand-violet)) 50%,
-      hsl(var(--brand-violet-soft)) 100%
+      hsl(var(--brand-violet)) 45%,
+      hsl(var(--brand-violet-soft)) 70%,
+      hsl(var(--brand-indigo)) 100%
     );
-    background-size: 200% 200%;
+    background-size: 220% 220%;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    animation: gradient-shift 12s ease-in-out infinite;
+    animation: gradient-shift 10s ease-in-out infinite;
+    text-shadow: 0 0 60px hsl(var(--brand-violet) / 0.25);
+  }
+
+  /* Hero headline — premium variant with subtle shine */
+  .ek-hero-title {
+    position: relative;
+    background: linear-gradient(
+      110deg,
+      hsl(var(--brand-indigo)) 0%,
+      hsl(var(--brand-violet)) 30%,
+      hsl(var(--brand-violet-soft)) 50%,
+      hsl(var(--brand-violet)) 70%,
+      hsl(var(--brand-indigo)) 100%
+    );
+    background-size: 260% 100%;
+    -webkit-background-clip: text;
+            background-clip: text;
+    color: transparent;
+    animation: hero-shine 14s ease-in-out infinite;
+    filter: drop-shadow(0 6px 28px hsl(var(--brand-violet) / 0.28));
+  }
+  @keyframes hero-shine {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 
   /* Static brand gradient text (no animation) */
@@ -347,25 +582,140 @@
 
   /* Gradient button: primary (filled) */
   .gb-primary {
-    background: linear-gradient(
+    background-image: linear-gradient(
       135deg,
-      hsl(var(--brand-indigo)),
-      hsl(var(--brand-violet))
+      hsl(var(--brand-indigo)) 0%,
+      hsl(var(--brand-violet)) 55%,
+      hsl(var(--brand-indigo)) 100%
     );
-    box-shadow: 0 12px 32px -12px hsl(var(--brand-violet) / 0.55);
+    background-size: 200% 100%;
+    background-position: 0% 50%;
+    box-shadow:
+      0 12px 32px -12px hsl(var(--brand-violet) / 0.65),
+      0 4px 14px -6px hsl(var(--brand-indigo) / 0.50),
+      inset 0 1px 0 hsl(0 0% 100% / 0.18),
+      inset 0 -1px 0 hsl(0 0% 0% / 0.25);
+    transition:
+      background-position 600ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
   }
   .gb-primary:hover {
-    box-shadow: 0 16px 40px -12px hsl(var(--brand-violet) / 0.75);
+    background-position: 100% 50%;
+    box-shadow:
+      0 22px 44px -12px hsl(var(--brand-violet) / 0.85),
+      0 10px 22px -8px hsl(var(--brand-indigo) / 0.60),
+      inset 0 1px 0 hsl(0 0% 100% / 0.22),
+      inset 0 -1px 0 hsl(0 0% 0% / 0.30);
+  }
+  .gb-primary:active {
+    transform: translateY(0) scale(0.97);
+    box-shadow:
+      0 8px 18px -8px hsl(var(--brand-violet) / 0.55),
+      inset 0 1px 0 hsl(0 0% 100% / 0.16),
+      inset 0 -1px 0 hsl(0 0% 0% / 0.30);
+  }
+  /* Sheen sweep on hover */
+  .gb-primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+      120deg,
+      transparent 30%,
+      hsl(0 0% 100% / 0.22) 50%,
+      transparent 70%
+    );
+    transform: translateX(-120%);
+    transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+    mix-blend-mode: overlay;
+    z-index: 0;
+  }
+  .gb-primary:hover::before {
+    transform: translateX(120%);
+  }
+  /* Keep label + icons above the sheen layer */
+  .gb-primary > *,
+  .gb-outline > * {
+    position: relative;
+    z-index: 1;
   }
 
   /* Gradient button: outline (transparent w/ gradient border via ek-border-gradient) */
   .gb-outline {
-    background-color: hsl(var(--background) / 0.4);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background-color: hsl(var(--background) / 0.45);
+    backdrop-filter: saturate(160%) blur(12px);
+    -webkit-backdrop-filter: saturate(160%) blur(12px);
+    box-shadow:
+      inset 0 1px 0 hsl(var(--brand-violet-soft) / 0.10),
+      0 10px 28px -18px hsl(var(--brand-violet) / 0.45);
+    transition:
+      background-color 280ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
   }
   .gb-outline:hover {
-    background-color: hsl(var(--brand-violet-soft) / 0.08);
+    background-color: hsl(var(--brand-violet-soft) / 0.12);
+    box-shadow:
+      inset 0 1px 0 hsl(var(--brand-violet-soft) / 0.18),
+      0 18px 36px -18px hsl(var(--brand-violet) / 0.70);
+  }
+  .gb-outline:active {
+    transform: translateY(0) scale(0.97);
+  }
+
+  /* Hero / About tech pills — premium glassy badge */
+  .ek-pill {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.32rem 0.78rem;
+    border-radius: 0.5rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: hsl(var(--foreground) / 0.92);
+    background:
+      linear-gradient(180deg, hsl(var(--brand-violet-soft) / 0.10), hsl(var(--brand-indigo) / 0.06)),
+      hsl(var(--card) / 0.55);
+    border: 1px solid hsl(var(--brand-violet-soft) / 0.30);
+    backdrop-filter: saturate(160%) blur(10px);
+    -webkit-backdrop-filter: saturate(160%) blur(10px);
+    box-shadow:
+      inset 0 1px 0 hsl(var(--brand-violet-soft) / 0.18),
+      0 4px 14px -8px hsl(var(--brand-violet) / 0.35);
+    transition:
+      transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      color 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .ek-pill::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(
+      120% 80% at 50% -30%,
+      hsl(var(--brand-violet-soft) / 0.35),
+      transparent 65%
+    );
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .ek-pill:hover {
+    transform: translateY(-1px);
+    border-color: hsl(var(--brand-violet-soft) / 0.55);
+    color: hsl(var(--foreground));
+    box-shadow:
+      inset 0 1px 0 hsl(var(--brand-violet-soft) / 0.28),
+      0 14px 28px -14px hsl(var(--brand-violet) / 0.55);
+  }
+  .ek-pill:hover::before {
+    opacity: 1;
   }
 
   /* Slow pulsing glow used by the animated background orbs */
