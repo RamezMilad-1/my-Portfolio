@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { useScrollReveal } from '../motion/use-scroll-reveal';
 
@@ -296,7 +296,7 @@ export function TechGrid({ items }: Props) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+    <div className="grid grid-cols-4 gap-x-2 gap-y-5 sm:grid-cols-5 sm:gap-x-3 sm:gap-y-6 md:grid-cols-6 lg:grid-cols-7">
       {items.map((tech, i) => (
         <TechGridItem key={tech} tech={tech} index={i} />
       ))}
@@ -309,20 +309,80 @@ function TechGridItem({ tech, index }: { tech: string; index: number }) {
     y: 20,
     margin: '-50px',
   });
+  const prefersReduced = useReducedMotion();
+
+  // Vary the bob duration / delay per item so they drift independently
+  // instead of bobbing in sync. Subtle motion — small, slow drifts.
+  const bobDuration = 4 + (index % 5) * 0.6; // 4s … 6.4s
+  const bobDelay = (index % 7) * 0.35; // 0s … 2.1s
+  const bobAmplitude = 3 + (index % 3); // 3px … 5px
+
   return (
     <motion.div
       ref={ref}
       initial={initial}
       animate={animate}
-      transition={{ duration: 0.4, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
-      className="group ek-glass ek-card-sheen ek-glow relative flex flex-col items-center gap-2 rounded-xl px-3 py-4 transition-transform duration-300 hover:-translate-y-1"
+      transition={{
+        duration: 0.5,
+        delay: index * 0.04,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      // Outer cell is the hover target. `py-2` adds an invisible cushion so
+      // the cursor stays inside even while the inner element bobs — that
+      // prevents the halo from flickering on/off during hover.
+      className="group flex cursor-default flex-col items-center gap-1.5 py-2"
     >
-      <div className="ek-icon-tile flex h-12 w-12">
-        <TechIcon name={tech} />
-      </div>
-      <p className="text-center text-[13px] font-medium text-[hsl(220_25%_92%)]">
-        {tech}
-      </p>
+      <motion.div
+        animate={
+          prefersReduced
+            ? undefined
+            : { y: [0, -bobAmplitude, 0] }
+        }
+        transition={{
+          duration: bobDuration,
+          repeat: Infinity,
+          ease: 'easeInOut',
+          delay: bobDelay,
+        }}
+        className="flex flex-col items-center gap-1.5"
+      >
+        {/* Fixed stage. Halos live here and NEVER transform — only the icon
+            inside transforms on hover. Browsers can drop a blur filter when
+            its parent transforms; keeping the halo's ancestors transform-free
+            guarantees there's no repaint glitch and no visible on/off. */}
+        <div
+          className="relative isolate flex h-12 w-12 items-center justify-center sm:h-14 sm:w-14"
+          style={{ willChange: 'auto' }}
+        >
+          {/* Outer indigo glow — wide & soft */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 -m-6 rounded-full bg-[radial-gradient(50%_50%_at_50%_50%,hsl(var(--brand-indigo)/0.30),transparent_75%)] blur-2xl"
+          />
+          {/* Inner violet halo — tighter, more intense */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 -m-3 rounded-full bg-[radial-gradient(55%_55%_at_50%_50%,hsl(var(--brand-violet)/0.48),transparent_72%)] blur-xl"
+          />
+
+          {/* The icon is the ONLY element that transforms on hover. Halos
+              stay perfectly still. */}
+          <div
+            className="relative h-full w-full transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-1 group-hover:scale-110"
+            style={{
+              filter:
+                'drop-shadow(0 4px 10px hsl(var(--brand-indigo) / 0.35)) drop-shadow(0 2px 4px hsl(220 40% 2% / 0.55))',
+            }}
+          >
+            <TechIcon name={tech} />
+          </div>
+        </div>
+
+        {/* Label — bold, brightens & lifts on hover */}
+        <p className="text-center text-[12px] font-bold tracking-tight text-[hsl(220_22%_88%)] transition-all duration-300 group-hover:-translate-y-0.5 group-hover:scale-[1.04] group-hover:text-white">
+          {tech}
+        </p>
+      </motion.div>
     </motion.div>
   );
 }

@@ -33,4 +33,20 @@ export class UpdateProfileDto {
   @ValidateNested()
   @Type(() => ProfileStatsDto)
   stats?: ProfileStatsDto;
+
+  @IsOptional() @IsString() aboutKicker?: string;
+  @IsOptional() @IsString() aboutTitle?: string;
+  @IsOptional() @IsString() aboutSubtitle?: string;
+
+  @IsOptional() @IsString() portfolioKicker?: string;
+  @IsOptional() @IsString() portfolioTitle?: string;
+  @IsOptional() @IsString() portfolioSubtitle?: string;
+
+  @IsOptional() @IsString() contactKicker?: string;
+  @IsOptional() @IsString() contactTitle?: string;
+  @IsOptional() @IsString() contactSubtitle?: string;
+
+  @IsOptional() @IsString() lifelineKicker?: string;
+  @IsOptional() @IsString() lifelineTitle?: string;
+  @IsOptional() @IsString() lifelineSubtitle?: string;
 }

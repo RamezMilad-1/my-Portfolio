@@ -40,6 +40,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { SectionHeaderEditor } from '@/components/admin/section-header-editor';
 import type { Project } from '@/lib/types';
 
 export default function AdminProjectsPage() {
@@ -117,7 +118,25 @@ export default function AdminProjectsPage() {
         </Button>
       </div>
 
-      <div className="mt-8 overflow-hidden rounded-2xl border border-[hsl(var(--border))]">
+      <div className="mt-8">
+        <SectionHeaderEditor
+          label="Portfolio section header"
+          description="The kicker, title, and subtitle shown above the Portfolio (Selected work) section on the public site. Leave blank to use the defaults."
+          fields={{
+            kicker: 'portfolioKicker',
+            title: 'portfolioTitle',
+            subtitle: 'portfolioSubtitle',
+          }}
+          defaults={{
+            kicker: 'Portfolio showcase',
+            title: 'Selected work',
+            subtitle:
+              'Production-grade student projects — built end-to-end, deployed, and actively used.',
+          }}
+        />
+      </div>
+
+      <div className="mt-6 overflow-hidden rounded-2xl border border-[hsl(var(--border))]">
         <table className="w-full text-sm">
           <thead className="bg-[hsl(var(--muted))]/50 text-left">
             <tr>

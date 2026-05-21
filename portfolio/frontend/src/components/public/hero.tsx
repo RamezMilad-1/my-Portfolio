@@ -168,16 +168,18 @@ export function Hero({ profile }: Props) {
               </a>
             </GradientButton>
 
-            <GradientButton asChild variant="outline">
-              <a
-                href={profile?.resumeUrl ? uploadsUrl(profile.resumeUrl) : '/cv.pdf'}
-                target="_blank"
-                rel="noopener noreferrer"
-                download
-              >
-                <FileDown className="h-4 w-4" /> Download CV
-              </a>
-            </GradientButton>
+            {profile?.resumeUrl ? (
+              <GradientButton asChild variant="outline">
+                <a
+                  href={uploadsUrl(profile.resumeUrl)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download
+                >
+                  <FileDown className="h-4 w-4" /> Download CV
+                </a>
+              </GradientButton>
+            ) : null}
           </motion.div>
 
           <motion.div

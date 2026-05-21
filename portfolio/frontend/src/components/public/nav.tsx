@@ -12,6 +12,7 @@ const SECTIONS: { id: string; label: string }[] = [
   { id: 'about', label: 'About' },
   { id: 'portfolio', label: 'Portfolio' },
   { id: 'contact', label: 'Contact' },
+  { id: 'lifeline', label: 'Lifeline' },
 ];
 
 export function Nav() {
@@ -46,12 +47,36 @@ export function Nav() {
       },
     );
 
-    SECTIONS.forEach((s) => {
-      const el = document.getElementById(s.id);
-      if (el) observer.observe(el);
-    });
+    // Some sections (e.g. #lifeline) only render after async data loads, so
+    // they may not exist on the initial mount. Poll briefly until each known
+    // section id appears, then stop. A MutationObserver on document.body
+    // would fire on every motion/popover/keystroke and is unnecessary here.
+    const observed = new Set<string>();
+    const tryObserve = () => {
+      for (const s of SECTIONS) {
+        if (observed.has(s.id)) continue;
+        const el = document.getElementById(s.id);
+        if (el) {
+          observer.observe(el);
+          observed.add(s.id);
+        }
+      }
+    };
 
-    return () => observer.disconnect();
+    tryObserve();
+    let attempts = 0;
+    const pollId = window.setInterval(() => {
+      tryObserve();
+      attempts += 1;
+      if (observed.size === SECTIONS.length || attempts > 30) {
+        window.clearInterval(pollId);
+      }
+    }, 300);
+
+    return () => {
+      observer.disconnect();
+      window.clearInterval(pollId);
+    };
   }, [isHome]);
 
   const handleClick = (id: string) => {

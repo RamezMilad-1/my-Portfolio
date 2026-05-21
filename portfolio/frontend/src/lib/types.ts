@@ -17,6 +17,18 @@ export interface Profile {
   socials: Record<string, string>;
   headlines?: string[];
   stats?: ProfileStats;
+  aboutKicker?: string;
+  aboutTitle?: string;
+  aboutSubtitle?: string;
+  portfolioKicker?: string;
+  portfolioTitle?: string;
+  portfolioSubtitle?: string;
+  contactKicker?: string;
+  contactTitle?: string;
+  contactSubtitle?: string;
+  lifelineKicker?: string;
+  lifelineTitle?: string;
+  lifelineSubtitle?: string;
 }
 
 export interface TeamMember {
@@ -119,6 +131,40 @@ export interface CertificateInput {
   credentialUrl?: string;
   imageUrl?: string;
   description?: string;
+  position?: number;
+  isPublished?: boolean;
+}
+
+export interface TimelineEntry {
+  _id: string;
+  year: string;
+  topic: string;
+  body: string;
+  position: number;
+  isPublished: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface TimelineEntryInput {
+  year?: string;
+  topic?: string;
+  body?: string;
+  position?: number;
+  isPublished?: boolean;
+}
+
+export interface TechItem {
+  _id: string;
+  name: string;
+  position: number;
+  isPublished: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface TechItemInput {
+  name?: string;
   position?: number;
   isPublished?: boolean;
 }

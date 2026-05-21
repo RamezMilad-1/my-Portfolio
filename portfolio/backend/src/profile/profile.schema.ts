@@ -29,6 +29,23 @@ export class Profile {
   @Prop({ type: [String], default: [] }) headlines: string[];
 
   @Prop({ type: ProfileStatsSchema, default: () => ({}) }) stats: ProfileStats;
+
+  // Editable copy for the public section headers. Blank = use site default.
+  @Prop({ default: '' }) aboutKicker: string;
+  @Prop({ default: '' }) aboutTitle: string;
+  @Prop({ default: '' }) aboutSubtitle: string;
+
+  @Prop({ default: '' }) portfolioKicker: string;
+  @Prop({ default: '' }) portfolioTitle: string;
+  @Prop({ default: '' }) portfolioSubtitle: string;
+
+  @Prop({ default: '' }) contactKicker: string;
+  @Prop({ default: '' }) contactTitle: string;
+  @Prop({ default: '' }) contactSubtitle: string;
+
+  @Prop({ default: '' }) lifelineKicker: string;
+  @Prop({ default: '' }) lifelineTitle: string;
+  @Prop({ default: '' }) lifelineSubtitle: string;
 }
 
 export const ProfileSchema = SchemaFactory.createForClass(Profile);

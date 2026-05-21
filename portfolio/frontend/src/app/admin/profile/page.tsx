@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUploadMedia } from '@/lib/api/media';
+import { SectionHeaderEditor } from '@/components/admin/section-header-editor';
 
 const schema = z.object({
   displayName: z.string().min(1),
@@ -333,6 +334,38 @@ export default function AdminProfilePage() {
       <div className="flex justify-end">
         <Button type="submit">Save profile</Button>
       </div>
+
+      <SectionHeaderEditor
+        label="About section header"
+        description="Shown above the About section on the public homepage. Leave blank to use the defaults."
+        fields={{
+          kicker: 'aboutKicker',
+          title: 'aboutTitle',
+          subtitle: 'aboutSubtitle',
+        }}
+        defaults={{
+          kicker: 'About me',
+          title: "A developer with a designer's eye",
+          subtitle:
+            'I build full-stack web apps that ship — and look like they were designed on purpose.',
+        }}
+      />
+
+      <SectionHeaderEditor
+        label="Contact section header"
+        description="Shown above the Contact section on the public homepage. Leave blank to use the defaults."
+        fields={{
+          kicker: 'contactKicker',
+          title: 'contactTitle',
+          subtitle: 'contactSubtitle',
+        }}
+        defaults={{
+          kicker: 'Get in touch',
+          title: "Let's build something",
+          subtitle:
+            'Open to internships, well-scoped student projects, and ambitious side projects.',
+        }}
+      />
     </form>
   );
 }

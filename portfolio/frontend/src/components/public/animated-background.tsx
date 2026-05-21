@@ -28,6 +28,7 @@ export function AnimatedBackground() {
     let width = 0;
     let height = 0;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let visible = !document.hidden;
 
     const resize = () => {
       width = window.innerWidth;
@@ -36,9 +37,12 @@ export function AnimatedBackground() {
       canvas.height = height * dpr;
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
-      ctx.scale(dpr, dpr);
+      // Reset transform first so repeated resizes don't compound the scale.
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      const target = Math.min(70, Math.round((width * height) / 28000));
+      // Cap particle count more conservatively — the connection-line pass is
+      // O(n²), so even small reductions help a lot.
+      const target = Math.min(50, Math.round((width * height) / 36000));
       if (particlesRef.current.length !== target) {
         particlesRef.current = Array.from({ length: target }, () => ({
           x: Math.random() * width,
@@ -52,10 +56,24 @@ export function AnimatedBackground() {
     };
 
     resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(document.body);
+    // Listen for window resize only. ResizeObserver on document.body was
+    // firing on every scroll on mobile (URL bar showing/hiding) and on any
+    // page content reflow, reallocating particles each time.
+    window.addEventListener('resize', resize, { passive: true });
+
+    const onVisibilityChange = () => {
+      visible = !document.hidden;
+      if (visible && rafRef.current == null) {
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
     const tick = () => {
+      if (!visible) {
+        rafRef.current = null;
+        return;
+      }
       ctx.clearRect(0, 0, width, height);
 
       const ps = particlesRef.current;
@@ -70,15 +88,16 @@ export function AnimatedBackground() {
 
       // connecting lines
       const maxDist = 130;
+      const maxDistSq = maxDist * maxDist;
       ctx.lineWidth = 1;
       for (let i = 0; i < ps.length; i++) {
+        const a = ps[i];
         for (let j = i + 1; j < ps.length; j++) {
-          const a = ps[i];
           const b = ps[j];
           const dx = a.x - b.x;
           const dy = a.y - b.y;
           const d2 = dx * dx + dy * dy;
-          if (d2 < maxDist * maxDist) {
+          if (d2 < maxDistSq) {
             const t = 1 - Math.sqrt(d2) / maxDist;
             ctx.strokeStyle = `rgba(180, 165, 230, ${0.12 * t})`;
             ctx.beginPath();
@@ -103,7 +122,8 @@ export function AnimatedBackground() {
 
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      ro.disconnect();
+      window.removeEventListener('resize', resize);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, []);
 

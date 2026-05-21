@@ -96,6 +96,10 @@
     font-family: var(--font-sans);
     min-height: 100dvh;
     overflow-x: hidden;
+    /* overflow-x: hidden makes body the scroll container. Framer-motion's
+       useScroll measures offsets relative to this container; without
+       position: relative it warns and offsets can drift. */
+    position: relative;
   }
 
   ::selection {
@@ -160,6 +164,7 @@
     0%, 100% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
   }
+
 
   /* glass surface */
   .glass {

@@ -11,6 +11,8 @@ import {
   LogOut,
   Home,
   Award,
+  GitBranch,
+  Code2,
 } from 'lucide-react';
 import { useLogout, useMe } from '@/lib/api/auth';
 import { Button } from '../ui/button';
@@ -21,6 +23,8 @@ const items = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/admin/projects', label: 'Projects', icon: FolderKanban },
   { href: '/admin/certificates', label: 'Certificates', icon: Award },
+  { href: '/admin/tech', label: 'Tech stack', icon: Code2 },
+  { href: '/admin/timeline', label: 'Lifeline', icon: GitBranch },
   { href: '/admin/media', label: 'Media', icon: ImageIcon },
   { href: '/admin/team', label: 'Team', icon: Users },
   { href: '/admin/profile', label: 'Profile', icon: User },

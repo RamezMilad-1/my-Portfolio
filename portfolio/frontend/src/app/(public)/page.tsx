@@ -19,6 +19,8 @@ import {
 import { useProfile } from '@/lib/api/profile';
 import { useProjectsPublic } from '@/lib/api/projects';
 import { useCertificatesPublic } from '@/lib/api/certificates';
+import { useTimelinePublic } from '@/lib/api/timeline';
+import { useTechPublic } from '@/lib/api/tech';
 import { Hero } from '@/components/public/hero';
 import { useScrollReveal } from '@/components/motion/use-scroll-reveal';
 import { SectionHeading } from '@/components/public/section-heading';
@@ -27,6 +29,7 @@ import { ProjectCardV2 } from '@/components/public/project-card-v2';
 import { CertificateCard } from '@/components/public/certificate-card';
 import { CertificateLightbox } from '@/components/public/certificate-lightbox';
 import { TechGrid } from '@/components/public/tech-grid';
+import { Timeline } from '@/components/public/timeline';
 import { GradientButton } from '@/components/public/gradient-button';
 import { uploadsUrl } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -35,20 +38,31 @@ export default function HomePage() {
   const { data: profile } = useProfile();
   const { data: projects = [] } = useProjectsPublic();
   const { data: certificates = [] } = useCertificatesPublic();
+  const { data: timelineEntries = [] } = useTimelinePublic();
+  const { data: techItems = [] } = useTechPublic();
 
-  // Scroll to hash on load (e.g. arriving from /#about)
+  // Scroll to hash on load (e.g. arriving from /#about). Some sections
+  // (e.g. #lifeline) only mount after async data settles, so retry briefly
+  // until the element appears, then scroll once.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const id = window.location.hash.replace('#', '');
-    if (id) {
+    if (!id) return;
+
+    let attempts = 0;
+    let timer: ReturnType<typeof setTimeout>;
+    const tryScroll = () => {
       const el = document.getElementById(id);
       if (el) {
-        setTimeout(
-          () => el.scrollIntoView({ behavior: 'smooth', block: 'start' }),
-          100,
-        );
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
       }
-    }
+      if (attempts++ < 20) {
+        timer = setTimeout(tryScroll, 100);
+      }
+    };
+    tryScroll();
+    return () => clearTimeout(timer);
   }, []);
 
   const sortedProjects = useMemo(
@@ -61,10 +75,15 @@ export default function HomePage() {
   );
 
   const techList = useMemo(() => {
+    // If admin has curated a tech list, use that (in their ordering).
+    // Otherwise auto-derive from project tech arrays (legacy behaviour).
+    if (techItems.length > 0) {
+      return techItems.map((t) => t.name);
+    }
     const set = new Set<string>();
     for (const p of projects) for (const t of p.tech ?? []) set.add(t);
     return [...set].sort((a, b) => a.localeCompare(b));
-  }, [projects]);
+  }, [projects, techItems]);
 
   const stats = useMemo(() => {
     const userStats = profile?.stats ?? {};
@@ -117,9 +136,15 @@ export default function HomePage() {
       >
         <div className="mx-auto max-w-6xl">
           <SectionHeading
-            kicker="About me"
-            title="A developer with a designer's eye"
-            subtitle="I build full-stack web apps that ship — and look like they were designed on purpose."
+            kicker={profile?.aboutKicker?.trim() || 'About me'}
+            title={
+              profile?.aboutTitle?.trim() ||
+              "A developer with a designer's eye"
+            }
+            subtitle={
+              profile?.aboutSubtitle?.trim() ||
+              'I build full-stack web apps that ship — and look like they were designed on purpose.'
+            }
           />
 
           {/* Row 1 — greeting + intro paragraph + CTAs · portrait */}
@@ -153,16 +178,18 @@ export default function HomePage() {
                     See my work <ArrowRight className="h-4 w-4" />
                   </a>
                 </GradientButton>
-                <GradientButton asChild variant="outline">
-                  <a
-                    href={profile?.resumeUrl ? uploadsUrl(profile.resumeUrl) : '/cv.pdf'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    download
-                  >
-                    <FileDown className="h-4 w-4" /> Download CV
-                  </a>
-                </GradientButton>
+                {profile?.resumeUrl ? (
+                  <GradientButton asChild variant="outline">
+                    <a
+                      href={uploadsUrl(profile.resumeUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
+                    >
+                      <FileDown className="h-4 w-4" /> Download CV
+                    </a>
+                  </GradientButton>
+                ) : null}
               </div>
             </motion.div>
 
@@ -236,9 +263,12 @@ export default function HomePage() {
       >
         <div className="mx-auto max-w-6xl">
           <SectionHeading
-            kicker="Portfolio showcase"
-            title="Selected work"
-            subtitle="Production-grade student projects — built end-to-end, deployed, and actively used."
+            kicker={profile?.portfolioKicker?.trim() || 'Portfolio showcase'}
+            title={profile?.portfolioTitle?.trim() || 'Selected work'}
+            subtitle={
+              profile?.portfolioSubtitle?.trim() ||
+              'Production-grade student projects — built end-to-end, deployed, and actively used.'
+            }
           />
 
           <div className="mt-10">
@@ -311,9 +341,12 @@ export default function HomePage() {
       >
         <div className="mx-auto max-w-4xl">
           <SectionHeading
-            kicker="Get in touch"
-            title="Let's build something"
-            subtitle="Open to internships, well-scoped student projects, and ambitious side projects."
+            kicker={profile?.contactKicker?.trim() || 'Get in touch'}
+            title={profile?.contactTitle?.trim() || "Let's build something"}
+            subtitle={
+              profile?.contactSubtitle?.trim() ||
+              'Open to internships, well-scoped student projects, and ambitious side projects.'
+            }
           />
 
           <div className="mt-10 grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -373,6 +406,26 @@ export default function HomePage() {
           ) : null}
         </div>
       </section>
+
+      {/* ──────── Lifeline (vertical timeline) ──────── */}
+      {timelineEntries.length > 0 ? (
+        <section
+          id="lifeline"
+          className="relative scroll-mt-20 px-4 py-16 sm:px-6 md:py-24"
+        >
+          <div className="mx-auto max-w-3xl">
+            <SectionHeading
+              kicker={profile?.lifelineKicker?.trim() || 'Lifeline'}
+              title={profile?.lifelineTitle?.trim() || 'The road so far'}
+              subtitle={
+                profile?.lifelineSubtitle?.trim() ||
+                'A short timeline of milestones — the moments that shaped the work behind everything above.'
+              }
+            />
+            <Timeline entries={timelineEntries} />
+          </div>
+        </section>
+      ) : null}
     </>
   );
 }

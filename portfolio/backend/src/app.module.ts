@@ -12,6 +12,8 @@ import { ProjectsModule } from './projects/projects.module';
 import { MediaModule } from './media/media.module';
 import { TeamModule } from './team/team.module';
 import { CertificatesModule } from './certificates/certificates.module';
+import { TimelineModule } from './timeline/timeline.module';
+import { TechModule } from './tech/tech.module';
 
 @Module({
   imports: [
@@ -43,6 +45,8 @@ import { CertificatesModule } from './certificates/certificates.module';
     MediaModule,
     TeamModule,
     CertificatesModule,
+    TimelineModule,
+    TechModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
