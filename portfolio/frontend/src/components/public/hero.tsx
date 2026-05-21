@@ -18,22 +18,25 @@ import { IconCloud } from '@/components/magicui/icon-cloud';
 import type { Profile } from '@/lib/types';
 import { uploadsUrl } from '@/lib/utils';
 
-const techCloudSlugs = [
-  'typescript',
-  'javascript',
-  'react',
-  'nextdotjs',
-  'nodedotjs',
-  'nestjs',
-  'postgresql',
-  'mongodb',
-  'tailwindcss',
-  'docker',
-  'git',
-  'github',
+// Tech icons rendered into the 3D hero cloud. `color` overrides the
+// official brand color when that color disappears against the dark canvas
+// (Next.js #000 and GitHub #181717 were rendering as solid black squares).
+const techCloud: { slug: string; color?: string }[] = [
+  { slug: 'typescript' },
+  { slug: 'javascript' },
+  { slug: 'react' },
+  { slug: 'nextdotjs', color: 'ffffff' },
+  { slug: 'nodedotjs' },
+  { slug: 'nestjs' },
+  { slug: 'postgresql' },
+  { slug: 'mongodb' },
+  { slug: 'tailwindcss' },
+  { slug: 'docker' },
+  { slug: 'git' },
+  { slug: 'github', color: 'ffffff' },
 ];
-const techCloudImages = techCloudSlugs.map(
-  (slug) => `https://cdn.simpleicons.org/${slug}/${slug}`,
+const techCloudImages = techCloud.map(
+  ({ slug, color }) => `https://cdn.simpleicons.org/${slug}/${color ?? slug}`,
 );
 
 const easing = [0.22, 1, 0.36, 1] as const;

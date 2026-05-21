@@ -21,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={cn("dark", "font-sans", geist.variable)} style={{ colorScheme: 'dark' }} suppressHydrationWarning>
+    <html lang="en" className={cn("dark", "font-sans", geist.variable)} style={{ colorScheme: 'dark' }} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="min-h-dvh antialiased">
         <a
           href="#main-content"

@@ -152,6 +152,18 @@ const DEVICON: Record<string, [string, string]> = {
 };
 
 /**
+ * Logos whose official brand color is near-black (Next.js #000, GitHub
+ * #181717, etc.) disappear against the dark theme — they render as a
+ * solid black blob. For those, force a fully-formed URL with a light
+ * color override so the icon stays readable.
+ */
+const ICON_OVERRIDE: Record<string, string> = {
+  next: 'https://cdn.simpleicons.org/nextdotjs/ffffff',
+  'next.js': 'https://cdn.simpleicons.org/nextdotjs/ffffff',
+  nextjs: 'https://cdn.simpleicons.org/nextdotjs/ffffff',
+};
+
+/**
  * Fallback monochrome icons via Simple Icons CDN, in their official brand
  * color (since omitting the color suffix yields the native brand hex).
  */
@@ -223,23 +235,34 @@ function lookupSimpleIcon(name: string): string | null {
   return null;
 }
 
+function lookupOverride(name: string): string | null {
+  const key = normalize(name);
+  if (ICON_OVERRIDE[key]) return ICON_OVERRIDE[key];
+  const stripped = key.replace(/[^a-z0-9]/g, '');
+  if (ICON_OVERRIDE[stripped]) return ICON_OVERRIDE[stripped];
+  return null;
+}
+
 type Stage = 'devicon' | 'simpleicons' | 'fallback';
 
 function TechIcon({ name }: { name: string }) {
+  const override = lookupOverride(name);
   const devicon = lookupDevicon(name);
   const simpleIcon = lookupSimpleIcon(name);
-  const initial: Stage = devicon
+  const initial: Stage = override
     ? 'devicon'
-    : simpleIcon
-      ? 'simpleicons'
-      : 'fallback';
+    : devicon
+      ? 'devicon'
+      : simpleIcon
+        ? 'simpleicons'
+        : 'fallback';
   const [stage, setStage] = useState<Stage>(initial);
 
-  if (stage === 'devicon' && devicon) {
+  if (stage === 'devicon' && (override || devicon)) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={deviconUrl(devicon[0], devicon[1])}
+        src={override ?? deviconUrl(devicon![0], devicon![1])}
         alt=""
         aria-hidden
         width={32}

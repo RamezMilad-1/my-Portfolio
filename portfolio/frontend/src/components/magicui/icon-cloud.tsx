@@ -59,6 +59,10 @@ export function IconCloud({ icons, images }: IconCloudProps) {
       const offCtx = offscreen.getContext('2d');
 
       if (offCtx) {
+        // Explicitly clear the offscreen canvas to ensure it starts transparent
+        // and prevent rendering artifacts during initial load
+        offCtx.clearRect(0, 0, offscreen.width, offscreen.height);
+
         if (images) {
           const img = new Image();
           img.crossOrigin = 'anonymous';
