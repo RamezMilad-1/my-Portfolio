@@ -732,6 +732,16 @@
     animation: pulse-glow 8s ease-in-out infinite;
   }
 
+  /* A subtler pulse used for distant/or less-important orbs to avoid
+     localized bright hotspots (lower amplitude and slower scale). */
+  @keyframes pulse-glow-subtle {
+    0%, 100% { opacity: 0.32; transform: scale(1); }
+    50%      { opacity: 0.48; transform: scale(1.03); }
+  }
+  .animate-pulse-glow-subtle {
+    animation: pulse-glow-subtle 10s ease-in-out infinite;
+  }
+
   /* Typewriter cursor blink */
   @keyframes blink {
     0%, 49%   { opacity: 1; }

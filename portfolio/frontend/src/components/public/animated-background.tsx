@@ -132,13 +132,10 @@ export function AnimatedBackground() {
       aria-hidden
       className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
     >
-      {/* Static gradient base */}
-      <div className="absolute inset-0 bg-[hsl(var(--background))]" />
-
       {/* Animated orbs */}
       <div className="absolute -left-32 top-[-10%] h-[28rem] w-[28rem] rounded-full bg-[hsl(var(--brand-indigo)/0.25)] blur-[120px] animate-pulse-glow" />
       <div
-        className="absolute -right-32 top-[40%] h-[32rem] w-[32rem] rounded-full bg-[hsl(var(--brand-violet)/0.25)] blur-[140px] animate-pulse-glow"
+        className="absolute -right-28 top-[56%] h-[40rem] w-[40rem] rounded-full bg-[hsl(var(--brand-violet)/0.12)] blur-[220px] animate-pulse-glow-subtle"
         style={{ animationDelay: '2s' }}
       />
       <div
@@ -147,7 +144,7 @@ export function AnimatedBackground() {
       />
 
       {/* Particle canvas */}
-      <canvas ref={canvasRef} className="absolute inset-0" />
+      <canvas ref={canvasRef} className="absolute inset-0" style={{ background: 'transparent' }} />
 
       {/* Subtle grid */}
       <div className="absolute inset-0 ek-grid opacity-[0.18] dark:opacity-[0.12]" />
