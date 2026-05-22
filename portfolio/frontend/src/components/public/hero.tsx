@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, useReducedMotion, type Variants } from 'framer-motion';
 import {
   ArrowRight,
   FileDown,
@@ -40,6 +40,49 @@ const techCloudImages = techCloud.map(
 );
 
 const easing = [0.22, 1, 0.36, 1] as const;
+
+// One parent variants tree instead of six separate motion.divs each with
+// their own delay. Framer-motion only bookkeeps the parent timeline and
+// children inherit through `staggerChildren`, halving reconciliation work
+// at mount and keeping the visual rhythm identical.
+const heroContainerVariants: Variants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.1, delayChildren: 0.05 },
+  },
+};
+
+const heroFadeUp: Variants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, ease: easing },
+  },
+};
+
+const heroFadeLeft: Variants = {
+  hidden: { opacity: 0, x: -16 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.7, ease: easing },
+  },
+};
+
+const heroHeadline: Variants = {
+  hidden: { opacity: 0, y: 18 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.8, ease: easing },
+  },
+};
+
+const heroFadeOnly: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.8 } },
+};
 
 const DEFAULT_ROLE = 'Full-Stack Developer';
 const DEFAULT_TYPEWRITER = ['Software Engineer', 'CS Student', 'Tech Enthusiast'];
@@ -80,6 +123,7 @@ export function Hero({ profile }: Props) {
   const inView = useInView(sectionRef, { amount: 0.4 });
   const [runId, setRunId] = useState(0);
   const wasInView = useRef(true);
+  const prefersReduced = useReducedMotion();
 
   // First mount counts as the first run. Every subsequent re-entry replays.
   useEffect(() => {
@@ -99,26 +143,24 @@ export function Hero({ profile }: Props) {
       <div className="relative mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-12 px-4 py-12 sm:px-6 md:grid-cols-2 md:py-20">
         {/* Left: text content */}
         <motion.div
-          initial={{ opacity: 0, x: -16 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.7, ease: easing }}
+          variants={heroContainerVariants}
+          initial={prefersReduced ? false : 'hidden'}
+          animate="visible"
           className="relative z-10"
         >
-          <StatusBadge label={availability} tone="emerald" />
+          <motion.div variants={prefersReduced ? undefined : heroFadeLeft}>
+            <StatusBadge label={availability} tone="emerald" />
+          </motion.div>
 
           <motion.h1
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.1, ease: easing }}
+            variants={prefersReduced ? undefined : heroHeadline}
             className="font-display mt-5 text-[clamp(2rem,5.5vw,3.75rem)] font-bold leading-[1.05] tracking-tight"
           >
             <span className="ek-hero-title block">{role}</span>
           </motion.h1>
 
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2, ease: easing }}
+            variants={prefersReduced ? undefined : heroFadeUp}
             className="mt-4 flex h-7 items-center text-base font-medium text-[hsl(var(--foreground)/0.92)] md:text-lg"
           >
             <Typewriter
@@ -130,18 +172,14 @@ export function Hero({ profile }: Props) {
           </motion.div>
 
           <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3, ease: easing }}
+            variants={prefersReduced ? undefined : heroFadeUp}
             className="mt-5 max-w-xl text-sm leading-relaxed text-[hsl(var(--muted-foreground))] md:text-base"
           >
             {subtitle}
           </motion.p>
 
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.4, ease: easing }}
+            variants={prefersReduced ? undefined : heroFadeUp}
             className="mt-6 flex flex-wrap gap-2"
           >
             {techPills.map((t) => (
@@ -152,9 +190,7 @@ export function Hero({ profile }: Props) {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.5, ease: easing }}
+            variants={prefersReduced ? undefined : heroFadeUp}
             className="mt-7 flex flex-wrap items-center gap-3"
           >
             <GradientButton asChild>
@@ -186,9 +222,7 @@ export function Hero({ profile }: Props) {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.7 }}
+            variants={prefersReduced ? undefined : heroFadeOnly}
             className="mt-7 flex items-center gap-2.5"
           >
             {socials.github ? (

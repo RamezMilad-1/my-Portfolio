@@ -116,13 +116,15 @@ function TimelineRow({
       }}
       className="group relative"
     >
-      {/* Bullet on the rail */}
+      {/* Bullet on the rail. Rides the parent row's reveal stagger via the
+          shared `reveal.inView` state — no per-bullet spring on each entry,
+          which keeps long timelines from spawning N parallel framer-motion
+          animations as the viewport scrolls. */}
       <motion.span
         aria-hidden
         initial={{ scale: 0, opacity: 0 }}
-        whileInView={{ scale: 1, opacity: 1 }}
-        viewport={{ margin: '-100px', once: false }}
-        transition={{ type: 'spring', stiffness: 160, damping: 22, mass: 0.6 }}
+        animate={reveal.inView ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
+        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: index * 0.05 + 0.1 }}
         className="absolute left-5 top-3 z-[5] -translate-x-1/2 sm:left-6"
       >
         <span className="relative flex h-4 w-4 items-center justify-center">
@@ -164,10 +166,11 @@ function TimelineRow({
           ) : null}
         </div>
 
-        <div className="ek-glass ek-card-sheen ek-glow relative flex-1 overflow-hidden rounded-2xl p-4 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 sm:p-5">
+        <div className="ek-glass ek-card-sheen ek-glow relative flex-1 overflow-hidden rounded-2xl p-4 transition-[transform,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 sm:p-5">
           {/* Subtle corner glow on hover */}
           <div
             aria-hidden
+            style={{ willChange: 'opacity' }}
             className="pointer-events-none absolute -left-12 -top-12 h-28 w-28 rounded-full bg-[hsl(var(--brand-violet)/0.18)] opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
           />
 

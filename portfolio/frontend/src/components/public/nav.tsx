@@ -65,10 +65,13 @@ export function Nav() {
 
     tryObserve();
     let attempts = 0;
+    // Lifeline (the slowest section to mount) settles within ~3.5s of
+    // data load — 12 attempts × 300ms ≈ 3.6s covers it without leaving an
+    // interval running indefinitely on slow data fetches.
     const pollId = window.setInterval(() => {
       tryObserve();
       attempts += 1;
-      if (observed.size === SECTIONS.length || attempts > 30) {
+      if (observed.size === SECTIONS.length || attempts > 12) {
         window.clearInterval(pollId);
       }
     }, 300);

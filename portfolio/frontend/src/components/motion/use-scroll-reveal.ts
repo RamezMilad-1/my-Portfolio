@@ -8,6 +8,11 @@ export interface ScrollRevealOptions {
   x?: number;
   margin?: string;
   amount?: number | 'some' | 'all';
+  // Re-fire on every viewport entry. Defaults to false (animate once and
+  // stay): once a section has been seen, scrolling back doesn't replay it.
+  // This is the Motion.dev / web.dev recommendation and prevents recruiter-
+  // style scroll-backs from triggering animation cascades.
+  once?: boolean;
   exitFactor?: number;
   exitOpacity?: number;
   firstMultiplier?: number;
@@ -20,14 +25,6 @@ export interface ScrollRevealReturn<T extends HTMLElement = HTMLElement> {
   inView: boolean;
 }
 
-// Re-fires on every viewport entry. The very first reveal uses a bigger
-// travel distance (firstMultiplier) so the first impression lands hard;
-// subsequent reveals animate from the softer "subtle" exit state, giving
-// a gentler — but still re-firing — entry on every later scroll.
-//
-// Leaving view (after the first reveal) animates back to the subtle state
-// instead of snapping all the way back to hidden — controlled by
-// exitFactor (how far it retreats) and exitOpacity (how much it fades).
 export function useScrollReveal<T extends HTMLElement = HTMLElement>(
   options: ScrollRevealOptions = {},
 ): ScrollRevealReturn<T> {
@@ -35,7 +32,8 @@ export function useScrollReveal<T extends HTMLElement = HTMLElement>(
     y = 24,
     x = 0,
     margin = '-80px',
-    amount = 'some',
+    amount = 0.15,
+    once = true,
     exitFactor = 0.9,
     exitOpacity = 0.05,
     firstMultiplier = 4,
@@ -46,6 +44,7 @@ export function useScrollReveal<T extends HTMLElement = HTMLElement>(
   const inView = useInView(ref, {
     margin: margin as `${number}px` | `${number}%`,
     amount,
+    once,
   });
   const hasEntered = useRef(false);
   if (inView) hasEntered.current = true;
@@ -66,6 +65,17 @@ export function useScrollReveal<T extends HTMLElement = HTMLElement>(
     return { ref, initial: visible, animate: visible, inView };
   }
 
+  // Once-only path (default): hold visible after first entry, no re-fire.
+  if (once) {
+    return {
+      ref,
+      initial: firstHidden,
+      animate: hasEntered.current ? visible : firstHidden,
+      inView,
+    };
+  }
+
+  // Opt-in: subtle retreat on leave, gentler re-entry on subsequent views.
   return {
     ref,
     initial: firstHidden,

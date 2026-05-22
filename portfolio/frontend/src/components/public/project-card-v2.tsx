@@ -32,8 +32,8 @@ export function ProjectCardV2({ project, index = 0 }: Props) {
       ref={ref}
       initial={initial}
       animate={animate}
-      transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: index * 0.08 }}
-      className="group ek-glass ek-card-sheen ek-ring-conic ek-glow relative overflow-hidden rounded-xl transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5"
+      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: index * 0.07 }}
+      className="group ek-glass ek-card-sheen ek-ring-conic ek-glow relative overflow-hidden rounded-xl transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5"
     >
       <Link
         href={`/projects/${project.slug}`}
@@ -50,7 +50,8 @@ export function ProjectCardV2({ project, index = 0 }: Props) {
             src={cover}
             alt={project.name}
             loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
+            decoding="async"
+            className="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
           />
         ) : (
           <div className="relative flex h-full w-full items-center justify-center">

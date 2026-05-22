@@ -4,7 +4,7 @@ import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
   ArrowLeft,
   Check,
@@ -34,6 +34,7 @@ export default function ProjectDetailPage({
   const [direction, setDirection] = useState(0);
   const [coverErrored, setCoverErrored] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const prefersReduced = useReducedMotion();
 
   // Show skeleton while data is loading OR while we have neither data nor a
   // concrete error (e.g. cache-warming, hydration window).
@@ -90,11 +91,18 @@ export default function ProjectDetailPage({
     setGalleryIdx(normalized);
   };
 
-  const slideVariants = {
-    enter: (dir: number) => ({ x: dir > 0 ? 28 : dir < 0 ? -28 : 0, opacity: 0 }),
-    center: { x: 0, opacity: 1 },
-    exit: (dir: number) => ({ x: dir > 0 ? -28 : dir < 0 ? 28 : 0, opacity: 0 }),
-  };
+  // Reduced motion: pure crossfade, no x translation, no spring.
+  const slideVariants = prefersReduced
+    ? {
+        enter: () => ({ opacity: 0 }),
+        center: { opacity: 1 },
+        exit: () => ({ opacity: 0 }),
+      }
+    : {
+        enter: (dir: number) => ({ x: dir > 0 ? 28 : dir < 0 ? -28 : 0, opacity: 0 }),
+        center: { x: 0, opacity: 1 },
+        exit: (dir: number) => ({ x: dir > 0 ? -28 : dir < 0 ? 28 : 0, opacity: 0 }),
+      };
 
   return (
     <article className="pt-20">
@@ -231,10 +239,14 @@ export default function ProjectDetailPage({
                         initial="enter"
                         animate="center"
                         exit="exit"
-                        transition={{
-                          x: { type: 'spring', stiffness: 240, damping: 32 },
-                          opacity: { duration: 0.32, ease: [0.22, 1, 0.36, 1] },
-                        }}
+                        transition={
+                          prefersReduced
+                            ? { opacity: { duration: 0.2 } }
+                            : {
+                                x: { type: 'spring', stiffness: 240, damping: 32 },
+                                opacity: { duration: 0.32, ease: [0.22, 1, 0.36, 1] },
+                              }
+                        }
                         className="absolute inset-0 h-full w-full cursor-zoom-in object-contain drop-shadow-[0_14px_24px_hsl(220_40%_2%/0.35)]"
                       />
                     </AnimatePresence>

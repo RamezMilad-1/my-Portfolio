@@ -479,11 +479,12 @@ function MetricCard({
   return (
     <motion.div
       whileHover={{ y: -3 }}
-      transition={{ type: 'spring', stiffness: 320, damping: 22 }}
+      transition={{ type: 'spring', stiffness: 260, damping: 24 }}
       className="group ek-glass ek-card-sheen ek-ring-conic ek-glow relative overflow-hidden rounded-xl p-3.5"
     >
       <div
         aria-hidden
+        style={{ willChange: 'opacity' }}
         className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-[hsl(var(--brand-violet)/0.10)] opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
       />
       <div className="ek-icon-tile relative h-8 w-8 [&_svg]:h-4 [&_svg]:w-4">
@@ -528,6 +529,7 @@ function ContactCard({
     <div className="group ek-glass ek-card-sheen ek-ring-conic ek-glow relative flex items-center gap-3 overflow-hidden rounded-xl p-3 transition-transform duration-300 hover:-translate-y-1">
       <div
         aria-hidden
+        style={{ willChange: 'opacity' }}
         className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-[hsl(var(--brand-violet)/0.10)] opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
       />
       <div className="ek-icon-tile relative h-9 w-9 flex-shrink-0 [&_svg]:h-4 [&_svg]:w-4">

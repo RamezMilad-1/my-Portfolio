@@ -283,8 +283,11 @@
       radial-gradient(120% 80% at 0% 0%, hsl(0 0% 100% / 0.05), transparent 55%),
       radial-gradient(110% 80% at 50% 115%, hsl(var(--brand-indigo) / 0.10), transparent 65%);
     border: 1px solid hsl(0 0% 100% / 0.10);
-    backdrop-filter: saturate(150%) blur(18px);
-    -webkit-backdrop-filter: saturate(150%) blur(18px);
+    /* 14px (was 18px) — paint cost on grids of 10+ cards drops noticeably
+       while the glass read stays intact. Increasing past this is what
+       starts to feel heavy on mid-range laptops + phones. */
+    backdrop-filter: saturate(150%) blur(14px);
+    -webkit-backdrop-filter: saturate(150%) blur(14px);
     box-shadow:
       inset 0 1px 0 hsl(0 0% 100% / 0.10),
       inset 0 -1px 0 hsl(var(--brand-indigo) / 0.08),
@@ -322,13 +325,14 @@
     box-shadow: 0 0 14px -2px hsl(var(--brand-violet) / 0.65);
   }
 
-  /* Hover lift — soft dark depth + subtle indigo rim. No pink glow. */
+  /* Hover lift — soft dark depth + subtle indigo rim. No pink glow.
+     Note: background-color change still applies on :hover (instant);
+     omitted from the transition list to drop a paint property per frame. */
   .ek-glow {
     transition:
       box-shadow 360ms cubic-bezier(0.22, 1, 0.36, 1),
       border-color 360ms cubic-bezier(0.22, 1, 0.36, 1),
-      transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
-      background-color 360ms cubic-bezier(0.22, 1, 0.36, 1);
+      transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
   }
   .ek-glow:hover {
     border-color: hsl(0 0% 100% / 0.18);
@@ -536,7 +540,10 @@
     -webkit-background-clip: text;
             background-clip: text;
     color: transparent;
-    animation: hero-shine 14s ease-in-out infinite;
+    /* 22s (was 14s) — background-position is paint-bound on a large text
+       layer; slowing the cycle cuts paint frequency without any visible
+       difference to the eye. */
+    animation: hero-shine 22s ease-in-out infinite;
     filter: drop-shadow(0 6px 28px hsl(var(--brand-violet) / 0.28));
   }
   @keyframes hero-shine {
@@ -723,23 +730,47 @@
     opacity: 1;
   }
 
-  /* Slow pulsing glow used by the animated background orbs */
+  /* Slow pulsing glow used by the animated background orbs.
+     Opacity-only: scaling a 120–220px blurred element forces the browser
+     to re-rasterize the blur on every frame, which is the single most
+     expensive thing those orbs were doing. The visual difference between
+     opacity-only and opacity+scale at these sizes is imperceptible. */
   @keyframes pulse-glow {
-    0%, 100% { opacity: 0.55; transform: scale(1); }
-    50%      { opacity: 0.9;  transform: scale(1.07); }
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 0.9;  }
   }
   .animate-pulse-glow {
     animation: pulse-glow 8s ease-in-out infinite;
+    /* `both` pins the element to the 0% keyframe state during any
+       animation-delay (including the negative delays used on the orbs).
+       Without this, CSS defaults to `none` and the element renders at its
+       own opacity (the implicit 1.0) until the delay elapses, producing a
+       cold-start flash of overly-bright orbs on every hard refresh. */
+    animation-fill-mode: both;
   }
 
-  /* A subtler pulse used for distant/or less-important orbs to avoid
-     localized bright hotspots (lower amplitude and slower scale). */
   @keyframes pulse-glow-subtle {
-    0%, 100% { opacity: 0.32; transform: scale(1); }
-    50%      { opacity: 0.48; transform: scale(1.03); }
+    0%, 100% { opacity: 0.32; }
+    50%      { opacity: 0.48; }
   }
   .animate-pulse-glow-subtle {
     animation: pulse-glow-subtle 10s ease-in-out infinite;
+    animation-fill-mode: both;
+  }
+
+  /* TechGrid icon bob — compositor-only translate-y. Each item gets its
+     own duration / delay via inline style so the grid drifts independently
+     instead of bobbing in sync. Cheaper than a per-item framer-motion
+     infinite loop because the work happens entirely on the compositor
+     thread. */
+  @keyframes ek-bob {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(var(--bob, -4px)); }
+  }
+  .ek-bob {
+    animation: ek-bob var(--bob-duration, 5s) ease-in-out infinite;
+    animation-delay: var(--bob-delay, 0s);
+    will-change: transform;
   }
 
   /* Typewriter cursor blink */

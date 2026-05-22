@@ -334,8 +334,9 @@ function TechGridItem({ tech, index }: { tech: string; index: number }) {
   });
   const prefersReduced = useReducedMotion();
 
-  // Vary the bob duration / delay per item so they drift independently
-  // instead of bobbing in sync. Subtle motion — small, slow drifts.
+  // Vary the bob per item so the grid drifts independently. Pure CSS
+  // keyframe (`.ek-bob`) — driven by inline custom properties, runs on the
+  // compositor, no per-icon framer-motion infinite loop.
   const bobDuration = 4 + (index % 5) * 0.6; // 4s … 6.4s
   const bobDelay = (index % 7) * 0.35; // 0s … 2.1s
   const bobAmplitude = 3 + (index % 3); // 3px … 5px
@@ -355,19 +356,17 @@ function TechGridItem({ tech, index }: { tech: string; index: number }) {
       // prevents the halo from flickering on/off during hover.
       className="group flex cursor-default flex-col items-center gap-1.5 py-2"
     >
-      <motion.div
-        animate={
+      <div
+        className={`flex flex-col items-center gap-1.5 ${prefersReduced ? '' : 'ek-bob'}`}
+        style={
           prefersReduced
             ? undefined
-            : { y: [0, -bobAmplitude, 0] }
+            : ({
+                ['--bob' as string]: `-${bobAmplitude}px`,
+                ['--bob-duration' as string]: `${bobDuration}s`,
+                ['--bob-delay' as string]: `${bobDelay}s`,
+              } as React.CSSProperties)
         }
-        transition={{
-          duration: bobDuration,
-          repeat: Infinity,
-          ease: 'easeInOut',
-          delay: bobDelay,
-        }}
-        className="flex flex-col items-center gap-1.5"
       >
         {/* Fixed stage. Halos live here and NEVER transform — only the icon
             inside transforms on hover. Browsers can drop a blur filter when
@@ -402,10 +401,10 @@ function TechGridItem({ tech, index }: { tech: string; index: number }) {
         </div>
 
         {/* Label — bold, brightens & lifts on hover */}
-        <p className="text-center text-[12px] font-bold tracking-tight text-[hsl(220_22%_88%)] transition-all duration-300 group-hover:-translate-y-0.5 group-hover:scale-[1.04] group-hover:text-white">
+        <p className="text-center text-[12px] font-bold tracking-tight text-[hsl(220_22%_88%)] transition-[transform,color] duration-300 group-hover:-translate-y-0.5 group-hover:scale-[1.04] group-hover:text-white">
           {tech}
         </p>
-      </motion.div>
+      </div>
     </motion.div>
   );
 }

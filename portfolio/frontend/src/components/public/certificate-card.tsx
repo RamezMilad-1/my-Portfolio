@@ -28,7 +28,7 @@ export function CertificateCard({ certificate, index = 0, onClick }: Props) {
       initial={initial}
       animate={animate}
       transition={{ duration: 0.5, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
-      className="group ek-glass ek-card-sheen ek-ring-conic ek-glow relative block w-full overflow-hidden rounded-2xl text-left transition-[transform,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1.5"
+      className="group ek-glass ek-card-sheen ek-ring-conic ek-glow relative block w-full overflow-hidden rounded-2xl text-left transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1.5"
     >
       {/* Top violet hairline accent */}
       <div
@@ -52,7 +52,8 @@ export function CertificateCard({ certificate, index = 0, onClick }: Props) {
               src={img}
               alt={certificate.title}
               loading="lazy"
-              className="h-full w-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05]"
+              decoding="async"
+              className="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05]"
             />
           ) : (
             <div className="relative flex h-full w-full flex-col items-center justify-center gap-2.5 px-4 text-center">

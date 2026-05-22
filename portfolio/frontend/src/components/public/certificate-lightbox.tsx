@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, ExternalLink, X } from 'lucide-react';
 import type { Certificate } from '@/lib/types';
 import { uploadsUrl } from '@/lib/utils';
@@ -21,6 +21,7 @@ export function CertificateLightbox({
 }: Props) {
   const open = index !== null;
   const cert = index !== null ? certificates[index] : null;
+  const prefersReduced = useReducedMotion();
 
   useEffect(() => {
     if (!open) return;
@@ -42,21 +43,25 @@ export function CertificateLightbox({
   }, [open, index, certificates.length, onClose, onNavigate]);
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {open && cert ? (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: prefersReduced ? 0 : 0.2 }}
+          // will-change: backdrop-filter keeps the blurred overlay layer on
+          // the GPU during the cross-fade — avoids a frame of stalled paint
+          // on first open.
+          style={{ willChange: 'backdrop-filter' }}
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
           onClick={onClose}
         >
           <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
+            initial={prefersReduced ? false : { scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            transition={{ duration: 0.25 }}
+            exit={prefersReduced ? { opacity: 0 } : { scale: 0.95, opacity: 0 }}
+            transition={{ duration: prefersReduced ? 0 : 0.25 }}
             className="ek-glass relative mx-auto w-full max-w-4xl overflow-hidden rounded-3xl"
             onClick={(e) => e.stopPropagation()}
           >
