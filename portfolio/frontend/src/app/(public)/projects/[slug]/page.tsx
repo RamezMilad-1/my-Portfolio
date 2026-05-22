@@ -36,6 +36,28 @@ export default function ProjectDetailPage({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const prefersReduced = useReducedMotion();
 
+  // Right-rail height-aware sticky: pin the rail's bottom 24 px above the
+  // viewport bottom ONCE the rail is fully visible, then freeze it there
+  // while the left column scrolls past. Both columns end together because
+  // the rail is sticky inside the same grid cell as the (taller) left.
+  //
+  // We use a CALLBACK ref (not useRef) so the effect re-runs the moment
+  // the rail element actually mounts. The first render shows a skeleton
+  // (the rail JSX isn't in the tree yet), so a plain useRef + [] effect
+  // would observe `null` and never re-attach — leaving railHeight at 0
+  // and the sticky math pinning the rail to the viewport bottom forever.
+  const [railEl, setRailEl] = useState<HTMLDivElement | null>(null);
+  const [railHeight, setRailHeight] = useState(0);
+  useEffect(() => {
+    if (!railEl || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver((entries) => {
+      const h = entries[0]?.contentRect.height ?? 0;
+      setRailHeight(h);
+    });
+    ro.observe(railEl);
+    return () => ro.disconnect();
+  }, [railEl]);
+
   // Show skeleton while data is loading OR while we have neither data nor a
   // concrete error (e.g. cache-warming, hydration window).
   if (isLoading || (!project && !error)) {
@@ -198,159 +220,10 @@ export default function ProjectDetailPage({
         </div>
       </section>
 
-      {/* ──────── Cover / Gallery ──────── */}
-      {showGallery || showCover ? (
-        <section className="px-4 sm:px-6">
-          <div className="mx-auto max-w-3xl">
-            <div className="relative">
-              {/* Soft ambient halo behind the frame */}
-              <div
-                aria-hidden
-                className="pointer-events-none absolute -inset-10 rounded-[2.5rem] bg-[radial-gradient(55%_50%_at_50%_45%,hsl(var(--brand-violet-soft)/0.22),transparent_72%)] blur-3xl"
-              />
-
-              {/* Whitish frosted-glass shell — image flush to the top edge */}
-              <div
-                className="relative overflow-hidden rounded-[1.75rem] border border-white/25 backdrop-blur-2xl"
-                style={{
-                  background:
-                    'linear-gradient(180deg, hsl(0 0% 100% / 0.16) 0%, hsl(0 0% 100% / 0.08) 45%, hsl(0 0% 100% / 0.05) 100%)',
-                  boxShadow:
-                    'inset 0 1px 0 hsl(0 0% 100% / 0.40), inset 0 -1px 0 hsl(0 0% 100% / 0.10), 0 24px 60px -24px hsl(220 40% 2% / 0.55), 0 6px 18px -10px hsl(220 40% 2% / 0.45)',
-                }}
-              >
-                {/* Image stage — flush to top, sides; no inner padding above the image */}
-                <div
-                  className="relative aspect-[16/10] w-full overflow-hidden"
-                  style={{
-                    background:
-                      'radial-gradient(120% 80% at 50% 0%, hsl(0 0% 100% / 0.18), transparent 60%), linear-gradient(180deg, hsl(0 0% 100% / 0.06), hsl(0 0% 100% / 0.01))',
-                  }}
-                >
-                  {showGallery ? (
-                    <AnimatePresence initial={false} custom={direction} mode="sync">
-                      <motion.img
-                        key={galleryImages[safeIdx]}
-                        src={galleryImages[safeIdx]}
-                        alt={`${project.name} screenshot ${safeIdx + 1}`}
-                        onClick={() => setLightboxOpen(true)}
-                        custom={direction}
-                        variants={slideVariants}
-                        initial="enter"
-                        animate="center"
-                        exit="exit"
-                        transition={
-                          prefersReduced
-                            ? { opacity: { duration: 0.2 } }
-                            : {
-                                x: { type: 'spring', stiffness: 240, damping: 32 },
-                                opacity: { duration: 0.32, ease: [0.22, 1, 0.36, 1] },
-                              }
-                        }
-                        className="absolute inset-0 h-full w-full cursor-zoom-in object-contain drop-shadow-[0_14px_24px_hsl(220_40%_2%/0.35)]"
-                      />
-                    </AnimatePresence>
-                  ) : showCover ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={cover!}
-                      alt={project.name}
-                      onClick={() => setLightboxOpen(true)}
-                      onError={() => setCoverErrored(true)}
-                      className="absolute inset-0 h-full w-full cursor-zoom-in object-contain drop-shadow-[0_14px_24px_hsl(220_40%_2%/0.35)]"
-                    />
-                  ) : null}
-
-                  {/* Subtle top-edge highlight, hairline-thin */}
-                  <div
-                    aria-hidden
-                    className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent"
-                  />
-
-                  {showGallery && galleryImages.length > 1 ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => goTo(safeIdx - 1)}
-                        aria-label="Previous"
-                        className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/50 bg-white/70 text-[hsl(220_30%_18%)] shadow-[0_8px_22px_-8px_hsl(220_40%_2%/0.35)] backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white hover:text-[hsl(var(--brand-indigo))]"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => goTo(safeIdx + 1)}
-                        aria-label="Next"
-                        className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/50 bg-white/70 text-[hsl(220_30%_18%)] shadow-[0_8px_22px_-8px_hsl(220_40%_2%/0.35)] backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white hover:text-[hsl(var(--brand-indigo))]"
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </button>
-                      <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/40 bg-white/60 px-2.5 py-1.5 shadow-[0_6px_18px_-8px_hsl(220_40%_2%/0.35)] backdrop-blur-md">
-                        {galleryImages.map((_, i) => (
-                          <button
-                            key={i}
-                            type="button"
-                            onClick={() => goTo(i)}
-                            aria-label={`Go to image ${i + 1}`}
-                            className={`h-1.5 rounded-full transition-all duration-300 ${
-                              i === safeIdx
-                                ? 'w-6 bg-gradient-to-r from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] shadow-[0_0_10px_-1px_hsl(var(--brand-violet)/0.55)]'
-                                : 'w-1.5 bg-[hsl(220_15%_55%/0.55)] hover:bg-[hsl(220_15%_35%/0.75)]'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </>
-                  ) : null}
-                </div>
-
-                {/* Bottom "film strip" — only when gallery has >1 image */}
-                {showGallery && galleryImages.length > 1 ? (
-                  <div className="relative border-t border-white/20 bg-white/[0.06] px-3 py-2.5 backdrop-blur-md">
-                    {/* Counter on the right */}
-                    <div className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 rounded-full bg-white/40 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-[hsl(220_30%_18%)] backdrop-blur sm:flex">
-                      <span className="text-[hsl(var(--brand-indigo))]">
-                        {safeIdx + 1}
-                      </span>
-                      <span className="text-[hsl(220_15%_45%)]">/</span>
-                      <span>{galleryImages.length}</span>
-                    </div>
-
-                    <div className="flex gap-2 overflow-x-auto pr-0 sm:pr-14">
-                      {galleryImages.map((src, i) => (
-                        <motion.button
-                          key={`${src}-${i}`}
-                          type="button"
-                          onClick={() => goTo(i)}
-                          whileHover={{ y: -2 }}
-                          transition={{ type: 'spring', stiffness: 320, damping: 24 }}
-                          className={`relative h-11 w-16 flex-shrink-0 overflow-hidden rounded-md border bg-white/40 backdrop-blur transition-all duration-300 ${
-                            i === safeIdx
-                              ? 'border-[hsl(var(--brand-indigo)/0.65)] opacity-100 shadow-[0_0_0_1px_hsl(var(--brand-indigo)/0.30),0_6px_14px_-6px_hsl(var(--brand-violet)/0.45)]'
-                              : 'border-white/40 opacity-65 hover:border-white/70 hover:opacity-100'
-                          }`}
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={src}
-                            alt=""
-                            className="h-full w-full object-contain p-0.5"
-                          />
-                        </motion.button>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        </section>
-      ) : null}
-
       {/* ──────── Body ──────── */}
       <div className="mx-auto max-w-5xl px-4 py-14 sm:px-6 md:py-20">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
-          <div className="space-y-12 lg:col-span-8">
+          <div className="order-2 space-y-12 lg:order-1 lg:col-span-8">
             {project.problem || project.outcome || project.role ? (
               <div>
                 <SectionHeading centered={false} kicker="01" title="Case study" />
@@ -440,62 +313,219 @@ export default function ProjectDetailPage({
             ) : null}
           </div>
 
-          <aside className="lg:col-span-4">
-            <div className="ek-glass sticky top-24 space-y-4 rounded-2xl p-5">
-              {project.liveUrl ? (
-                <GradientButton asChild className="w-full">
-                  <a
-                    href={project.liveUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    {project.liveLabel || 'Live Demo'}
-                  </a>
-                </GradientButton>
-              ) : null}
-              {project.githubUrl ? (
-                <GradientButton
-                  asChild
-                  variant="outline"
-                  className="w-full"
-                >
-                  <a
-                    href={project.githubUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Github className="h-4 w-4" />
-                    {project.sourceLabel || 'Source'}
-                  </a>
-                </GradientButton>
+          <aside className="order-1 lg:order-2 lg:col-span-4">
+            <div
+              ref={setRailEl}
+              className="space-y-5"
+              style={{
+                position: 'sticky',
+                // Engage sticky only when the rail's bottom would otherwise
+                // go below `viewport - 24`. Until then the rail scrolls with
+                // the page. `dvh` for mobile toolbar safety; `max(24px, …)`
+                // falls back to top-pin if the rail ever exceeds viewport.
+                top: `max(24px, calc(100dvh - ${railHeight}px - 24px))`,
+              }}
+            >
+              {/* Gallery — same logic, now in the site's dark-glass language
+                  so it sits as a peer of the info card below and the cards
+                  on the left. */}
+              {showGallery || showCover ? (
+                <div className="relative">
+                  {/* Soft ambient violet halo — tighter so it doesn't bleed
+                      into the info card below. */}
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute -inset-6 rounded-[2rem] bg-[radial-gradient(55%_50%_at_50%_45%,hsl(var(--brand-violet-soft)/0.18),transparent_75%)] blur-3xl"
+                  />
+
+                  {/* Dark glass shell — same family as .ek-glass cards.
+                      No `ek-card-sheen` here: its ::after overlay paints a
+                      whitish gradient on top of the image (opacity 0.85)
+                      and visibly washes the screenshot out. */}
+                  <div className="ek-glass ek-glow relative overflow-hidden rounded-2xl">
+                    {/* Image stage. */}
+                    <div
+                      className="relative aspect-[16/10] w-full overflow-hidden"
+                      style={{
+                        background:
+                          'radial-gradient(120% 80% at 50% 0%, hsl(0 0% 100% / 0.06), transparent 60%), linear-gradient(180deg, hsl(232 28% 12% / 0.55), hsl(232 28% 8% / 0.65))',
+                      }}
+                    >
+                      {showGallery ? (
+                        <AnimatePresence initial={false} custom={direction} mode="sync">
+                          <motion.img
+                            key={galleryImages[safeIdx]}
+                            src={galleryImages[safeIdx]}
+                            alt={`${project.name} screenshot ${safeIdx + 1}`}
+                            onClick={() => setLightboxOpen(true)}
+                            custom={direction}
+                            variants={slideVariants}
+                            initial="enter"
+                            animate="center"
+                            exit="exit"
+                            transition={
+                              prefersReduced
+                                ? { opacity: { duration: 0.2 } }
+                                : {
+                                    x: { type: 'spring', stiffness: 240, damping: 32 },
+                                    opacity: { duration: 0.32, ease: [0.22, 1, 0.36, 1] },
+                                  }
+                            }
+                            className="absolute inset-0 h-full w-full cursor-zoom-in object-contain drop-shadow-[0_14px_24px_hsl(220_40%_2%/0.35)]"
+                          />
+                        </AnimatePresence>
+                      ) : showCover ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={cover!}
+                          alt={project.name}
+                          onClick={() => setLightboxOpen(true)}
+                          onError={() => setCoverErrored(true)}
+                          className="absolute inset-0 h-full w-full cursor-zoom-in object-contain drop-shadow-[0_14px_24px_hsl(220_40%_2%/0.35)]"
+                        />
+                      ) : null}
+
+                      {/* Subtle top-edge sheen, matching ek-card-sheen tier. */}
+                      <div
+                        aria-hidden
+                        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent"
+                      />
+
+                      {showGallery && galleryImages.length > 1 ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => goTo(safeIdx - 1)}
+                            aria-label="Previous"
+                            className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[hsl(220_30%_8%/0.55)] text-white shadow-[0_6px_18px_-8px_hsl(220_40%_4%/0.6)] backdrop-blur-md transition-all duration-200 hover:scale-105 hover:border-white/30 hover:bg-[hsl(220_30%_14%/0.75)] hover:text-[hsl(var(--brand-violet-soft))]"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => goTo(safeIdx + 1)}
+                            aria-label="Next"
+                            className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[hsl(220_30%_8%/0.55)] text-white shadow-[0_6px_18px_-8px_hsl(220_40%_4%/0.6)] backdrop-blur-md transition-all duration-200 hover:scale-105 hover:border-white/30 hover:bg-[hsl(220_30%_14%/0.75)] hover:text-[hsl(var(--brand-violet-soft))]"
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </button>
+                          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/15 bg-[hsl(220_30%_8%/0.55)] px-2.5 py-1.5 shadow-[0_6px_18px_-8px_hsl(220_40%_4%/0.6)] backdrop-blur-md">
+                            {galleryImages.map((_, i) => (
+                              <button
+                                key={i}
+                                type="button"
+                                onClick={() => goTo(i)}
+                                aria-label={`Go to image ${i + 1}`}
+                                className={`h-1.5 rounded-full transition-all duration-300 ${
+                                  i === safeIdx
+                                    ? 'w-6 bg-gradient-to-r from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] shadow-[0_0_10px_-1px_hsl(var(--brand-violet)/0.55)]'
+                                    : 'w-1.5 bg-[hsl(220_15%_70%/0.30)] hover:bg-[hsl(220_15%_85%/0.45)]'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </>
+                      ) : null}
+                    </div>
+
+                    {/* Bottom film strip — only when gallery has >1 image. */}
+                    {showGallery && galleryImages.length > 1 ? (
+                      <div className="relative border-t border-white/[0.08] bg-[hsl(232_28%_10%/0.45)] px-3 py-2.5 backdrop-blur-md">
+                        {/* Counter on the right — dark capsule */}
+                        <div className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 rounded-full border border-white/10 bg-[hsl(220_30%_8%/0.55)] px-2 py-0.5 text-[10px] font-semibold tracking-wide text-[hsl(220_25%_90%)] backdrop-blur sm:flex">
+                          <span className="text-[hsl(var(--brand-violet-soft))]">
+                            {safeIdx + 1}
+                          </span>
+                          <span className="text-[hsl(220_15%_55%)]">/</span>
+                          <span>{galleryImages.length}</span>
+                        </div>
+
+                        <div className="flex gap-2 overflow-x-auto pr-0 sm:pr-14">
+                          {galleryImages.map((src, i) => (
+                            <motion.button
+                              key={`${src}-${i}`}
+                              type="button"
+                              onClick={() => goTo(i)}
+                              whileHover={{ y: -2 }}
+                              transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+                              className={`relative h-11 w-16 flex-shrink-0 overflow-hidden rounded-md border bg-[hsl(220_30%_10%/0.45)] backdrop-blur transition-all duration-300 ${
+                                i === safeIdx
+                                  ? 'border-[hsl(var(--brand-indigo)/0.65)] opacity-100 shadow-[0_0_0_1px_hsl(var(--brand-indigo)/0.30),0_6px_14px_-6px_hsl(var(--brand-violet)/0.45)]'
+                                  : 'border-white/10 opacity-65 hover:border-white/25 hover:opacity-100'
+                              }`}
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={src}
+                                alt=""
+                                className="h-full w-full object-contain p-0.5"
+                              />
+                            </motion.button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
               ) : null}
 
-              <dl className="space-y-3.5 border-t border-[hsl(var(--border))] pt-4 text-sm">
-                {project.role ? (
-                  <DetailRow label="Role" value={project.role} />
+              {/* Live Demo / Source / Role / Category / Stack — unchanged */}
+              <div className="ek-glass space-y-4 rounded-2xl p-5">
+                {project.liveUrl ? (
+                  <GradientButton asChild className="w-full">
+                    <a
+                      href={project.liveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      {project.liveLabel || 'Live Demo'}
+                    </a>
+                  </GradientButton>
                 ) : null}
-                {project.category ? (
-                  <DetailRow label="Category" value={project.category} />
+                {project.githubUrl ? (
+                  <GradientButton
+                    asChild
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <a
+                      href={project.githubUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Github className="h-4 w-4" />
+                      {project.sourceLabel || 'Source'}
+                    </a>
+                  </GradientButton>
                 ) : null}
-                {project.tech?.length ? (
-                  <div>
-                    <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-[hsl(var(--muted-foreground))]">
-                      Stack
-                    </dt>
-                    <dd className="mt-2 flex flex-wrap gap-1">
-                      {project.tech.map((t) => (
-                        <span
-                          key={t}
-                          className="rounded-full border border-[hsl(var(--brand-violet-soft)/0.20)] bg-[hsl(var(--brand-violet-soft)/0.05)] px-2 py-0.5 text-[10px] font-medium text-[hsl(var(--brand-indigo))]"
-                        >
-                          {t}
-                        </span>
-                      ))}
-                    </dd>
-                  </div>
-                ) : null}
-              </dl>
+
+                <dl className="space-y-3.5 border-t border-[hsl(var(--border))] pt-4 text-sm">
+                  {project.role ? (
+                    <DetailRow label="Role" value={project.role} />
+                  ) : null}
+                  {project.category ? (
+                    <DetailRow label="Category" value={project.category} />
+                  ) : null}
+                  {project.tech?.length ? (
+                    <div>
+                      <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-[hsl(var(--muted-foreground))]">
+                        Stack
+                      </dt>
+                      <dd className="mt-2 flex flex-wrap gap-1">
+                        {project.tech.map((t) => (
+                          <span
+                            key={t}
+                            className="rounded-full border border-[hsl(var(--brand-violet-soft)/0.20)] bg-[hsl(var(--brand-violet-soft)/0.05)] px-2 py-0.5 text-[10px] font-medium text-[hsl(var(--brand-indigo))]"
+                          >
+                            {t}
+                          </span>
+                        ))}
+                      </dd>
+                    </div>
+                  ) : null}
+                </dl>
+              </div>
             </div>
           </aside>
         </div>
