@@ -219,38 +219,37 @@ export default function HomePage() {
             initial={metricsReveal.initial}
             animate={metricsReveal.animate}
             transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-10 grid grid-cols-2 gap-2.5 md:grid-cols-3"
+            className="mt-10 grid grid-cols-2 gap-2.5 md:grid-cols-6"
           >
             <MetricCard
               icon={<GraduationCap className="h-5 w-5" />}
               label="Education"
               value={profile?.education ?? 'B.Sc. Computer Science'}
+              className="col-span-2 md:col-span-4"
             />
             <MetricCard
               icon={<Briefcase className="h-5 w-5" />}
               label="Availability"
               value={profile?.availability ?? 'Open to opportunities'}
+              className="col-span-2 md:col-span-2"
             />
             <MetricCard
               icon={<Briefcase className="h-5 w-5" />}
               label="Projects shipped"
               value={stats.projectsShipped}
+              className="col-span-1 md:col-span-2"
             />
             <MetricCard
               icon={<Code2 className="h-5 w-5" />}
               label="Technologies"
               value={stats.technologies}
-            />
-            <MetricCard
-              icon={<GraduationCap className="h-5 w-5" />}
-              label="Years coding"
-              value={stats.yearsCoding}
-              suffix="+"
+              className="col-span-1 md:col-span-2"
             />
             <MetricCard
               icon={<Sparkles className="h-5 w-5" />}
               label="Certificates"
               value={certificates.length}
+              className="col-span-2 md:col-span-2"
             />
           </motion.div>
         </div>
@@ -469,18 +468,20 @@ function MetricCard({
   label,
   value,
   suffix = '',
+  className = '',
 }: {
   icon: React.ReactNode;
   label: string;
   value: string | number;
   suffix?: string;
+  className?: string;
 }) {
   const isNumeric = typeof value === 'number';
   return (
     <motion.div
       whileHover={{ y: -3 }}
       transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-      className="group ek-glass ek-card-sheen ek-ring-conic ek-glow relative overflow-hidden rounded-xl p-3.5"
+      className={`group ek-glass ek-card-sheen ek-ring-conic ek-glow relative overflow-hidden rounded-xl p-3.5 ${className}`}
     >
       <div
         aria-hidden
