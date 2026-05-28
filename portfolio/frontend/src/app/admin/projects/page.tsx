@@ -48,8 +48,6 @@ export default function AdminProjectsPage() {
   const del = useDeleteProject();
   const reorder = useReorderProjects();
 
-  // Mirror the server data into local state so we can show optimistic
-  // updates while the reorder request is in flight.
   const [items, setItems] = useState<Project[]>([]);
   useEffect(() => {
     if (data) {
@@ -83,7 +81,6 @@ export default function AdminProjectsPage() {
         onSuccess: () => toast.success('Order saved'),
         onError: () => {
           toast.error('Could not save order');
-          // revert
           setItems(items);
         },
       },

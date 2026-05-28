@@ -57,9 +57,6 @@ export function AnimatedBackground() {
       canvas.style.height = `${height}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      // Lower density target: was width*height / 36000, max 50.
-      // Now width*height / 60000, max 36 — the O(n²)-ish line pass drops
-      // by ~50% and the spatial-bucket pass below makes it near-linear.
       const target = Math.min(36, Math.round((width * height) / 60000));
       if (particlesRef.current.length !== target) {
         particlesRef.current = Array.from({ length: target }, () => ({
@@ -112,11 +109,6 @@ export function AnimatedBackground() {
         if (p.y > height + 10) p.y = -10;
       }
 
-      // Spatial bucket pre-pass: hash each particle into a grid whose cell
-      // size equals maxDist. A particle only needs to check its own cell
-      // and the 4 cells to the right/below (each pair tested once). This
-      // collapses the visible work from O(n²) to ~O(n) without changing
-      // the rendered output at all.
       const cellSize = maxDist;
       const cols = Math.max(1, Math.ceil(width / cellSize));
       const rows = Math.max(1, Math.ceil(height / cellSize));
@@ -172,7 +164,6 @@ export function AnimatedBackground() {
         }
       }
 
-      // particles
       for (const p of ps) {
         ctx.fillStyle = `rgba(200, 180, 240, ${p.alpha * 0.85})`;
         ctx.beginPath();
@@ -196,13 +187,9 @@ export function AnimatedBackground() {
       aria-hidden
       className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
     >
-      {/* Animated orbs */}
       <div className="absolute -left-32 top-[-10%] h-[28rem] w-[28rem] rounded-full bg-[hsl(var(--brand-indigo)/0.25)] blur-[120px] animate-pulse-glow" />
       <div
         className="absolute -right-28 top-[56%] h-[40rem] w-[40rem] rounded-full bg-[hsl(var(--brand-violet)/0.12)] blur-[220px] animate-pulse-glow-subtle"
-        // Negative delays start each orb mid-cycle on first paint — no
-        // bright flash on hard refresh; matches the steady-state look from
-        // frame 0.
         style={{ animationDelay: '-2s' }}
       />
       <div
@@ -210,9 +197,6 @@ export function AnimatedBackground() {
         style={{ animationDelay: '-4s' }}
       />
 
-      {/* Particle canvas — desktop only. On phones / coarse pointers the
-          orbs + grid are enough and the canvas is the single biggest
-          per-frame cost in the background. */}
       {canDrawCanvas ? (
         <canvas
           ref={canvasRef}

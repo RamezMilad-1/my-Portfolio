@@ -6,13 +6,10 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "lint": "eslint \"{src,test,scripts}/**/*.ts\" --fix",
-    "test": "jest",
     "db:seed": "ts-node -r tsconfig-paths/register scripts/seed.ts",
     "create-admin": "ts-node -r tsconfig-paths/register scripts/create-admin.ts"
   },
@@ -25,7 +22,6 @@
     "@nestjs/mongoose": "^11.0.3",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.1.9",
-    "@nestjs/schedule": "^6.0.1",
     "@nestjs/serve-static": "^5.0.4",
     "@nestjs/throttler": "^6.5.0",
     "bcrypt": "^6.0.0",
@@ -43,11 +39,9 @@
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
-    "@nestjs/testing": "^11.0.1",
     "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.0",
-    "@types/jest": "^30.0.0",
     "@types/multer": "^2.0.0",
     "@types/node": "^22.19.1",
     "@types/passport-jwt": "^4.0.1",

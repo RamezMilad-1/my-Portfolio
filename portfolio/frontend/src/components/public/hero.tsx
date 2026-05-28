@@ -86,8 +86,6 @@ const DEFAULT_SUBTITLE =
   'Full-stack TypeScript — typed all the way through, with the kind of detail that holds up six months later.';
 
 function buildHeroCopy(profile: Profile | null | undefined) {
-  // First non-empty configured headline becomes the role; everything else
-  // in `headlines` is ignored now that the typewriter is gone.
   const role =
     (profile?.headlines ?? [])
       .map((s) => s?.trim())
@@ -116,7 +114,6 @@ export function Hero({ profile }: Props) {
       aria-label="Introduction"
     >
       <div className="relative mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-12 px-4 py-12 sm:px-6 md:grid-cols-2 md:py-20">
-        {/* Left: text content */}
         <motion.div
           variants={heroContainerVariants}
           initial={prefersReduced ? false : 'hidden'}
@@ -127,7 +124,6 @@ export function Hero({ profile }: Props) {
             <StatusBadge label={availability} tone="emerald" />
           </motion.div>
 
-          {/* Name kicker — small, violet, identifies the page owner */}
           <motion.p
             variants={prefersReduced ? undefined : heroFadeUp}
             className="mt-5 text-xs font-bold uppercase tracking-[0.32em] text-[hsl(var(--brand-violet-soft))] md:text-sm"
@@ -135,7 +131,6 @@ export function Hero({ profile }: Props) {
             {displayName}
           </motion.p>
 
-          {/* Role headline */}
           <motion.h1
             variants={prefersReduced ? undefined : heroHeadline}
             className="font-display mt-2 text-[clamp(2rem,5.5vw,3.75rem)] font-bold leading-[1.05] tracking-tight"
@@ -143,7 +138,6 @@ export function Hero({ profile }: Props) {
             <span className="ek-hero-title block">{role}</span>
           </motion.h1>
 
-          {/* Subtitle */}
           <motion.p
             variants={prefersReduced ? undefined : heroFadeUp}
             className="mt-5 max-w-xl text-sm leading-relaxed text-[hsl(var(--muted-foreground))] md:text-base"
@@ -151,7 +145,6 @@ export function Hero({ profile }: Props) {
             {subtitle}
           </motion.p>
 
-          {/* CTAs */}
           <motion.div
             variants={prefersReduced ? undefined : heroFadeUp}
             className="mt-7 flex flex-wrap items-center gap-3"
@@ -184,7 +177,6 @@ export function Hero({ profile }: Props) {
             ) : null}
           </motion.div>
 
-          {/* Social icon row */}
           <motion.div
             variants={prefersReduced ? undefined : heroFadeOnly}
             className="mt-6 flex items-center gap-2.5"
@@ -217,7 +209,6 @@ export function Hero({ profile }: Props) {
           </motion.div>
         </motion.div>
 
-        {/* Right: tech icon cloud — UNTOUCHED */}
         <div className="relative flex size-full items-center justify-center overflow-visible md:justify-end md:pr-2 lg:pr-6">
           <IconCloud images={techCloudImages} />
         </div>

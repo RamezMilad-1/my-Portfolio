@@ -15,6 +15,11 @@ export class ProfileStatsDto {
   @IsOptional() @IsInt() @Min(0) technologies?: number;
 }
 
+export class AboutFocusBlockDto {
+  @IsOptional() @IsString() heading?: string;
+  @IsOptional() @IsString() body?: string;
+}
+
 export class UpdateProfileDto {
   @IsOptional() @IsString() displayName?: string;
   @IsOptional() @IsString() headline?: string;
@@ -60,4 +65,14 @@ export class UpdateProfileDto {
   @IsArray()
   @IsString({ each: true })
   aboutCapabilities?: string[];
+
+  @IsOptional() @IsString() aboutFocusKicker?: string;
+  @IsOptional() @IsString() aboutFocusTitle?: string;
+  @IsOptional() @IsString() aboutFocusSubtitle?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => AboutFocusBlockDto)
+  aboutFocusBlocks?: AboutFocusBlockDto[];
 }

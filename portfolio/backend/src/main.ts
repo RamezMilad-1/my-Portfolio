@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
@@ -8,6 +8,7 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 
 const PLACEHOLDER_JWT_SECRET = 'change-me-to-a-long-random-string';
+const logger = new Logger('Bootstrap');
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -15,36 +16,19 @@ async function bootstrap() {
   });
   const config = app.get(ConfigService);
 
-  // Cap JSON bodies at 256kb (default would be 100kb).
-  // File uploads route through Multer separately and are not affected.
   app.useBodyParser('json', { limit: '256kb' });
   app.useBodyParser('urlencoded', { limit: '256kb', extended: true });
 
-  // ---- JWT secret runtime guard ----
-  // Loud warning if the secret is missing or still the placeholder.
-  // Don't crash — would block local dev — but make the problem impossible to miss.
   const secret = config.get<string>('JWT_SECRET');
   if (!secret || secret === PLACEHOLDER_JWT_SECRET) {
-    console.warn(
-      '\n[SECURITY WARN] JWT_SECRET is missing or set to the example placeholder.',
+    logger.warn('JWT_SECRET is missing or set to the example placeholder.');
+    logger.warn('Generate a real secret before deploying.');
+    logger.warn(
+      'Use: node -e "process.stdout.write(require(\'crypto\').randomBytes(48).toString(\'base64\'))"',
     );
-    console.warn(
-      '[SECURITY WARN] Generate a real one before deploying:',
-    );
-    console.warn(
-      '[SECURITY WARN]   node -e "console.log(require(\'crypto\').randomBytes(48).toString(\'base64\'))"',
-    );
-    console.warn(
-      '[SECURITY WARN] Then set JWT_SECRET in your production env (NOT in the .env file in the repo).\n',
-    );
+    logger.warn('Set JWT_SECRET in the production environment.');
   }
 
-  // ---- Security middleware ----
-  // helmet adds X-Frame-Options, X-Content-Type-Options, Referrer-Policy,
-  // Strict-Transport-Security, and a basic Content-Security-Policy.
-  // CORP defaults to 'same-origin' which blocks the frontend (a separate
-  // origin) from loading uploaded images via <img>. Relax to 'cross-origin'
-  // so /uploads/* can be embedded by the portfolio frontend.
   app.use(
     helmet({
       crossOriginResourcePolicy: { policy: 'cross-origin' },
@@ -61,7 +45,6 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Strip unknown fields from request bodies; reject if any are present.
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -70,14 +53,12 @@ async function bootstrap() {
     }),
   );
 
-  // Trust the first proxy so client IPs (used by ThrottlerGuard) are accurate
-  // when running behind Vercel/Render/Railway/Nginx.
   const expressApp = app.getHttpAdapter().getInstance();
   expressApp.set('trust proxy', 1);
 
   const port = Number(config.get('PORT', 3001));
   await app.listen(port);
-  console.log(`[backend] listening on http://localhost:${port}/api/v1`);
+  logger.log(`Listening on http://localhost:${port}/api/v1`);
 }
 
 bootstrap();

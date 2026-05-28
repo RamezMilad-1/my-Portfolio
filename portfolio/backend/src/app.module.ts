@@ -19,8 +19,6 @@ import { TechModule } from './tech/tech.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRoot([
-      // Global default: 100 requests per minute per IP. Sufficient for normal
-      // public-portfolio traffic; stricter limits live on individual routes.
       { ttl: 60_000, limit: 100 },
     ]),
     MongooseModule.forRootAsync({

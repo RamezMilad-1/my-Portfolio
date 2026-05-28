@@ -11,6 +11,13 @@ export class ProfileStats {
 }
 const ProfileStatsSchema = SchemaFactory.createForClass(ProfileStats);
 
+@Schema({ _id: false })
+export class AboutFocusBlock {
+  @Prop({ default: '' }) heading?: string;
+  @Prop({ default: '' }) body?: string;
+}
+const AboutFocusBlockSchema = SchemaFactory.createForClass(AboutFocusBlock);
+
 @Schema({ timestamps: true, _id: false })
 export class Profile {
   @Prop({ default: 'singleton' }) _id: string;
@@ -54,6 +61,11 @@ export class Profile {
   @Prop({ default: '' }) aboutFactStack: string;
   @Prop({ default: '' }) aboutFactAvailable: string;
   @Prop({ type: [String], default: [] }) aboutCapabilities: string[];
+  @Prop({ default: '' }) aboutFocusKicker: string;
+  @Prop({ default: '' }) aboutFocusTitle: string;
+  @Prop({ default: '' }) aboutFocusSubtitle: string;
+  @Prop({ type: [AboutFocusBlockSchema], default: [] })
+  aboutFocusBlocks: AboutFocusBlock[];
 }
 
 export const ProfileSchema = SchemaFactory.createForClass(Profile);

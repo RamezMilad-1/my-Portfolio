@@ -35,6 +35,10 @@ export interface Profile {
   aboutFactStack?: string;
   aboutFactAvailable?: string;
   aboutCapabilities?: string[];
+  aboutFocusKicker?: string;
+  aboutFocusTitle?: string;
+  aboutFocusSubtitle?: string;
+  aboutFocusBlocks?: { heading?: string; body?: string }[];
 }
 
 export interface TeamMember {

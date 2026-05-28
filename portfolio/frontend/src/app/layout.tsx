@@ -1,10 +1,15 @@
 import type { Metadata } from 'next';
+import localFont from 'next/font/local';
 import '../styles/globals.css';
 import { Providers } from '@/components/providers';
-import { Geist } from "next/font/google";
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = localFont({
+  src: '../assets/fonts/geist-latin.woff2',
+  variable: '--font-sans',
+  weight: '100 900',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: {
@@ -21,7 +26,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={cn("dark", "font-sans", geist.variable)} style={{ colorScheme: 'dark' }} data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={cn('dark', 'font-sans', geist.variable)}
+      style={{ colorScheme: 'dark' }}
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+    >
       <body className="min-h-dvh antialiased">
         <a
           href="#main-content"

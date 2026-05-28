@@ -469,7 +469,7 @@ export default function ProjectDetailPage({
                 </div>
               ) : null}
 
-              {/* Live Demo / Source / Role / Category / Stack — unchanged */}
+              {/* Project metadata */}
               <div className="ek-glass space-y-4 rounded-2xl p-5">
                 {project.liveUrl ? (
                   <GradientButton asChild className="w-full">

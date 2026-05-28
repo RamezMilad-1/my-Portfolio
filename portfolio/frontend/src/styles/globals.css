@@ -283,9 +283,6 @@
       radial-gradient(120% 80% at 0% 0%, hsl(0 0% 100% / 0.05), transparent 55%),
       radial-gradient(110% 80% at 50% 115%, hsl(var(--brand-indigo) / 0.10), transparent 65%);
     border: 1px solid hsl(0 0% 100% / 0.10);
-    /* 14px (was 18px) — paint cost on grids of 10+ cards drops noticeably
-       while the glass read stays intact. Increasing past this is what
-       starts to feel heavy on mid-range laptops + phones. */
     backdrop-filter: saturate(150%) blur(14px);
     -webkit-backdrop-filter: saturate(150%) blur(14px);
     box-shadow:
@@ -400,8 +397,7 @@
     opacity: 0.85;
   }
 
-  /* Soft moving highlight that sweeps across a card on hover (replaces
-     heavy violet halos). Pair with .ek-glass containers. */
+  /* Soft moving highlight that sweeps across card surfaces. */
   .ek-card-shine {
     position: relative;
     overflow: hidden;
@@ -540,9 +536,6 @@
     -webkit-background-clip: text;
             background-clip: text;
     color: transparent;
-    /* 22s (was 14s) — background-position is paint-bound on a large text
-       layer; slowing the cycle cuts paint frequency without any visible
-       difference to the eye. */
     animation: hero-shine 22s ease-in-out infinite;
     filter: drop-shadow(0 6px 28px hsl(var(--brand-violet) / 0.28));
   }
@@ -587,7 +580,6 @@
     pointer-events: none;
   }
 
-  /* Grid background overlay — intentionally empty (squares removed per request) */
   .ek-grid {
     display: none;
   }
@@ -741,11 +733,6 @@
   }
   .animate-pulse-glow {
     animation: pulse-glow 8s ease-in-out infinite;
-    /* `both` pins the element to the 0% keyframe state during any
-       animation-delay (including the negative delays used on the orbs).
-       Without this, CSS defaults to `none` and the element renders at its
-       own opacity (the implicit 1.0) until the delay elapses, producing a
-       cold-start flash of overly-bright orbs on every hard refresh. */
     animation-fill-mode: both;
   }
 
@@ -773,14 +760,6 @@
     will-change: transform;
   }
 
-  /* Typewriter cursor blink */
-  @keyframes blink {
-    0%, 49%   { opacity: 1; }
-    50%, 100% { opacity: 0; }
-  }
-  .animate-blink {
-    animation: blink 1.05s steps(1, start) infinite;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

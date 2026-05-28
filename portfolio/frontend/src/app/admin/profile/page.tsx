@@ -41,6 +41,17 @@ const schema = z.object({
   aboutFactStack: z.string().optional(),
   aboutFactAvailable: z.string().optional(),
   aboutCapabilities: z.array(z.string()).default([]),
+  aboutFocusKicker: z.string().optional(),
+  aboutFocusTitle: z.string().optional(),
+  aboutFocusSubtitle: z.string().optional(),
+  aboutFocusBlocks: z
+    .array(
+      z.object({
+        heading: z.string().optional(),
+        body: z.string().optional(),
+      }),
+    )
+    .default([]),
 });
 type Form = z.infer<typeof schema>;
 
@@ -69,6 +80,10 @@ export default function AdminProfilePage() {
       aboutFactStack: '',
       aboutFactAvailable: '',
       aboutCapabilities: [],
+      aboutFocusKicker: '',
+      aboutFocusTitle: '',
+      aboutFocusSubtitle: '',
+      aboutFocusBlocks: [],
     },
   });
 
@@ -77,6 +92,9 @@ export default function AdminProfilePage() {
 
   const capabilities = form.watch('aboutCapabilities');
   const [capabilityInput, setCapabilityInput] = useState('');
+  const focusBlocks = form.watch('aboutFocusBlocks');
+  const [focusHeadingInput, setFocusHeadingInput] = useState('');
+  const [focusBodyInput, setFocusBodyInput] = useState('');
 
   useEffect(() => {
     if (profile) {
@@ -107,6 +125,10 @@ export default function AdminProfilePage() {
         aboutFactStack: profile.aboutFactStack ?? '',
         aboutFactAvailable: profile.aboutFactAvailable ?? '',
         aboutCapabilities: profile.aboutCapabilities ?? [],
+        aboutFocusKicker: profile.aboutFocusKicker ?? '',
+        aboutFocusTitle: profile.aboutFocusTitle ?? '',
+        aboutFocusSubtitle: profile.aboutFocusSubtitle ?? '',
+        aboutFocusBlocks: profile.aboutFocusBlocks ?? [],
       });
     }
   }, [profile, form]);
@@ -172,6 +194,39 @@ export default function AdminProfilePage() {
     form.setValue(
       'aboutCapabilities',
       capabilities.filter((_, idx) => idx !== i),
+      { shouldDirty: true },
+    );
+  };
+
+  const addFocusBlock = () => {
+    const heading = focusHeadingInput.trim();
+    const body = focusBodyInput.trim();
+    if (!heading && !body) return;
+    form.setValue('aboutFocusBlocks', [...(focusBlocks ?? []), { heading, body }], {
+      shouldDirty: true,
+    });
+    setFocusHeadingInput('');
+    setFocusBodyInput('');
+  };
+
+  const updateFocusBlock = (
+    index: number,
+    field: 'heading' | 'body',
+    value: string,
+  ) => {
+    form.setValue(
+      'aboutFocusBlocks',
+      (focusBlocks ?? []).map((block, idx) =>
+        idx === index ? { ...block, [field]: value } : block,
+      ),
+      { shouldDirty: true },
+    );
+  };
+
+  const removeFocusBlock = (index: number) => {
+    form.setValue(
+      'aboutFocusBlocks',
+      (focusBlocks ?? []).filter((_, idx) => idx !== index),
       { shouldDirty: true },
     );
   };
@@ -400,6 +455,96 @@ export default function AdminProfilePage() {
               placeholder="Full-stack apps from Figma to deploy — typed APIs, accessible UIs, clean builds."
             />
             <Button type="button" variant="outline" onClick={addCapability}>
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <Label>Focus section</Label>
+            <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
+              Optional recruiter-facing override for the public About focus cards.
+              Leave blocks empty to use the bullet statements above.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="aboutFocusKicker">Kicker</Label>
+              <Input
+                id="aboutFocusKicker"
+                placeholder="What I can ship"
+                {...form.register('aboutFocusKicker')}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="aboutFocusTitle">Title</Label>
+              <Input
+                id="aboutFocusTitle"
+                placeholder="Reliable product work"
+                {...form.register('aboutFocusTitle')}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="aboutFocusSubtitle">Subtitle</Label>
+              <Input
+                id="aboutFocusSubtitle"
+                placeholder="Short supporting sentence"
+                {...form.register('aboutFocusSubtitle')}
+              />
+            </div>
+          </div>
+
+          <ul className="space-y-2">
+            {(focusBlocks ?? []).map((block, index) => (
+              <li key={index} className="flex items-start gap-2">
+                <div className="flex-1 space-y-2">
+                  <Input
+                    value={block.heading ?? ''}
+                    onChange={(event) =>
+                      updateFocusBlock(index, 'heading', event.target.value)
+                    }
+                    placeholder="Heading"
+                  />
+                  <Textarea
+                    value={block.body ?? ''}
+                    onChange={(event) =>
+                      updateFocusBlock(index, 'body', event.target.value)
+                    }
+                    placeholder="Short supporting sentence"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeFocusBlock(index)}
+                >
+                  <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                </Button>
+              </li>
+            ))}
+          </ul>
+
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_1fr_auto]">
+            <Input
+              value={focusHeadingInput}
+              onChange={(event) => setFocusHeadingInput(event.target.value)}
+              placeholder="Heading (optional)"
+            />
+            <Input
+              value={focusBodyInput}
+              onChange={(event) => setFocusBodyInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  addFocusBlock();
+                }
+              }}
+              placeholder="Short supporting sentence"
+            />
+            <Button type="button" variant="outline" onClick={addFocusBlock}>
               <Plus className="h-4 w-4" />
             </Button>
           </div>

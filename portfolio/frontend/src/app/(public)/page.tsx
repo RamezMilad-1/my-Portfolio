@@ -72,8 +72,6 @@ export default function HomePage() {
   );
 
   const techList = useMemo(() => {
-    // If admin has curated a tech list, use that (in their ordering).
-    // Otherwise auto-derive from project tech arrays (legacy behaviour).
     if (techItems.length > 0) {
       return techItems.map((t) => t.name);
     }
@@ -116,10 +114,10 @@ export default function HomePage() {
       .filter(Boolean);
     if (items.length > 0) return items;
     return [
-      'Full-stack apps from Figma to deploy — typed APIs, accessible UIs, clean builds.',
-      'Production React / Next.js frontends with motion, dark mode, and a11y baked in.',
-      'Strict NestJS backends — validation, auth, and clean module boundaries.',
-      'Real data layers — MongoDB or Postgres — with proper schemas, not just CRUD.',
+      'I ship full-stack apps end-to-end — Figma to deployed, with no awkward seams in between.',
+      'I care about the front edge — micro-interactions, accessibility, and dark mode handled before someone asks.',
+      "I write backends I'd want to come back to — strict NestJS modules, real validation, no surprises.",
+      "I write databases I trust six months later — schemas, migrations, and queries I'd defend in review.",
     ];
   }, [profile?.aboutCapabilities]);
 

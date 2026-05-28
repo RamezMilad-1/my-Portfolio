@@ -25,10 +25,6 @@ export function IconCloud({ icons, images }: IconCloudProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [iconPositions, setIconPositions] = useState<Icon[]>([]);
 
-  // Interaction state lives in refs so the RAF loop never tears down on every
-  // mouse move. Previously these were React state in the animation effect's
-  // dep array, which caused the animation loop to be cancelled and restarted
-  // on each pointermove — major source of stutter.
   const isDraggingRef = useRef(false);
   const lastMousePosRef = useRef({ x: 0, y: 0 });
   const mousePosRef = useRef({ x: 0, y: 0 });
@@ -59,8 +55,6 @@ export function IconCloud({ icons, images }: IconCloudProps) {
       const offCtx = offscreen.getContext('2d');
 
       if (offCtx) {
-        // Explicitly clear the offscreen canvas to ensure it starts transparent
-        // and prevent rendering artifacts during initial load
         offCtx.clearRect(0, 0, offscreen.width, offscreen.height);
 
         if (images) {
