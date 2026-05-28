@@ -4,16 +4,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
-  Briefcase,
-  Code2,
   FileDown,
   Github,
-  GraduationCap,
   Linkedin,
   Mail,
   MapPin,
   Send,
-  Sparkles,
   Twitter,
 } from 'lucide-react';
 import { useProfile } from '@/lib/api/profile';
@@ -22,6 +18,7 @@ import { useCertificatesPublic } from '@/lib/api/certificates';
 import { useTimelinePublic } from '@/lib/api/timeline';
 import { useTechPublic } from '@/lib/api/tech';
 import { Hero } from '@/components/public/hero';
+import { StatusBadge } from '@/components/public/status-badge';
 import { useScrollReveal } from '@/components/motion/use-scroll-reveal';
 import { SectionHeading } from '@/components/public/section-heading';
 import { TabsPortfolio } from '@/components/public/tabs-portfolio';
@@ -95,6 +92,37 @@ export default function HomePage() {
     };
   }, [profile, projects, techList]);
 
+  // Body paragraphs come from `profile.bio` split on blank lines. When the
+  // bio is empty, fall back to the two-paragraph default that ships with the
+  // site so the layout stays meaningful out of the box.
+  const aboutBodyParagraphs = useMemo<string[]>(() => {
+    const bio = profile?.bio?.trim();
+    if (bio) {
+      return bio
+        .split(/\n\s*\n/)
+        .map((p) => p.trim())
+        .filter(Boolean);
+    }
+    return [
+      'Most of my time goes into TypeScript: React or Next.js on the front, NestJS on the back, MongoDB or Postgres underneath. I care about the parts most people skip — micro-interactions that feel right, types that hold the system together, and code that still reads cleanly when I come back to it cold.',
+      "I'm at the stage where I want to push past student projects into real work — full-stack TypeScript, shipped end-to-end, and honest about what's done versus what I'd refactor if I had another day.",
+    ];
+  }, [profile?.bio]);
+
+  // Same pattern for the "What I can ship" capability bullets.
+  const aboutCapabilitiesList = useMemo<string[]>(() => {
+    const items = (profile?.aboutCapabilities ?? [])
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (items.length > 0) return items;
+    return [
+      'Full-stack apps from Figma to deploy — typed APIs, accessible UIs, clean builds.',
+      'Production React / Next.js frontends with motion, dark mode, and a11y baked in.',
+      'Strict NestJS backends — validation, auth, and clean module boundaries.',
+      'Real data layers — MongoDB or Postgres — with proper schemas, not just CRUD.',
+    ];
+  }, [profile?.aboutCapabilities]);
+
   const [showAllProjects, setShowAllProjects] = useState(false);
   const visibleProjects = showAllProjects ? sortedProjects : sortedProjects.slice(0, 6);
 
@@ -132,39 +160,162 @@ export default function HomePage() {
       {/* ──────── About ──────── */}
       <section
         id="about"
-        className="relative scroll-mt-20 px-4 py-16 sm:px-6 md:py-24"
+        className="relative scroll-mt-20 px-4 py-10 sm:px-6 md:py-16"
       >
         <div className="mx-auto max-w-6xl">
           <SectionHeading
-            kicker={profile?.aboutKicker?.trim() || 'About me'}
-            title={
-              profile?.aboutTitle?.trim() ||
-              "A developer with a designer's eye"
-            }
-            subtitle={
-              profile?.aboutSubtitle?.trim() ||
-              'I build full-stack web apps that ship — and look like they were designed on purpose.'
-            }
+            kicker={profile?.aboutKicker?.trim() || 'About'}
+            title={profile?.aboutTitle?.trim() || 'The short version.'}
+            subtitle={profile?.aboutSubtitle?.trim() || undefined}
           />
 
-          {/* Row 1 — greeting + intro paragraph + CTAs · portrait */}
-          <div className="mt-12 grid grid-cols-1 items-center gap-8 lg:grid-cols-12">
+          {/* Recruiter card — name + role + status + scannable facts */}
+          <motion.div
+            ref={metricsReveal.ref}
+            initial={metricsReveal.initial}
+            animate={metricsReveal.animate}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="ek-glass ek-card-sheen relative mt-10 overflow-hidden rounded-2xl p-4 sm:p-5"
+          >
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-[hsl(var(--brand-violet)/0.6)] to-transparent"
+            />
+
+            {/* Identity line + status pill */}
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+              <h3 className="font-display text-base font-semibold tracking-tight text-[hsl(var(--foreground))] sm:text-lg md:text-xl">
+                {profile?.displayName ?? 'Ramez Milad'}
+                <span className="text-[hsl(220_15%_64%)] font-normal">
+                  {' '}
+                  {profile?.aboutTagline?.trim() ||
+                    '— Full-stack TypeScript developer'}
+                </span>
+              </h3>
+              <StatusBadge
+                tone="violet"
+                label={
+                  profile?.availability ??
+                  'Open to internships · Cairo / remote'
+                }
+              />
+            </div>
+
+            {/* Hairline */}
+            <div
+              aria-hidden
+              className="my-4 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent"
+            />
+
+            {/* Scannable facts — Role / Location / Stack / Available for */}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+              <FactCell
+                label="Role"
+                value={
+                  profile?.education ?? '3rd-year CS · Software Engineering'
+                }
+              />
+              <FactCell
+                label="Location"
+                value={
+                  profile?.aboutFactLocation?.trim() ||
+                  'Cairo, Egypt · GMT+2'
+                }
+              />
+              <FactCell
+                label="Core stack"
+                value={
+                  profile?.aboutFactStack?.trim() ||
+                  'TypeScript · React · Next.js · NestJS'
+                }
+              />
+              <FactCell
+                label="Available for"
+                value={
+                  profile?.aboutFactAvailable?.trim() ||
+                  'Internships · Junior · Remote'
+                }
+              />
+            </div>
+
+            {/* Find me on — social trust signals */}
+            {profile?.socials?.github ||
+            profile?.socials?.linkedin ||
+            profile?.socials?.x ||
+            profile?.email ? (
+              <>
+                <div
+                  aria-hidden
+                  className="my-4 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent"
+                />
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <p className="text-[9.5px] font-semibold uppercase tracking-[0.22em] text-[hsl(220_15%_62%)]">
+                    Find me on
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {profile?.socials?.github ? (
+                      <SocialIcon
+                        href={profile.socials.github}
+                        label="GitHub"
+                        icon={<Github className="h-4 w-4" />}
+                      />
+                    ) : null}
+                    {profile?.socials?.linkedin ? (
+                      <SocialIcon
+                        href={profile.socials.linkedin}
+                        label="LinkedIn"
+                        icon={<Linkedin className="h-4 w-4" />}
+                      />
+                    ) : null}
+                    {profile?.socials?.x ? (
+                      <SocialIcon
+                        href={profile.socials.x}
+                        label="X"
+                        icon={<Twitter className="h-4 w-4" />}
+                      />
+                    ) : null}
+                    {profile?.email ? (
+                      <SocialIcon
+                        href={`mailto:${profile.email}`}
+                        label="Email"
+                        icon={<Mail className="h-4 w-4" />}
+                      />
+                    ) : null}
+                  </div>
+                </div>
+              </>
+            ) : null}
+          </motion.div>
+
+          {/* Reflective prose + portrait */}
+          <div className="mt-10 grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
             <motion.div
               ref={aboutTextReveal.ref}
               initial={aboutTextReveal.initial}
               animate={aboutTextReveal.animate}
               transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-              className="lg:col-span-7"
+              className="lg:col-span-8"
             >
-              <p className="font-display text-xl font-semibold leading-tight tracking-tight text-[hsl(var(--foreground))] md:text-2xl">
-                Hello, I&apos;m {profile?.displayName ?? 'Ramez Milad'}.
-              </p>
-              <p className="mt-4 text-sm leading-relaxed text-[hsl(var(--muted-foreground))] md:text-base">
-                {profile?.bio ??
-                  "I'm a 3rd-year Computer Science student majoring in Software Engineering. I focus on shipping production-grade student projects end-to-end: modern frontends in React / Next.js, typed APIs in NestJS, and data layers in MongoDB or Postgres. I care about details — micro-interactions, accessibility, and code that reads cleanly six months later."}
+              {/* Confident lede */}
+              <p className="font-display text-xl font-semibold leading-[1.22] tracking-tight text-[hsl(var(--foreground))] md:text-[22px]">
+                {profile?.aboutLede?.trim() ||
+                  'I build production-grade web apps end-to-end — typed all the way through, with the kind of detail that holds up six months later.'}
               </p>
 
-              <div className="mt-6 flex flex-wrap gap-3">
+              {/* Reflective paragraphs */}
+              {aboutBodyParagraphs.map((para, i) => (
+                <p
+                  key={i}
+                  className={`${
+                    i === 0 ? 'mt-4' : 'mt-3'
+                  } text-[13.5px] leading-relaxed text-[hsl(var(--muted-foreground))] md:text-[14.5px]`}
+                >
+                  {para}
+                </p>
+              ))}
+
+              {/* CTAs */}
+              <div className="mt-5 flex flex-wrap gap-2.5">
                 <GradientButton asChild>
                   <a
                     href="#portfolio"
@@ -190,6 +341,13 @@ export default function HomePage() {
                     </a>
                   </GradientButton>
                 ) : null}
+                {profile?.email ? (
+                  <GradientButton asChild variant="outline">
+                    <a href={`mailto:${profile.email}`}>
+                      <Mail className="h-4 w-4" /> Email me
+                    </a>
+                  </GradientButton>
+                ) : null}
               </div>
             </motion.div>
 
@@ -198,7 +356,7 @@ export default function HomePage() {
               initial={aboutPortraitReveal.initial}
               animate={aboutPortraitReveal.animate}
               transition={{ duration: 1, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
-              className="lg:col-span-5"
+              className="lg:col-span-4"
             >
               <AboutPortrait
                 src={profile?.avatarUrl ? uploadsUrl(profile.avatarUrl) : null}
@@ -213,45 +371,23 @@ export default function HomePage() {
             </motion.div>
           </div>
 
-          {/* Row 2 — unified 6-card metric grid */}
-          <motion.div
-            ref={metricsReveal.ref}
-            initial={metricsReveal.initial}
-            animate={metricsReveal.animate}
-            transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-10 grid grid-cols-2 gap-2.5 md:grid-cols-6"
-          >
-            <MetricCard
-              icon={<GraduationCap className="h-5 w-5" />}
-              label="Education"
-              value={profile?.education ?? 'B.Sc. Computer Science'}
-              className="col-span-2 md:col-span-4"
-            />
-            <MetricCard
-              icon={<Briefcase className="h-5 w-5" />}
-              label="Availability"
-              value={profile?.availability ?? 'Open to opportunities'}
-              className="col-span-2 md:col-span-2"
-            />
-            <MetricCard
-              icon={<Briefcase className="h-5 w-5" />}
-              label="Projects shipped"
-              value={stats.projectsShipped}
-              className="col-span-1 md:col-span-2"
-            />
-            <MetricCard
-              icon={<Code2 className="h-5 w-5" />}
-              label="Technologies"
-              value={stats.technologies}
-              className="col-span-1 md:col-span-2"
-            />
-            <MetricCard
-              icon={<Sparkles className="h-5 w-5" />}
-              label="Certificates"
-              value={certificates.length}
-              className="col-span-2 md:col-span-2"
-            />
-          </motion.div>
+          {/* What I can ship — outcome-oriented capabilities */}
+          {aboutCapabilitiesList.length > 0 ? (
+            <div className="mt-10">
+              <p className="font-display text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(220_15%_68%)]">
+                What I can ship
+              </p>
+              <span
+                aria-hidden
+                className="mt-2.5 block h-px w-12 bg-gradient-to-r from-[hsl(var(--brand-violet-soft)/0.7)] via-[hsl(var(--brand-violet-soft)/0.35)] to-transparent"
+              />
+              <ul className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                {aboutCapabilitiesList.map((text, i) => (
+                  <Capability key={i} text={text} />
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -274,7 +410,6 @@ export default function HomePage() {
             <TabsPortfolio
               counts={{
                 projects: sortedProjects.length,
-                certificates: certificates.length,
                 tech: techList.length,
               }}
               projects={
@@ -304,34 +439,62 @@ export default function HomePage() {
                   </>
                 )
               }
-              certificates={
-                certificates.length === 0 ? (
-                  <EmptyState message="No certificates yet — check back soon." />
-                ) : (
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                    {certificates.map((c, i) => (
-                      <CertificateCard
-                        key={c._id}
-                        certificate={c}
-                        index={i}
-                        onClick={() => setLightboxIdx(i)}
-                      />
-                    ))}
-                  </div>
-                )
-              }
               tech={<TechGrid items={techList} />}
             />
           </div>
         </div>
-
-        <CertificateLightbox
-          certificates={certificates}
-          index={lightboxIdx}
-          onClose={() => setLightboxIdx(null)}
-          onNavigate={(i) => setLightboxIdx(i)}
-        />
       </section>
+
+      {/* ──────── Lifeline (vertical timeline + certifications) ──────── */}
+      {timelineEntries.length > 0 || certificates.length > 0 ? (
+        <section
+          id="lifeline"
+          className="relative scroll-mt-20 px-4 py-16 sm:px-6 md:py-24"
+        >
+          <div className="mx-auto max-w-3xl">
+            <SectionHeading
+              kicker={profile?.lifelineKicker?.trim() || 'Lifeline'}
+              title={profile?.lifelineTitle?.trim() || 'The road so far'}
+              subtitle={
+                profile?.lifelineSubtitle?.trim() ||
+                'A short timeline of milestones — the moments that shaped the work behind everything above.'
+              }
+            />
+            {timelineEntries.length > 0 ? (
+              <Timeline entries={timelineEntries} />
+            ) : null}
+
+            {certificates.length > 0 ? (
+              <div className="mt-16">
+                <p className="font-display text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(220_15%_68%)]">
+                  Certifications
+                </p>
+                <span
+                  aria-hidden
+                  className="mt-3 block h-px w-12 bg-gradient-to-r from-[hsl(var(--brand-violet-soft)/0.7)] via-[hsl(var(--brand-violet-soft)/0.35)] to-transparent"
+                />
+                <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {certificates.map((c, i) => (
+                    <CertificateCard
+                      key={c._id}
+                      certificate={c}
+                      index={i}
+                      onClick={() => setLightboxIdx(i)}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          <CertificateLightbox
+            certificates={certificates}
+            index={lightboxIdx}
+            onClose={() => setLightboxIdx(null)}
+            onNavigate={(i) => setLightboxIdx(i)}
+          />
+        </section>
+      ) : null}
 
       {/* ──────── Contact ──────── */}
       <section
@@ -405,26 +568,6 @@ export default function HomePage() {
           ) : null}
         </div>
       </section>
-
-      {/* ──────── Lifeline (vertical timeline) ──────── */}
-      {timelineEntries.length > 0 ? (
-        <section
-          id="lifeline"
-          className="relative scroll-mt-20 px-4 py-16 sm:px-6 md:py-24"
-        >
-          <div className="mx-auto max-w-3xl">
-            <SectionHeading
-              kicker={profile?.lifelineKicker?.trim() || 'Lifeline'}
-              title={profile?.lifelineTitle?.trim() || 'The road so far'}
-              subtitle={
-                profile?.lifelineSubtitle?.trim() ||
-                'A short timeline of milestones — the moments that shaped the work behind everything above.'
-              }
-            />
-            <Timeline entries={timelineEntries} />
-          </div>
-        </section>
-      ) : null}
     </>
   );
 }
@@ -441,8 +584,8 @@ function AboutPortrait({
   initials: string;
 }) {
   return (
-    <div className="relative mx-auto aspect-square w-full max-w-[14rem] sm:max-w-[16rem]">
-      <div className="absolute -inset-4 rounded-3xl bg-gradient-to-tr from-[hsl(var(--brand-indigo)/0.22)] to-[hsl(var(--brand-violet-soft)/0.22)] opacity-70 blur-2xl" />
+    <div className="relative mx-auto aspect-square w-full max-w-[11rem] sm:max-w-[13rem]">
+      <div className="absolute -inset-3 rounded-3xl bg-gradient-to-tr from-[hsl(var(--brand-indigo)/0.22)] to-[hsl(var(--brand-violet-soft)/0.22)] opacity-70 blur-2xl" />
       <div className="ek-glass relative h-full w-full overflow-hidden rounded-3xl">
         {src ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -463,49 +606,54 @@ function AboutPortrait({
   );
 }
 
-function MetricCard({
-  icon,
-  label,
-  value,
-  suffix = '',
-  className = '',
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string | number;
-  suffix?: string;
-  className?: string;
-}) {
-  const isNumeric = typeof value === 'number';
+function FactCell({ label, value }: { label: string; value: string }) {
   return (
-    <motion.div
-      whileHover={{ y: -3 }}
-      transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-      className={`group ek-glass ek-card-sheen ek-ring-conic ek-glow relative overflow-hidden rounded-xl p-3.5 ${className}`}
-    >
-      <div
-        aria-hidden
-        style={{ willChange: 'opacity' }}
-        className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-[hsl(var(--brand-violet)/0.10)] opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
-      />
-      <div className="ek-icon-tile relative h-8 w-8 [&_svg]:h-4 [&_svg]:w-4">
-        {icon}
-      </div>
-      {isNumeric ? (
-        <p className="font-display relative mt-2.5 text-xl font-bold tracking-tight text-[hsl(220_25%_96%)] md:text-2xl">
-          {value}
-          {suffix}
-        </p>
-      ) : (
-        <p className="relative mt-2.5 text-[13px] font-medium leading-snug text-[hsl(220_25%_94%)]">
-          {value}
-        </p>
-      )}
-      <p className="relative mt-1 text-[9.5px] font-semibold uppercase tracking-[0.18em] text-[hsl(220_15%_68%)]">
+    <div className="relative">
+      <p className="text-[9.5px] font-semibold uppercase tracking-[0.22em] text-[hsl(220_15%_62%)]">
         {label}
       </p>
-      <span aria-hidden className="ek-underline relative mt-2" />
-    </motion.div>
+      <p className="mt-1 text-[12.5px] font-medium leading-snug text-[hsl(220_25%_94%)] md:text-[13px]">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function SocialIcon({
+  href,
+  label,
+  icon,
+}: {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+}) {
+  const isMail = href.startsWith('mailto:');
+  return (
+    <a
+      href={href}
+      aria-label={label}
+      title={label}
+      target={isMail ? undefined : '_blank'}
+      rel={isMail ? undefined : 'noopener noreferrer'}
+      className="ek-glass inline-flex h-7 w-7 items-center justify-center rounded-full text-[hsl(220_22%_88%)] transition-[transform,color,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:text-white"
+    >
+      {icon}
+    </a>
+  );
+}
+
+function Capability({ text }: { text: string }) {
+  return (
+    <li className="group ek-glass relative flex items-start gap-3 overflow-hidden rounded-xl px-3.5 py-2.5 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5">
+      <span
+        aria-hidden
+        className="mt-[3px] inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-[hsl(var(--brand-violet))] shadow-[0_0_0_3px_hsl(var(--brand-violet)/0.18)]"
+      />
+      <p className="text-[13px] leading-relaxed text-[hsl(220_22%_88%)] transition-colors duration-300 group-hover:text-white">
+        {text}
+      </p>
+    </li>
   );
 }
 

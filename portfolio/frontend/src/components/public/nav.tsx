@@ -11,8 +11,8 @@ const SECTIONS: { id: string; label: string }[] = [
   { id: 'home', label: 'Home' },
   { id: 'about', label: 'About' },
   { id: 'portfolio', label: 'Portfolio' },
-  { id: 'contact', label: 'Contact' },
   { id: 'lifeline', label: 'Lifeline' },
+  { id: 'contact', label: 'Contact' },
 ];
 
 export function Nav() {

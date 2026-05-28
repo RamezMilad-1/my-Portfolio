@@ -35,6 +35,12 @@ const schema = z.object({
     projectsShipped: z.number().int().min(0).optional(),
     technologies: z.number().int().min(0).optional(),
   }),
+  aboutTagline: z.string().optional(),
+  aboutLede: z.string().optional(),
+  aboutFactLocation: z.string().optional(),
+  aboutFactStack: z.string().optional(),
+  aboutFactAvailable: z.string().optional(),
+  aboutCapabilities: z.array(z.string()).default([]),
 });
 type Form = z.infer<typeof schema>;
 
@@ -57,11 +63,20 @@ export default function AdminProfilePage() {
       socials: { github: '', linkedin: '', x: '', website: '' },
       headlines: [],
       stats: {},
+      aboutTagline: '',
+      aboutLede: '',
+      aboutFactLocation: '',
+      aboutFactStack: '',
+      aboutFactAvailable: '',
+      aboutCapabilities: [],
     },
   });
 
   const headlines = form.watch('headlines');
   const [headlineInput, setHeadlineInput] = useState('');
+
+  const capabilities = form.watch('aboutCapabilities');
+  const [capabilityInput, setCapabilityInput] = useState('');
 
   useEffect(() => {
     if (profile) {
@@ -86,6 +101,12 @@ export default function AdminProfilePage() {
           projectsShipped: profile.stats?.projectsShipped,
           technologies: profile.stats?.technologies,
         },
+        aboutTagline: profile.aboutTagline ?? '',
+        aboutLede: profile.aboutLede ?? '',
+        aboutFactLocation: profile.aboutFactLocation ?? '',
+        aboutFactStack: profile.aboutFactStack ?? '',
+        aboutFactAvailable: profile.aboutFactAvailable ?? '',
+        aboutCapabilities: profile.aboutCapabilities ?? [],
       });
     }
   }, [profile, form]);
@@ -139,6 +160,22 @@ export default function AdminProfilePage() {
     );
   };
 
+  const addCapability = () => {
+    const v = capabilityInput.trim();
+    if (!v) return;
+    form.setValue('aboutCapabilities', [...capabilities, v], {
+      shouldDirty: true,
+    });
+    setCapabilityInput('');
+  };
+  const removeCapability = (i: number) => {
+    form.setValue(
+      'aboutCapabilities',
+      capabilities.filter((_, idx) => idx !== i),
+      { shouldDirty: true },
+    );
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -176,12 +213,11 @@ export default function AdminProfilePage() {
           <Input id="email" {...form.register('email')} />
         </div>
         <div className="space-y-1.5 md:col-span-2">
-          <Label htmlFor="headline">Headline (fallback for typewriter)</Label>
+          <Label htmlFor="headline">Hero subtitle</Label>
+          <p className="-mt-0.5 text-xs text-[hsl(var(--muted-foreground))]">
+            One-liner shown under the big role headline in the hero.
+          </p>
           <Input id="headline" {...form.register('headline')} />
-        </div>
-        <div className="space-y-1.5 md:col-span-2">
-          <Label htmlFor="bio">Bio</Label>
-          <Textarea id="bio" rows={5} {...form.register('bio')} />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="education">Education</Label>
@@ -203,11 +239,12 @@ export default function AdminProfilePage() {
 
       <div className="space-y-3">
         <div>
-          <Label>Typewriter phrases</Label>
+          <Label>Hero role</Label>
           <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
-            These rotate in the hero, typed letter-by-letter. Add several short
-            roles (e.g. &quot;Full-Stack Developer&quot;, &quot;CS Student&quot;,
-            &quot;React enthusiast&quot;). If empty, the headline above is used.
+            The first phrase here is shown as the big role headline in the
+            hero (e.g. &quot;Full-Stack Developer&quot;). Extra phrases are
+            kept for future use but not currently displayed. If empty, a
+            sensible default is used.
           </p>
         </div>
         <ul className="space-y-2">
@@ -242,6 +279,130 @@ export default function AdminProfilePage() {
           <Button type="button" variant="outline" onClick={addHeadline}>
             <Plus className="h-4 w-4" />
           </Button>
+        </div>
+      </div>
+
+      {/* About content — every personal string that the public About section reads. */}
+      <div className="space-y-5 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-[hsl(var(--muted-foreground))]">
+            About content
+          </h2>
+          <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
+            Every personal string shown in the About section. Leave any field
+            blank to fall back to the site default.
+          </p>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="aboutTagline">Identity tagline</Label>
+          <p className="-mt-0.5 text-xs text-[hsl(var(--muted-foreground))]">
+            Shown next to your name in the About recruiter card.
+          </p>
+          <Input
+            id="aboutTagline"
+            placeholder="— Full-stack TypeScript developer"
+            {...form.register('aboutTagline')}
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="aboutLede">Lede (one big sentence)</Label>
+          <p className="-mt-0.5 text-xs text-[hsl(var(--muted-foreground))]">
+            The large confident opener of your About prose.
+          </p>
+          <Textarea
+            id="aboutLede"
+            rows={3}
+            placeholder="I build production-grade web apps end-to-end — typed all the way through, with the kind of detail that holds up six months later."
+            {...form.register('aboutLede')}
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="bio">About body</Label>
+          <p className="-mt-0.5 text-xs text-[hsl(var(--muted-foreground))]">
+            Renders as paragraphs under the lede. Separate paragraphs with a
+            blank line.
+          </p>
+          <Textarea
+            id="bio"
+            rows={7}
+            placeholder={
+              'Most of my time goes into TypeScript: React or Next.js on the front, NestJS on the back…\n\nI’m at the stage where I want to push past student projects into real work…'
+            }
+            {...form.register('bio')}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="aboutFactLocation">Location fact</Label>
+            <Input
+              id="aboutFactLocation"
+              placeholder="Cairo, Egypt · GMT+2"
+              {...form.register('aboutFactLocation')}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="aboutFactStack">Core stack fact</Label>
+            <Input
+              id="aboutFactStack"
+              placeholder="TypeScript · React · Next.js · NestJS"
+              {...form.register('aboutFactStack')}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="aboutFactAvailable">Available-for fact</Label>
+            <Input
+              id="aboutFactAvailable"
+              placeholder="Internships · Junior · Remote"
+              {...form.register('aboutFactAvailable')}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <Label>What I can ship</Label>
+            <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
+              Outcome-oriented capability statements shown as bullets. Leave
+              empty to fall back to the four site defaults.
+            </p>
+          </div>
+          <ul className="space-y-2">
+            {capabilities.map((c, i) => (
+              <li key={i} className="flex items-center gap-2">
+                <span className="flex-1 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-sm">
+                  {c}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeCapability(i)}
+                >
+                  <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                </Button>
+              </li>
+            ))}
+          </ul>
+          <div className="flex gap-2">
+            <Input
+              value={capabilityInput}
+              onChange={(e) => setCapabilityInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  addCapability();
+                }
+              }}
+              placeholder="Full-stack apps from Figma to deploy — typed APIs, accessible UIs, clean builds."
+            />
+            <Button type="button" variant="outline" onClick={addCapability}>
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 

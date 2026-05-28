@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { motion, useInView, useReducedMotion, type Variants } from 'framer-motion';
+import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import {
   ArrowRight,
   FileDown,
@@ -11,7 +10,6 @@ import {
   Twitter,
   Globe,
 } from 'lucide-react';
-import { Typewriter } from './typewriter';
 import { StatusBadge } from './status-badge';
 import { GradientButton } from './gradient-button';
 import { IconCloud } from '@/components/magicui/icon-cloud';
@@ -41,10 +39,9 @@ const techCloudImages = techCloud.map(
 
 const easing = [0.22, 1, 0.36, 1] as const;
 
-// One parent variants tree instead of six separate motion.divs each with
-// their own delay. Framer-motion only bookkeeps the parent timeline and
-// children inherit through `staggerChildren`, halving reconciliation work
-// at mount and keeping the visual rhythm identical.
+// One parent variants tree instead of separate motion.divs each with their
+// own delay. Framer-motion bookkeeps the parent timeline and children
+// inherit through `staggerChildren`.
 const heroContainerVariants: Variants = {
   hidden: {},
   visible: {
@@ -85,28 +82,20 @@ const heroFadeOnly: Variants = {
 };
 
 const DEFAULT_ROLE = 'Full-Stack Developer';
-const DEFAULT_TYPEWRITER = ['Software Engineer', 'CS Student', 'Tech Enthusiast'];
+const DEFAULT_SUBTITLE =
+  'Full-stack TypeScript — typed all the way through, with the kind of detail that holds up six months later.';
 
 function buildHeroCopy(profile: Profile | null | undefined) {
-  const phrases = (profile?.headlines ?? [])
-    .map((s) => s?.trim())
-    .filter((s): s is string => Boolean(s));
+  // First non-empty configured headline becomes the role; everything else
+  // in `headlines` is ignored now that the typewriter is gone.
+  const role =
+    (profile?.headlines ?? [])
+      .map((s) => s?.trim())
+      .find((s): s is string => Boolean(s)) || DEFAULT_ROLE;
 
-  const role = phrases[0] || DEFAULT_ROLE;
+  const subtitle = profile?.headline?.trim() || DEFAULT_SUBTITLE;
 
-  const remaining = phrases.slice(1);
-  const typewriterPhrases =
-    remaining.length > 0
-      ? remaining
-      : phrases.length === 1
-        ? DEFAULT_TYPEWRITER
-        : DEFAULT_TYPEWRITER;
-
-  const subtitle =
-    profile?.headline?.trim() ||
-    'Building modern, production-grade web apps with care for craft and detail.';
-
-  return { role, typewriterPhrases, subtitle };
+  return { role, subtitle };
 }
 
 interface Props {
@@ -115,27 +104,13 @@ interface Props {
 
 export function Hero({ profile }: Props) {
   const availability = profile?.availability?.trim() || 'Open to opportunities';
-  const { role, typewriterPhrases, subtitle } = buildHeroCopy(profile);
+  const displayName = profile?.displayName?.trim() || 'Ramez Milad';
+  const { role, subtitle } = buildHeroCopy(profile);
   const socials = profile?.socials ?? {};
-  const techPills = ['TypeScript', 'React', 'Next.js', 'NestJS'];
-
-  const sectionRef = useRef<HTMLElement | null>(null);
-  const inView = useInView(sectionRef, { amount: 0.4 });
-  const [runId, setRunId] = useState(0);
-  const wasInView = useRef(true);
   const prefersReduced = useReducedMotion();
-
-  // First mount counts as the first run. Every subsequent re-entry replays.
-  useEffect(() => {
-    if (inView && !wasInView.current) {
-      setRunId((n) => n + 1);
-    }
-    wasInView.current = inView;
-  }, [inView]);
 
   return (
     <section
-      ref={sectionRef}
       id="home"
       className="relative flex min-h-screen items-center pt-24 sm:pt-28"
       aria-label="Introduction"
@@ -152,25 +127,23 @@ export function Hero({ profile }: Props) {
             <StatusBadge label={availability} tone="emerald" />
           </motion.div>
 
+          {/* Name kicker — small, violet, identifies the page owner */}
+          <motion.p
+            variants={prefersReduced ? undefined : heroFadeUp}
+            className="mt-5 text-xs font-bold uppercase tracking-[0.32em] text-[hsl(var(--brand-violet-soft))] md:text-sm"
+          >
+            {displayName}
+          </motion.p>
+
+          {/* Role headline */}
           <motion.h1
             variants={prefersReduced ? undefined : heroHeadline}
-            className="font-display mt-5 text-[clamp(2rem,5.5vw,3.75rem)] font-bold leading-[1.05] tracking-tight"
+            className="font-display mt-2 text-[clamp(2rem,5.5vw,3.75rem)] font-bold leading-[1.05] tracking-tight"
           >
             <span className="ek-hero-title block">{role}</span>
           </motion.h1>
 
-          <motion.div
-            variants={prefersReduced ? undefined : heroFadeUp}
-            className="mt-4 flex h-7 items-center text-base font-medium text-[hsl(var(--foreground)/0.92)] md:text-lg"
-          >
-            <Typewriter
-              phrases={typewriterPhrases}
-              holdMs={5000}
-              runId={runId}
-              loop={false}
-            />
-          </motion.div>
-
+          {/* Subtitle */}
           <motion.p
             variants={prefersReduced ? undefined : heroFadeUp}
             className="mt-5 max-w-xl text-sm leading-relaxed text-[hsl(var(--muted-foreground))] md:text-base"
@@ -178,17 +151,7 @@ export function Hero({ profile }: Props) {
             {subtitle}
           </motion.p>
 
-          <motion.div
-            variants={prefersReduced ? undefined : heroFadeUp}
-            className="mt-6 flex flex-wrap gap-2"
-          >
-            {techPills.map((t) => (
-              <span key={t} className="ek-pill">
-                {t}
-              </span>
-            ))}
-          </motion.div>
-
+          {/* CTAs */}
           <motion.div
             variants={prefersReduced ? undefined : heroFadeUp}
             className="mt-7 flex flex-wrap items-center gap-3"
@@ -221,9 +184,10 @@ export function Hero({ profile }: Props) {
             ) : null}
           </motion.div>
 
+          {/* Social icon row */}
           <motion.div
             variants={prefersReduced ? undefined : heroFadeOnly}
-            className="mt-7 flex items-center gap-2.5"
+            className="mt-6 flex items-center gap-2.5"
           >
             {socials.github ? (
               <SocialLink href={socials.github} label="GitHub">
@@ -253,7 +217,7 @@ export function Hero({ profile }: Props) {
           </motion.div>
         </motion.div>
 
-        {/* Right: tech icon cloud */}
+        {/* Right: tech icon cloud — UNTOUCHED */}
         <div className="relative flex size-full items-center justify-center overflow-visible md:justify-end md:pr-2 lg:pr-6">
           <IconCloud images={techCloudImages} />
         </div>

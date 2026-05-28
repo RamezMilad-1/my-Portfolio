@@ -8,22 +8,29 @@ type Tab = 'projects' | 'certificates' | 'tech';
 
 interface Props {
   projects: React.ReactNode;
-  certificates: React.ReactNode;
+  certificates?: React.ReactNode;
   tech: React.ReactNode;
-  counts?: { projects: number; certificates: number; tech: number };
+  counts?: { projects: number; certificates?: number; tech: number };
 }
 
-const TABS: { key: Tab; label: string; icon: React.ElementType }[] = [
+const ALL_TABS: { key: Tab; label: string; icon: React.ElementType }[] = [
   { key: 'projects', label: 'Projects', icon: FolderKanban },
   { key: 'certificates', label: 'Certificates', icon: Award },
   { key: 'tech', label: 'Tech Stack', icon: Cpu },
 ];
 
 export function TabsPortfolio({ projects, certificates, tech, counts }: Props) {
+  const TABS = ALL_TABS.filter(
+    (t) => t.key !== 'certificates' || certificates !== undefined,
+  );
   const [active, setActive] = useState<Tab>('projects');
 
   const content =
-    active === 'projects' ? projects : active === 'certificates' ? certificates : tech;
+    active === 'projects'
+      ? projects
+      : active === 'certificates'
+        ? certificates
+        : tech;
 
   return (
     <div>

@@ -46,6 +46,14 @@ export class Profile {
   @Prop({ default: '' }) lifelineKicker: string;
   @Prop({ default: '' }) lifelineTitle: string;
   @Prop({ default: '' }) lifelineSubtitle: string;
+
+  // Editable copy for the public About section content. Blank = use site default.
+  @Prop({ default: '' }) aboutTagline: string;
+  @Prop({ default: '' }) aboutLede: string;
+  @Prop({ default: '' }) aboutFactLocation: string;
+  @Prop({ default: '' }) aboutFactStack: string;
+  @Prop({ default: '' }) aboutFactAvailable: string;
+  @Prop({ type: [String], default: [] }) aboutCapabilities: string[];
 }
 
 export const ProfileSchema = SchemaFactory.createForClass(Profile);

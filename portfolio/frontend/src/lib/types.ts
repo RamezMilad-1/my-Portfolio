@@ -29,6 +29,12 @@ export interface Profile {
   lifelineKicker?: string;
   lifelineTitle?: string;
   lifelineSubtitle?: string;
+  aboutTagline?: string;
+  aboutLede?: string;
+  aboutFactLocation?: string;
+  aboutFactStack?: string;
+  aboutFactAvailable?: string;
+  aboutCapabilities?: string[];
 }
 
 export interface TeamMember {

@@ -49,4 +49,15 @@ export class UpdateProfileDto {
   @IsOptional() @IsString() lifelineKicker?: string;
   @IsOptional() @IsString() lifelineTitle?: string;
   @IsOptional() @IsString() lifelineSubtitle?: string;
+
+  @IsOptional() @IsString() aboutTagline?: string;
+  @IsOptional() @IsString() aboutLede?: string;
+  @IsOptional() @IsString() aboutFactLocation?: string;
+  @IsOptional() @IsString() aboutFactStack?: string;
+  @IsOptional() @IsString() aboutFactAvailable?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  aboutCapabilities?: string[];
 }
