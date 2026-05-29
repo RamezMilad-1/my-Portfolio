@@ -106,7 +106,7 @@ Admin → **Profile** → click **Upload** next to **Avatar**, pick the image, t
 ### 1. Generate a real JWT secret
 
 ```sh
-node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"
+node -e "process.stdout.write(require('crypto').randomBytes(48).toString('base64'))"
 ```
 
 Copy the output. **Do not put it in any file in the repo** — it goes into your hosting platform's env-var settings.

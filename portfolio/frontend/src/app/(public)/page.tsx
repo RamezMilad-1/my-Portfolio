@@ -3,8 +3,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  ArrowRight,
-  FileDown,
   Github,
   Linkedin,
   Mail,
@@ -30,6 +28,123 @@ import { Timeline } from '@/components/public/timeline';
 import { GradientButton } from '@/components/public/gradient-button';
 import { uploadsUrl } from '@/lib/utils';
 import { toast } from 'sonner';
+
+const LEGACY_ABOUT_CAPABILITIES = [
+  'I ship full-stack apps end-to-end — Figma to deployed, with no awkward seams in between.',
+  'I care about the front edge — micro-interactions, accessibility, and dark mode handled before someone asks.',
+  "I write backends I'd want to come back to — strict NestJS modules, real validation, no surprises.",
+  "I write databases I trust six months later — schemas, migrations, and queries I'd defend in review.",
+];
+
+const DEFAULT_ABOUT_CAPABILITIES = [
+  'Front-end execution: React and Next.js screens with responsive layouts, accessible states, forms, and clean interaction details.',
+  'Backend execution: NestJS modules, typed DTOs, validation, auth-aware routes, and predictable API behavior.',
+  'Data literacy: MongoDB or Postgres schemas, query patterns, reporting flows, and careful handling of real application data.',
+  'Team readiness: readable code, clear module boundaries, honest status updates, and work I can explain in review.',
+];
+
+const LEGACY_ABOUT_CAPABILITY_COPY = new Map([
+  [LEGACY_ABOUT_CAPABILITIES[0], DEFAULT_ABOUT_CAPABILITIES[0]],
+  [LEGACY_ABOUT_CAPABILITIES[1], DEFAULT_ABOUT_CAPABILITIES[1]],
+  [LEGACY_ABOUT_CAPABILITIES[2], DEFAULT_ABOUT_CAPABILITIES[2]],
+  [LEGACY_ABOUT_CAPABILITIES[3], DEFAULT_ABOUT_CAPABILITIES[3]],
+  [
+    'Full-stack apps from Figma to deploy — typed APIs, accessible UIs, clean builds.',
+    DEFAULT_ABOUT_CAPABILITIES[0],
+  ],
+  [
+    'Production React / Next.js frontends with motion, dark mode, and a11y baked in.',
+    DEFAULT_ABOUT_CAPABILITIES[1],
+  ],
+  [
+    'Strict NestJS backends — validation, auth, and clean module boundaries.',
+    DEFAULT_ABOUT_CAPABILITIES[2],
+  ],
+  [
+    'Real data layers — MongoDB or Postgres — with proper schemas, not just CRUD.',
+    DEFAULT_ABOUT_CAPABILITIES[3],
+  ],
+]);
+
+function rewriteLegacyAboutCapability(value: string | null | undefined) {
+  const text = typeof value === 'string' ? value.trim() : '';
+  const normalized = text.toLowerCase().replace(/\s+/g, ' ').trim();
+
+  if (
+    normalized.includes('full-stack apps from figma') &&
+    normalized.includes('typed apis')
+  ) {
+    return DEFAULT_ABOUT_CAPABILITIES[0];
+  }
+  if (
+    normalized.includes('production react') &&
+    normalized.includes('dark mode')
+  ) {
+    return DEFAULT_ABOUT_CAPABILITIES[1];
+  }
+  if (
+    normalized.includes('strict nestjs backends') &&
+    normalized.includes('clean module boundaries')
+  ) {
+    return DEFAULT_ABOUT_CAPABILITIES[2];
+  }
+  if (
+    normalized.includes('real data layers') &&
+    normalized.includes('not just crud')
+  ) {
+    return DEFAULT_ABOUT_CAPABILITIES[3];
+  }
+
+  return LEGACY_ABOUT_CAPABILITY_COPY.get(text) ?? text;
+}
+
+type RecruiterSignal = {
+  label: string;
+  value: string;
+};
+
+function splitCapabilityCopy(source: string) {
+  const normalized = source.trim();
+  const separator = normalized.search(/:\s|\s(?:-|\u2013|\u2014)\s/);
+
+  if (separator === -1) {
+    return {
+      label: 'Profile',
+      value: normalized,
+    };
+  }
+
+  const label = normalized.slice(0, separator).trim();
+  const value = normalized
+    .slice(separator)
+    .replace(/^:\s*/, '')
+    .replace(/^\s(?:-|\u2013|\u2014)\s*/, '')
+    .trim();
+
+  return {
+    label: label || 'Profile',
+    value: value || normalized,
+  };
+}
+
+function recruiterSignalFromText(
+  text: string | null | undefined,
+): RecruiterSignal {
+  const displayText = rewriteLegacyAboutCapability(text);
+  return splitCapabilityCopy(displayText);
+}
+
+function recruiterSignalFromFocusBlock(
+  block: { heading?: string; body?: string },
+): RecruiterSignal {
+  const heading = block.heading?.trim();
+  const body = block.body?.trim();
+
+  return {
+    label: heading || 'Profile',
+    value: body || '',
+  };
+}
 
 export default function HomePage() {
   const { data: profile } = useProfile();
@@ -107,19 +222,28 @@ export default function HomePage() {
     ];
   }, [profile?.bio]);
 
-  // Same pattern for the "What I can ship" capability bullets.
+  // CV-style rows for the compact capability snapshot.
   const aboutCapabilitiesList = useMemo<string[]>(() => {
     const items = (profile?.aboutCapabilities ?? [])
+      .map(rewriteLegacyAboutCapability)
       .map((s) => s.trim())
       .filter(Boolean);
     if (items.length > 0) return items;
-    return [
-      'I ship full-stack apps end-to-end — Figma to deployed, with no awkward seams in between.',
-      'I care about the front edge — micro-interactions, accessibility, and dark mode handled before someone asks.',
-      "I write backends I'd want to come back to — strict NestJS modules, real validation, no surprises.",
-      "I write databases I trust six months later — schemas, migrations, and queries I'd defend in review.",
-    ];
+    return DEFAULT_ABOUT_CAPABILITIES;
   }, [profile?.aboutCapabilities]);
+
+  const aboutRecruiterSignals = useMemo<RecruiterSignal[]>(() => {
+    const focusBlocks = (profile?.aboutFocusBlocks ?? [])
+      .filter((block) => block?.heading?.trim() || block?.body?.trim())
+      .map(recruiterSignalFromFocusBlock)
+      .filter((signal) => signal.label.trim() && signal.value.trim());
+
+    if (focusBlocks.length > 0) return focusBlocks;
+
+    return aboutCapabilitiesList
+      .map(recruiterSignalFromText)
+      .filter((signal) => signal.label.trim() && signal.value.trim());
+  }, [aboutCapabilitiesList, profile?.aboutFocusBlocks]);
 
   const [showAllProjects, setShowAllProjects] = useState(false);
   const visibleProjects = showAllProjects ? sortedProjects : sortedProjects.slice(0, 6);
@@ -165,6 +289,7 @@ export default function HomePage() {
             kicker={profile?.aboutKicker?.trim() || 'About'}
             title={profile?.aboutTitle?.trim() || 'The short version.'}
             subtitle={profile?.aboutSubtitle?.trim() || undefined}
+            variant="classic"
           />
 
           {/* Recruiter card — name + role + status + scannable facts */}
@@ -311,42 +436,6 @@ export default function HomePage() {
                   {para}
                 </p>
               ))}
-
-              {/* CTAs */}
-              <div className="mt-5 flex flex-wrap gap-2.5">
-                <GradientButton asChild>
-                  <a
-                    href="#portfolio"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      document
-                        .getElementById('portfolio')
-                        ?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                  >
-                    See my work <ArrowRight className="h-4 w-4" />
-                  </a>
-                </GradientButton>
-                {profile?.resumeUrl ? (
-                  <GradientButton asChild variant="outline">
-                    <a
-                      href={uploadsUrl(profile.resumeUrl)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      download
-                    >
-                      <FileDown className="h-4 w-4" /> Download CV
-                    </a>
-                  </GradientButton>
-                ) : null}
-                {profile?.email ? (
-                  <GradientButton asChild variant="outline">
-                    <a href={`mailto:${profile.email}`}>
-                      <Mail className="h-4 w-4" /> Email me
-                    </a>
-                  </GradientButton>
-                ) : null}
-              </div>
             </motion.div>
 
             <motion.div
@@ -369,21 +458,28 @@ export default function HomePage() {
             </motion.div>
           </div>
 
-          {/* What I can ship — outcome-oriented capabilities */}
-          {aboutCapabilitiesList.length > 0 ? (
-            <div className="mt-10">
-              <p className="font-display text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(220_15%_68%)]">
-                What I can ship
-              </p>
+          {/* Stylish hairline divider — bridges the bio and the CV grid */}
+          <AboutDivider />
+
+          {/* What I can ship — recruiter-facing CV snapshot */}
+          {aboutRecruiterSignals.length > 0 ? (
+            <div className="relative mt-6 overflow-hidden rounded-3xl bg-white/[0.03] p-7 ring-1 ring-inset ring-white/[0.06] backdrop-blur-[7px] sm:p-10">
               <span
                 aria-hidden
-                className="mt-2.5 block h-px w-12 bg-gradient-to-r from-[hsl(var(--brand-violet-soft)/0.7)] via-[hsl(var(--brand-violet-soft)/0.35)] to-transparent"
+                className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-[hsl(var(--brand-violet)/0.08)] blur-3xl"
               />
-              <ul className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                {aboutCapabilitiesList.map((text, i) => (
-                  <Capability key={i} text={text} />
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.15] to-transparent"
+              />
+              <dl className="relative grid grid-cols-1 gap-x-12 gap-y-7 sm:grid-cols-2 sm:gap-y-9">
+                {aboutRecruiterSignals.map((signal, index) => (
+                  <Capability
+                    key={`${signal.label}-${signal.value}-${index}`}
+                    signal={signal}
+                  />
                 ))}
-              </ul>
+              </dl>
             </div>
           ) : null}
         </div>
@@ -641,17 +737,35 @@ function SocialIcon({
   );
 }
 
-function Capability({ text }: { text: string }) {
+function Capability({
+  signal,
+}: {
+  signal: RecruiterSignal;
+}) {
   return (
-    <li className="group ek-glass relative flex items-start gap-3 overflow-hidden rounded-xl px-3.5 py-2.5 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5">
-      <span
-        aria-hidden
-        className="mt-[3px] inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-[hsl(var(--brand-violet))] shadow-[0_0_0_3px_hsl(var(--brand-violet)/0.18)]"
-      />
-      <p className="text-[13px] leading-relaxed text-[hsl(220_22%_88%)] transition-colors duration-300 group-hover:text-white">
-        {text}
+    <div>
+      <dt className="font-display text-[15px] font-semibold tracking-tight text-[hsl(220_30%_96%)] md:text-base">
+        {signal.label}
+      </dt>
+      <dd className="mt-1.5 text-[13.5px] leading-relaxed text-[hsl(var(--muted-foreground))] md:text-[14px]">
+        {signal.value}
+      </dd>
+    </div>
+  );
+}
+
+function AboutDivider() {
+  return (
+    <div
+      className="mt-10 flex items-center justify-center gap-4"
+      aria-hidden
+    >
+      <span className="h-px w-20 bg-gradient-to-r from-transparent to-[hsl(var(--brand-violet)/0.7)]" />
+      <p className="font-display text-[10.5px] font-semibold uppercase tracking-[0.34em] text-[hsl(220_20%_74%)]">
+        What I bring
       </p>
-    </li>
+      <span className="h-px w-20 bg-gradient-to-r from-[hsl(var(--brand-violet)/0.7)] to-transparent" />
+    </div>
   );
 }
 

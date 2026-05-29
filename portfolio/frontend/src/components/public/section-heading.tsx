@@ -9,6 +9,13 @@ interface Props {
   subtitle?: string;
   centered?: boolean;
   id?: string;
+  /**
+   * `line` (default) — kicker is wrapped in the `── KICKER ──` shape and no
+   * underline appears below the title.
+   * `classic` — kicker sits as plain text above the title, with a short
+   * gradient underline below.
+   */
+  variant?: 'line' | 'classic';
 }
 
 const easing = [0.22, 1, 0.36, 1] as const;
@@ -19,8 +26,9 @@ export function SectionHeading({
   subtitle,
   centered = true,
   id,
+  variant = 'line',
 }: Props) {
-  const kickerReveal = useScrollReveal<HTMLParagraphElement>({ y: 8, margin: '-40px' });
+  const kickerReveal = useScrollReveal<HTMLDivElement>({ y: 8, margin: '-40px' });
   const titleReveal = useScrollReveal<HTMLHeadingElement>({ y: 16, margin: '-40px' });
   const subtitleReveal = useScrollReveal<HTMLParagraphElement>({ y: 16, margin: '-40px' });
   const dividerReveal = useScrollReveal<HTMLDivElement>({ y: 0, margin: '-40px' });
@@ -35,15 +43,39 @@ export function SectionHeading({
       }
     >
       {kicker ? (
-        <motion.p
-          ref={kickerReveal.ref}
-          initial={kickerReveal.initial}
-          animate={kickerReveal.animate}
-          transition={{ duration: 0.5, ease: easing }}
-          className="text-xs font-semibold uppercase tracking-[0.24em] text-[hsl(var(--brand-violet-soft))] md:text-sm"
-        >
-          {kicker}
-        </motion.p>
+        variant === 'line' ? (
+          <motion.div
+            ref={kickerReveal.ref}
+            initial={kickerReveal.initial}
+            animate={kickerReveal.animate}
+            transition={{ duration: 0.5, ease: easing }}
+            className={`flex items-center gap-4 ${
+              centered ? 'justify-center' : 'justify-start'
+            }`}
+          >
+            <span
+              aria-hidden
+              className="h-px w-14 bg-gradient-to-r from-transparent to-[hsl(var(--brand-violet)/0.7)] md:w-20"
+            />
+            <span className="font-display text-[10.5px] font-semibold uppercase tracking-[0.34em] text-[hsl(220_22%_76%)] md:text-[11.5px]">
+              {kicker}
+            </span>
+            <span
+              aria-hidden
+              className="h-px w-14 bg-gradient-to-r from-[hsl(var(--brand-violet)/0.7)] to-transparent md:w-20"
+            />
+          </motion.div>
+        ) : (
+          <motion.p
+            ref={kickerReveal.ref}
+            initial={kickerReveal.initial}
+            animate={kickerReveal.animate}
+            transition={{ duration: 0.5, ease: easing }}
+            className="text-xs font-semibold uppercase tracking-[0.24em] text-[hsl(var(--brand-violet-soft))] md:text-sm"
+          >
+            {kicker}
+          </motion.p>
+        )
       ) : null}
       <motion.h2
         ref={titleReveal.ref}
@@ -65,19 +97,21 @@ export function SectionHeading({
           {subtitle}
         </motion.p>
       ) : null}
-      <motion.div
-        ref={dividerReveal.ref}
-        initial={{ opacity: 0, scaleX: 0 }}
-        animate={
-          dividerReveal.inView
-            ? { opacity: 1, scaleX: 1 }
-            : { opacity: 0.4, scaleX: 0.4 }
-        }
-        transition={{ duration: 0.6, delay: 0.2, ease: easing }}
-        className={`mt-5 h-px bg-gradient-to-r from-transparent via-[hsl(var(--brand-violet-soft))] to-transparent ${
-          centered ? 'mx-auto w-32' : 'w-32'
-        }`}
-      />
+      {variant === 'classic' ? (
+        <motion.div
+          ref={dividerReveal.ref}
+          initial={{ opacity: 0, scaleX: 0 }}
+          animate={
+            dividerReveal.inView
+              ? { opacity: 1, scaleX: 1 }
+              : { opacity: 0.4, scaleX: 0.4 }
+          }
+          transition={{ duration: 0.6, delay: 0.2, ease: easing }}
+          className={`mt-5 h-px bg-gradient-to-r from-transparent via-[hsl(var(--brand-violet-soft))] to-transparent ${
+            centered ? 'mx-auto w-48 md:w-64' : 'w-48 md:w-64'
+          }`}
+        />
+      ) : null}
     </div>
   );
 }
