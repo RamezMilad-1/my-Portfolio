@@ -39,6 +39,13 @@ export interface Profile {
   aboutFocusTitle?: string;
   aboutFocusSubtitle?: string;
   aboutFocusBlocks?: { heading?: string; body?: string }[];
+  logoInitial?: string;
+  heroCTALabel?: string;
+  heroSeeking?: string;
+  aboutFactAcademics?: string;
+  aboutDividerLabel?: string;
+  contactCTALabel?: string;
+  responseTime?: string;
 }
 
 export interface TeamMember {
@@ -59,6 +66,21 @@ export interface Media {
   sizeBytes?: number;
   originalName?: string;
   createdAt?: string;
+}
+
+export interface ContactMessage {
+  _id: string;
+  name: string;
+  email: string;
+  body: string;
+  read: boolean;
+  createdAt?: string;
+}
+
+export interface ContactMessageInput {
+  name: string;
+  email: string;
+  body: string;
 }
 
 export interface ProjectTeamLink {
@@ -150,6 +172,8 @@ export interface TimelineEntry {
   year: string;
   topic: string;
   body: string;
+  type?: string;
+  organization?: string;
   position: number;
   isPublished: boolean;
   createdAt?: string;
@@ -160,6 +184,8 @@ export interface TimelineEntryInput {
   year?: string;
   topic?: string;
   body?: string;
+  type?: string;
+  organization?: string;
   position?: number;
   isPublished?: boolean;
 }
@@ -167,6 +193,7 @@ export interface TimelineEntryInput {
 export interface TechItem {
   _id: string;
   name: string;
+  category?: string;
   position: number;
   isPublished: boolean;
   createdAt?: string;
@@ -175,6 +202,7 @@ export interface TechItem {
 
 export interface TechItemInput {
   name?: string;
+  category?: string;
   position?: number;
   isPublished?: boolean;
 }

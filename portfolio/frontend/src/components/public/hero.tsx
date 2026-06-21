@@ -118,38 +118,58 @@ export function Hero({ profile }: Props) {
           variants={heroContainerVariants}
           initial={prefersReduced ? false : 'hidden'}
           animate="visible"
-          className="relative z-10"
+          className="hero-copy relative z-10 max-w-[38rem]"
         >
           <motion.div variants={prefersReduced ? undefined : heroFadeLeft}>
-            <StatusBadge label={availability} tone="emerald" />
+            <StatusBadge
+              label={availability}
+              tone="emerald"
+              className="px-3 py-1 text-[11px]"
+              borderGradient="linear-gradient(90deg, hsl(246 46% 58% / 0.72), hsl(272 38% 62% / 0.58))"
+              haloClassName="opacity-25 blur-sm"
+              pingClassName="bg-[hsl(152_55%_54%)] opacity-35"
+              dotClassName="bg-[hsl(152_55%_54%)] opacity-90"
+              labelClassName="font-medium text-[hsl(220_24%_88%)]"
+              iconClassName="h-3 w-3 text-[hsl(260_26%_72%)] opacity-65"
+            />
           </motion.div>
 
           <motion.p
             variants={prefersReduced ? undefined : heroFadeUp}
-            className="mt-5 text-xs font-bold uppercase tracking-[0.32em] text-[hsl(var(--brand-violet-soft))] md:text-sm"
+            className="mt-4 text-[11px] font-medium uppercase tracking-[0.36em] text-[hsl(260_24%_74%/0.82)] md:text-xs"
           >
             {displayName}
           </motion.p>
 
           <motion.h1
             variants={prefersReduced ? undefined : heroHeadline}
-            className="font-display mt-2 text-[clamp(2rem,5.5vw,3.75rem)] font-bold leading-[1.05] tracking-tight"
+            className="mt-2 font-sans text-[clamp(2rem,4.6vw,3rem)] font-semibold leading-[1.03] tracking-[0]"
           >
-            <span className="ek-hero-title block">{role}</span>
+            <span
+              className="ek-hero-title block whitespace-nowrap"
+              style={{
+                backgroundImage:
+                  'linear-gradient(110deg, hsl(258 70% 78%) 0%, hsl(274 66% 74%) 30%, hsl(286 72% 86%) 46%, hsl(266 72% 80%) 56%, hsl(280 62% 75%) 70%, hsl(258 70% 78%) 100%)',
+                filter:
+                  'drop-shadow(0 1px 0 hsl(0 0% 100% / 0.08)) drop-shadow(0 6px 22px hsl(270 48% 42% / 0.14))',
+              }}
+            >
+              {role}
+            </span>
           </motion.h1>
 
           <motion.p
             variants={prefersReduced ? undefined : heroFadeUp}
-            className="mt-5 max-w-xl text-sm leading-relaxed text-[hsl(var(--muted-foreground))] md:text-base"
+            className="mt-4 max-w-[36rem] text-[15px] leading-[1.75] text-[hsl(220_18%_76%)] md:text-[16px]"
           >
             {subtitle}
           </motion.p>
 
           <motion.div
             variants={prefersReduced ? undefined : heroFadeUp}
-            className="mt-7 flex flex-wrap items-center gap-3"
+            className="mt-6 flex flex-wrap items-center gap-2.5 sm:gap-3"
           >
-            <GradientButton asChild>
+            <GradientButton asChild className="hero-cta font-medium">
               <a
                 href="#portfolio"
                 onClick={(e) => {
@@ -164,7 +184,11 @@ export function Hero({ profile }: Props) {
             </GradientButton>
 
             {profile?.resumeUrl ? (
-              <GradientButton asChild variant="outline">
+              <GradientButton
+                asChild
+                variant="outline"
+                className="hero-cta font-medium"
+              >
                 <a
                   href={uploadsUrl(profile.resumeUrl)}
                   target="_blank"
@@ -232,7 +256,7 @@ function SocialLink({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
-      className="ek-glass flex h-9 w-9 items-center justify-center rounded-full text-[hsl(var(--muted-foreground))] transition-all duration-300 hover:-translate-y-0.5 hover:text-[hsl(var(--brand-indigo))] ek-glow"
+      className="hero-social-link ek-glass flex h-9 w-9 items-center justify-center rounded-full text-[hsl(220_18%_72%)] transition-all duration-300 hover:-translate-y-0.5 hover:text-[hsl(230_26%_92%)]"
     >
       {children}
     </a>

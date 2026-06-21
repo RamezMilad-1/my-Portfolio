@@ -21,13 +21,15 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
+      { protocol: 'http', hostname: 'localhost' },
+      { protocol: 'https', hostname: 'cdn.simpleicons.org' },
+      { protocol: 'https', hostname: 'cdn.jsdelivr.net' },
       {
         protocol: uploadsProtocol,
         hostname: uploadsHost,
         port: uploadsPort,
         pathname: '/uploads/**',
       },
-      { protocol: 'https', hostname: '**' },
     ],
   },
 };

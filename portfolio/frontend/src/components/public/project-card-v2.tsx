@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, ExternalLink, Github } from 'lucide-react';
 import { useScrollReveal } from '../motion/use-scroll-reveal';
@@ -45,13 +46,12 @@ export function ProjectCardV2({ project, index = 0 }: Props) {
 
       <div className="relative aspect-[16/9] overflow-hidden bg-[linear-gradient(135deg,hsl(244_30%_18%/0.85)_0%,hsl(225_30%_12%/0.85)_60%,hsl(275_35%_20%/0.85)_100%)]">
         {cover ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={cover}
             alt={project.name}
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
+            fill
+            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+            className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
           />
         ) : (
           <div className="relative flex h-full w-full items-center justify-center">
@@ -77,19 +77,29 @@ export function ProjectCardV2({ project, index = 0 }: Props) {
           <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
         </div>
 
-        {project.category ? (
-          <div className="absolute left-3 top-3 rounded-full border border-white/15 bg-[hsl(220_30%_8%/0.55)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[hsl(220_25%_92%)] backdrop-blur-md">
-            {project.category}
-          </div>
-        ) : null}
+        <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
+          {project.isFeatured ? (
+            <span className="rounded-full bg-gradient-to-r from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white shadow-[0_4px_14px_-4px_hsl(var(--brand-violet)/0.6)]">
+              Featured
+            </span>
+          ) : null}
+          {project.category ? (
+            <div className="rounded-full border border-white/15 bg-[hsl(220_30%_8%/0.55)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[hsl(220_25%_92%)] backdrop-blur-md">
+              {project.category}
+            </div>
+          ) : null}
+        </div>
       </div>
 
       <div className="relative p-3.5">
         <h3 className="font-display line-clamp-1 text-[15px] font-semibold tracking-tight text-[hsl(220_25%_94%)] transition-colors duration-300 group-hover:text-white">
+          {project.status === 'published' ? (
+            <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-[hsl(152_60%_50%)] align-middle shadow-[0_0_8px_hsl(152_60%_50%/0.7)]" />
+          ) : null}
           {project.name}
         </h3>
         {project.tagline ? (
-          <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-[hsl(220_15%_72%)]">
+          <p className="mt-1 line-clamp-3 text-[13px] leading-relaxed text-[hsl(220_15%_72%)]">
             {project.tagline}
           </p>
         ) : null}

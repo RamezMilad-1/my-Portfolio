@@ -7,6 +7,8 @@ export type TechItemDocument = HydratedDocument<TechItem>;
 export class TechItem {
   @Prop({ required: true }) name: string;
 
+  @Prop({ default: '' }) category: string;
+
   @Prop({ default: 0 }) position: number;
 
   @Prop({ default: true }) isPublished: boolean;

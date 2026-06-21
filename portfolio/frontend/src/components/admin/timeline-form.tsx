@@ -19,6 +19,8 @@ const schema = z.object({
   year: z.string().min(1, 'Year is required'),
   topic: z.string().optional(),
   body: z.string().min(1, 'Body is required'),
+  type: z.string().optional(),
+  organization: z.string().optional(),
   position: z.number().int().default(0),
   isPublished: z.boolean().default(true),
 });
@@ -45,6 +47,8 @@ export function TimelineForm({ entry }: Props) {
       year: entry?.year ?? '',
       topic: entry?.topic ?? '',
       body: entry?.body ?? '',
+      type: entry?.type ?? 'education',
+      organization: entry?.organization ?? '',
       position: entry?.position ?? 0,
       isPublished: entry?.isPublished ?? true,
     },
@@ -113,6 +117,27 @@ export function TimelineForm({ entry }: Props) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="type">Type</Label>
+          <select
+            id="type"
+            {...register('type')}
+            className="flex h-10 w-full rounded-md border border-[hsl(var(--input))] bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))]"
+          >
+            <option value="education">Education</option>
+            <option value="work">Work</option>
+            <option value="achievement">Achievement</option>
+            <option value="personal">Personal</option>
+          </select>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="organization">Organization</Label>
+          <Input
+            id="organization"
+            placeholder="GUC · Google · …"
+            {...register('organization')}
+          />
+        </div>
         <div className="space-y-1.5">
           <Label htmlFor="position">Position</Label>
           <Input

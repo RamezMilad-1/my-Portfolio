@@ -3,15 +3,17 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { FileDown, Menu, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { useProfile } from '@/lib/api/profile';
+import { cn, uploadsUrl } from '@/lib/utils';
+import { GradientButton } from './gradient-button';
 
 const SECTIONS: { id: string; label: string }[] = [
   { id: 'home', label: 'Home' },
   { id: 'about', label: 'About' },
   { id: 'portfolio', label: 'Portfolio' },
-  { id: 'lifeline', label: 'Lifeline' },
+  { id: 'experience', label: 'Experience' },
   { id: 'contact', label: 'Contact' },
 ];
 
@@ -19,6 +21,7 @@ export function Nav() {
   const pathname = usePathname();
   const router = useRouter();
   const isHome = pathname === '/';
+  const { data: profile } = useProfile();
 
   const [scrolled, setScrolled] = useState(false);
   const [activeId, setActiveId] = useState<string>('home');
@@ -47,7 +50,7 @@ export function Nav() {
       },
     );
 
-    // Some sections (e.g. #lifeline) only render after async data loads, so
+    // Some sections (e.g. #experience) only render after async data loads, so
     // they may not exist on the initial mount. Poll briefly until each known
     // section id appears, then stop. A MutationObserver on document.body
     // would fire on every motion/popover/keystroke and is unnecessary here.
@@ -65,7 +68,7 @@ export function Nav() {
 
     tryObserve();
     let attempts = 0;
-    // Lifeline (the slowest section to mount) settles within ~3.5s of
+    // Experience (the slowest section to mount) settles within ~3.5s of
     // data load — 12 attempts × 300ms ≈ 3.6s covers it without leaving an
     // interval running indefinitely on slow data fetches.
     const pollId = window.setInterval(() => {
@@ -118,9 +121,11 @@ export function Nav() {
             aria-hidden
             className="relative inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] text-[10px] font-bold text-white shadow-[0_4px_20px_-4px_hsl(var(--brand-violet)/0.6)]"
           >
-            R
+            {profile?.logoInitial?.trim() || 'R'}
           </span>
-          <span className="ek-gradient-text-static">Ramez Milad</span>
+          <span className="ek-gradient-text-static">
+            {profile?.displayName ?? 'Ramez Milad'}
+          </span>
         </Link>
 
         <nav className="relative ml-2 hidden flex-1 items-center gap-1 md:flex">
@@ -151,6 +156,23 @@ export function Nav() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
+          {profile?.resumeUrl ? (
+            <GradientButton
+              asChild
+              variant="outline"
+              size="md"
+              className="hidden h-9 px-4 text-xs md:inline-flex"
+            >
+              <a
+                href={uploadsUrl(profile.resumeUrl)}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+              >
+                <FileDown className="h-3.5 w-3.5" /> Download CV
+              </a>
+            </GradientButton>
+          ) : null}
           <button
             type="button"
             aria-label="Toggle menu"

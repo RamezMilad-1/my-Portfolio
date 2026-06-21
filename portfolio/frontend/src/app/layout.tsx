@@ -11,13 +11,37 @@ const geist = localFont({
   display: 'swap',
 });
 
+const display = localFont({
+  src: '../assets/fonts/geist-latin.woff2',
+  variable: '--font-display',
+  weight: '600 900',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
+  ),
   title: {
     default: 'Ramez Milad — Portfolio',
     template: '%s · Ramez Milad',
   },
   description:
     '3rd-year Computer Science (Software Engineering) student. Full-stack developer building production-grade student projects with React, Next.js, NestJS, and MongoDB.',
+  openGraph: {
+    title: 'Ramez Milad — Portfolio',
+    description:
+      'Full-stack developer building production-grade student projects with React, Next.js, NestJS, and MongoDB.',
+    type: 'website',
+    images: ['/og.png'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Ramez Milad — Portfolio',
+    description:
+      'Full-stack developer building production-grade student projects with React, Next.js, NestJS, and MongoDB.',
+    images: ['/og.png'],
+  },
 };
 
 export default function RootLayout({
@@ -28,7 +52,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn('dark', 'font-sans', geist.variable)}
+      className={cn('dark', 'font-sans', geist.variable, display.variable)}
       style={{ colorScheme: 'dark' }}
       data-scroll-behavior="smooth"
       suppressHydrationWarning

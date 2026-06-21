@@ -302,8 +302,10 @@ function TechIcon({ name }: { name: string }) {
   );
 }
 
+type TechGridEntry = { name: string; category?: string };
+
 interface Props {
-  items: string[];
+  items: TechGridEntry[];
 }
 
 export function TechGrid({ items }: Props) {
@@ -318,10 +320,29 @@ export function TechGrid({ items }: Props) {
     );
   }
 
+  const groups = items.reduce<Record<string, TechGridEntry[]>>((acc, it) => {
+    const key = it.category?.trim() || 'Other';
+    (acc[key] ??= []).push(it);
+    return acc;
+  }, {});
+
   return (
-    <div className="grid grid-cols-4 gap-x-2 gap-y-5 sm:grid-cols-5 sm:gap-x-3 sm:gap-y-6 md:grid-cols-6 lg:grid-cols-7">
-      {items.map((tech, i) => (
-        <TechGridItem key={tech} tech={tech} index={i} />
+    <div className="space-y-8">
+      {Object.entries(groups).map(([category, list]) => (
+        <div key={category} className="space-y-4">
+          <p className="font-display text-[11.5px] font-semibold uppercase tracking-[0.24em] text-[hsl(220_22%_76%)]">
+            {category}
+          </p>
+          <div className="grid grid-cols-4 gap-x-2 gap-y-5 sm:grid-cols-5 sm:gap-x-3 sm:gap-y-6 md:grid-cols-6 lg:grid-cols-7">
+            {list.map((item, i) => (
+              <TechGridItem
+                key={`${category}-${item.name}`}
+                tech={item.name}
+                index={i}
+              />
+            ))}
+          </div>
+        </div>
       ))}
     </div>
   );

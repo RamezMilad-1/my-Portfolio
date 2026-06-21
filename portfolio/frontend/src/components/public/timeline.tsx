@@ -8,12 +8,20 @@ import {
   useSpring,
   useTransform,
 } from 'framer-motion';
+import { Award, Briefcase, GraduationCap, Star } from 'lucide-react';
 import { useScrollReveal } from '../motion/use-scroll-reveal';
 import type { TimelineEntry } from '@/lib/types';
 
 interface Props {
   entries: TimelineEntry[];
 }
+
+const TYPE_ICONS = {
+  education: GraduationCap,
+  work: Briefcase,
+  achievement: Award,
+  personal: Star,
+};
 
 /**
  * Vertical "lifeline" — a glowing gradient rail that draws itself as the user
@@ -103,6 +111,8 @@ function TimelineRow({
     y: 18,
     margin: '-100px',
   });
+  const Icon =
+    TYPE_ICONS[entry.type as keyof typeof TYPE_ICONS] ?? TYPE_ICONS.education;
 
   return (
     <motion.li
@@ -138,8 +148,9 @@ function TimelineRow({
           />
           {/* Inner violet glow */}
           <span className="absolute inset-0 rounded-full bg-[hsl(var(--brand-violet))] opacity-45 blur-md" />
-          {/* Solid dot */}
-          <span className="relative h-3 w-3 rounded-full bg-gradient-to-br from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] ring-[3px] ring-[hsl(232_28%_10%)] shadow-[0_0_14px_-1px_hsl(var(--brand-violet)/0.65)] transition-transform duration-500 group-hover:scale-110" />
+          <span className="relative flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] text-white ring-[3px] ring-[hsl(232_28%_10%)] shadow-[0_0_14px_-1px_hsl(var(--brand-violet)/0.65)] transition-transform duration-500 group-hover:scale-110">
+            <Icon className="h-3.5 w-3.5" />
+          </span>
         </span>
       </motion.span>
 
@@ -182,9 +193,14 @@ function TimelineRow({
               </p>
             </div>
           ) : null}
+          {entry.organization ? (
+            <p className="relative mt-2 text-[13px] font-semibold text-white">
+              {entry.organization}
+            </p>
+          ) : null}
           <p
             className={`${
-              entry.topic ? 'mt-2.5' : ''
+              entry.topic || entry.organization ? 'mt-2.5' : ''
             } relative whitespace-pre-line text-[14.5px] leading-relaxed text-[hsl(220_25%_90%)]`}
           >
             {entry.body}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
   Github,
@@ -26,6 +27,8 @@ import { CertificateLightbox } from '@/components/public/certificate-lightbox';
 import { TechGrid } from '@/components/public/tech-grid';
 import { Timeline } from '@/components/public/timeline';
 import { GradientButton } from '@/components/public/gradient-button';
+import { ContactForm } from '@/components/public/contact-form';
+import { Skeleton } from '@/components/ui/skeleton';
 import { uploadsUrl } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -147,14 +150,14 @@ function recruiterSignalFromFocusBlock(
 }
 
 export default function HomePage() {
-  const { data: profile } = useProfile();
-  const { data: projects = [] } = useProjectsPublic();
+  const { data: profile, isLoading: profileLoading } = useProfile();
+  const { data: projects = [], isLoading: projectsLoading } = useProjectsPublic();
   const { data: certificates = [] } = useCertificatesPublic();
   const { data: timelineEntries = [] } = useTimelinePublic();
   const { data: techItems = [] } = useTechPublic();
 
   // Scroll to hash on load (e.g. arriving from /#about). Some sections
-  // (e.g. #lifeline) only mount after async data settles, so retry briefly
+  // (e.g. #experience) only mount after async data settles, so retry briefly
   // until the element appears, then scroll once.
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -194,6 +197,13 @@ export default function HomePage() {
     for (const p of projects) for (const t of p.tech ?? []) set.add(t);
     return [...set].sort((a, b) => a.localeCompare(b));
   }, [projects, techItems]);
+
+  const techGridItems = useMemo(() => {
+    if (techItems.length > 0) {
+      return techItems.map((t) => ({ name: t.name, category: t.category }));
+    }
+    return techList.map((name) => ({ name }));
+  }, [techItems, techList]);
 
   const stats = useMemo(() => {
     const userStats = profile?.stats ?? {};
@@ -298,120 +308,142 @@ export default function HomePage() {
             initial={metricsReveal.initial}
             animate={metricsReveal.animate}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="ek-glass ek-card-sheen relative mt-10 overflow-hidden rounded-2xl p-4 sm:p-5"
+            className="ek-glass ek-card-sheen relative mt-14 overflow-hidden rounded-2xl p-4 sm:p-5"
           >
             <div
               aria-hidden
               className="pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-[hsl(var(--brand-violet)/0.6)] to-transparent"
             />
 
-            {/* Identity line + status pill */}
-            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-              <h3 className="font-display text-base font-semibold tracking-tight text-[hsl(var(--foreground))] sm:text-lg md:text-xl">
-                {profile?.displayName ?? 'Ramez Milad'}
-                <span className="text-[hsl(220_15%_64%)] font-normal">
-                  {' '}
-                  {profile?.aboutTagline?.trim() ||
-                    '— Full-stack TypeScript developer'}
-                </span>
-              </h3>
-              <StatusBadge
-                tone="violet"
-                label={
-                  profile?.availability ??
-                  'Open to internships · Cairo / remote'
-                }
-              />
-            </div>
-
-            {/* Hairline */}
-            <div
-              aria-hidden
-              className="my-4 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent"
-            />
-
-            {/* Scannable facts — Role / Location / Stack / Available for */}
-            <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
-              <FactCell
-                label="Role"
-                value={
-                  profile?.education ?? '3rd-year CS · Software Engineering'
-                }
-              />
-              <FactCell
-                label="Location"
-                value={
-                  profile?.aboutFactLocation?.trim() ||
-                  'Cairo, Egypt · GMT+2'
-                }
-              />
-              <FactCell
-                label="Core stack"
-                value={
-                  profile?.aboutFactStack?.trim() ||
-                  'TypeScript · React · Next.js · NestJS'
-                }
-              />
-              <FactCell
-                label="Available for"
-                value={
-                  profile?.aboutFactAvailable?.trim() ||
-                  'Internships · Junior · Remote'
-                }
-              />
-            </div>
-
-            {/* Find me on — social trust signals */}
-            {profile?.socials?.github ||
-            profile?.socials?.linkedin ||
-            profile?.socials?.x ||
-            profile?.email ? (
+            {profileLoading ? (
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+                  <Skeleton className="h-7 w-72 max-w-full" />
+                  <Skeleton className="h-8 w-44 rounded-full" />
+                </div>
+                <div
+                  aria-hidden
+                  className="h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent"
+                />
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <div key={index} className="space-y-2">
+                      <Skeleton className="h-3 w-16" />
+                      <Skeleton className="h-4 w-28 max-w-full" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
               <>
+                {/* Identity line + status pill */}
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+                  <h3 className="font-display text-base font-semibold tracking-tight text-[hsl(var(--foreground))] sm:text-lg md:text-xl">
+                    {profile?.displayName ?? 'Ramez Milad'}
+                    <span className="text-[hsl(220_15%_64%)] font-normal">
+                      {' '}
+                      {profile?.aboutTagline?.trim() ||
+                        '— Full-stack TypeScript developer'}
+                    </span>
+                  </h3>
+                  <StatusBadge
+                    tone="violet"
+                    label={
+                      profile?.availability ??
+                      'Open to internships · Cairo / remote'
+                    }
+                  />
+                </div>
+
                 <div
                   aria-hidden
                   className="my-4 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent"
                 />
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <p className="text-[9.5px] font-semibold uppercase tracking-[0.22em] text-[hsl(220_15%_62%)]">
-                    Find me on
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    {profile?.socials?.github ? (
-                      <SocialIcon
-                        href={profile.socials.github}
-                        label="GitHub"
-                        icon={<Github className="h-4 w-4" />}
-                      />
-                    ) : null}
-                    {profile?.socials?.linkedin ? (
-                      <SocialIcon
-                        href={profile.socials.linkedin}
-                        label="LinkedIn"
-                        icon={<Linkedin className="h-4 w-4" />}
-                      />
-                    ) : null}
-                    {profile?.socials?.x ? (
-                      <SocialIcon
-                        href={profile.socials.x}
-                        label="X"
-                        icon={<Twitter className="h-4 w-4" />}
-                      />
-                    ) : null}
-                    {profile?.email ? (
-                      <SocialIcon
-                        href={`mailto:${profile.email}`}
-                        label="Email"
-                        icon={<Mail className="h-4 w-4" />}
-                      />
-                    ) : null}
-                  </div>
+
+                {/* Scannable facts — Role / Location / Stack / Available for */}
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+                  <FactCell
+                    label="Role"
+                    value={
+                      profile?.education ?? '3rd-year CS · Software Engineering'
+                    }
+                  />
+                  <FactCell
+                    label="Location"
+                    value={
+                      profile?.aboutFactLocation?.trim() ||
+                      'Cairo, Egypt · GMT+2'
+                    }
+                  />
+                  <FactCell
+                    label="Core stack"
+                    value={
+                      profile?.aboutFactStack?.trim() ||
+                      'TypeScript · React · Next.js · NestJS'
+                    }
+                  />
+                  <FactCell
+                    label="Available for"
+                    value={
+                      profile?.aboutFactAvailable?.trim() ||
+                      'Internships · Junior · Remote'
+                    }
+                  />
                 </div>
+
+                {/* Find me on — social trust signals */}
+                {profile?.socials?.github ||
+                profile?.socials?.linkedin ||
+                profile?.socials?.x ||
+                profile?.email ? (
+                  <>
+                    <div
+                      aria-hidden
+                      className="my-4 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent"
+                    />
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <p className="text-[9.5px] font-semibold uppercase tracking-[0.22em] text-[hsl(220_15%_62%)]">
+                        Find me on
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {profile?.socials?.github ? (
+                          <SocialIcon
+                            href={profile.socials.github}
+                            label="GitHub"
+                            icon={<Github className="h-4 w-4" />}
+                          />
+                        ) : null}
+                        {profile?.socials?.linkedin ? (
+                          <SocialIcon
+                            href={profile.socials.linkedin}
+                            label="LinkedIn"
+                            icon={<Linkedin className="h-4 w-4" />}
+                          />
+                        ) : null}
+                        {profile?.socials?.x ? (
+                          <SocialIcon
+                            href={profile.socials.x}
+                            label="X"
+                            icon={<Twitter className="h-4 w-4" />}
+                          />
+                        ) : null}
+                        {profile?.email ? (
+                          <SocialIcon
+                            href={`mailto:${profile.email}`}
+                            label="Email"
+                            icon={<Mail className="h-4 w-4" />}
+                          />
+                        ) : null}
+                      </div>
+                    </div>
+                  </>
+                ) : null}
               </>
-            ) : null}
+            )}
           </motion.div>
 
           {/* Reflective prose + portrait */}
-          <div className="mt-10 grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
+          <div className="mt-14 grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
             <motion.div
               ref={aboutTextReveal.ref}
               initial={aboutTextReveal.initial}
@@ -507,7 +539,27 @@ export default function HomePage() {
                 tech: techList.length,
               }}
               projects={
-                sortedProjects.length === 0 ? (
+                projectsLoading ? (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className="ek-glass overflow-hidden rounded-xl"
+                      >
+                        <Skeleton className="aspect-[16/9] w-full rounded-none" />
+                        <div className="space-y-3 p-3.5">
+                          <Skeleton className="h-5 w-3/4" />
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-5/6" />
+                          <div className="flex gap-1">
+                            <Skeleton className="h-6 w-16 rounded-full" />
+                            <Skeleton className="h-6 w-20 rounded-full" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : sortedProjects.length === 0 ? (
                   <EmptyState
                     message="No projects yet — check back soon."
                   />
@@ -526,14 +578,14 @@ export default function HomePage() {
                         >
                           {showAllProjects
                             ? 'Show less'
-                            : `Show all ${sortedProjects.length}`}
+                            : `View all ${sortedProjects.length} projects`}
                         </GradientButton>
                       </div>
                     ) : null}
                   </>
                 )
               }
-              tech={<TechGrid items={techList} />}
+              tech={<TechGrid items={techGridItems} />}
             />
           </div>
         </div>
@@ -542,7 +594,7 @@ export default function HomePage() {
       {/* ──────── Lifeline (vertical timeline + certifications) ──────── */}
       {timelineEntries.length > 0 || certificates.length > 0 ? (
         <section
-          id="lifeline"
+          id="experience"
           className="relative scroll-mt-20 px-4 py-16 sm:px-6 md:py-24"
         >
           <div className="mx-auto max-w-3xl">
@@ -567,7 +619,7 @@ export default function HomePage() {
                   aria-hidden
                   className="mt-3 block h-px w-12 bg-gradient-to-r from-[hsl(var(--brand-violet-soft)/0.7)] via-[hsl(var(--brand-violet-soft)/0.35)] to-transparent"
                 />
-                <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {certificates.map((c, i) => (
                     <CertificateCard
                       key={c._id}
@@ -595,7 +647,7 @@ export default function HomePage() {
         id="contact"
         className="relative scroll-mt-20 px-4 py-16 sm:px-6 md:py-24"
       >
-        <div className="mx-auto max-w-4xl">
+        <div className="mx-auto max-w-6xl">
           <SectionHeading
             kicker={profile?.contactKicker?.trim() || 'Get in touch'}
             title={profile?.contactTitle?.trim() || "Let's build something"}
@@ -605,49 +657,54 @@ export default function HomePage() {
             }
           />
 
-          <div className="mt-10 grid grid-cols-1 gap-3 md:grid-cols-2">
-            {profile?.email ? (
-              <ContactCard
-                icon={<Mail className="h-5 w-5" />}
-                label="Email"
-                value={profile.email}
-                href={`mailto:${profile.email}`}
-                action="Copy"
-                onAction={copyEmail}
-              />
-            ) : null}
-            {profile?.socials?.github ? (
-              <ContactCard
-                icon={<Github className="h-5 w-5" />}
-                label="GitHub"
-                value={profile.socials.github.replace(/^https?:\/\//, '')}
-                href={profile.socials.github}
-                external
-              />
-            ) : null}
-            {profile?.socials?.linkedin ? (
-              <ContactCard
-                icon={<Linkedin className="h-5 w-5" />}
-                label="LinkedIn"
-                value={profile.socials.linkedin.replace(/^https?:\/\//, '')}
-                href={profile.socials.linkedin}
-                external
-              />
-            ) : null}
-            {profile?.socials?.x ? (
-              <ContactCard
-                icon={<Twitter className="h-5 w-5" />}
-                label="X / Twitter"
-                value={profile.socials.x.replace(/^https?:\/\//, '')}
-                href={profile.socials.x}
-                external
-              />
-            ) : null}
-            {!profile?.email &&
-              !profile?.socials?.github &&
-              !profile?.socials?.linkedin && (
-                <EmptyState message="Contact info coming soon." />
-              )}
+          <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(20rem,1fr)]">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-1">
+              {profile?.email ? (
+                <ContactCard
+                  icon={<Mail className="h-5 w-5" />}
+                  label="Email"
+                  value={profile.email}
+                  href={`mailto:${profile.email}`}
+                  action="Copy"
+                  onAction={copyEmail}
+                  note={profile.responseTime?.trim() || undefined}
+                />
+              ) : null}
+              {profile?.socials?.github ? (
+                <ContactCard
+                  icon={<Github className="h-5 w-5" />}
+                  label="GitHub"
+                  value={profile.socials.github.replace(/^https?:\/\//, '')}
+                  href={profile.socials.github}
+                  external
+                />
+              ) : null}
+              {profile?.socials?.linkedin ? (
+                <ContactCard
+                  icon={<Linkedin className="h-5 w-5" />}
+                  label="LinkedIn"
+                  value={profile.socials.linkedin.replace(/^https?:\/\//, '')}
+                  href={profile.socials.linkedin}
+                  external
+                />
+              ) : null}
+              {profile?.socials?.x ? (
+                <ContactCard
+                  icon={<Twitter className="h-5 w-5" />}
+                  label="X / Twitter"
+                  value={profile.socials.x.replace(/^https?:\/\//, '')}
+                  href={profile.socials.x}
+                  external
+                />
+              ) : null}
+              {!profile?.email &&
+                !profile?.socials?.github &&
+                !profile?.socials?.linkedin && (
+                  <EmptyState message="Contact info coming soon." />
+                )}
+            </div>
+
+            <ContactForm />
           </div>
 
           {profile?.email ? (
@@ -655,7 +712,7 @@ export default function HomePage() {
               <GradientButton asChild>
                 <a href={`mailto:${profile.email}`}>
                   <Send className="h-4 w-4" />
-                  Send me a message
+                  {profile?.contactCTALabel?.trim() || 'Send me a message'}
                 </a>
               </GradientButton>
             </div>
@@ -682,11 +739,12 @@ function AboutPortrait({
       <div className="absolute -inset-3 rounded-3xl bg-gradient-to-tr from-[hsl(var(--brand-indigo)/0.22)] to-[hsl(var(--brand-violet-soft)/0.22)] opacity-70 blur-2xl" />
       <div className="ek-glass relative h-full w-full overflow-hidden rounded-3xl">
         {src ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={src}
             alt={alt}
-            className="h-full w-full object-cover"
+            fill
+            sizes="(min-width: 640px) 16rem, 14rem"
+            className="object-cover"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[hsl(var(--brand-indigo)/0.10)] to-[hsl(var(--brand-violet-soft)/0.10)]">
@@ -777,6 +835,7 @@ function ContactCard({
   external,
   action,
   onAction,
+  note,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -785,6 +844,7 @@ function ContactCard({
   external?: boolean;
   action?: string;
   onAction?: () => void;
+  note?: string;
 }) {
   return (
     <div className="group ek-glass ek-card-sheen ek-ring-conic ek-glow relative flex items-center gap-3 overflow-hidden rounded-xl p-3 transition-transform duration-300 hover:-translate-y-1">
@@ -809,6 +869,11 @@ function ContactCard({
         >
           {value}
         </a>
+        {note ? (
+          <p className="mt-1 text-xs font-medium text-[hsl(var(--muted-foreground))]">
+            {note}
+          </p>
+        ) : null}
       </div>
       {action && onAction ? (
         <button

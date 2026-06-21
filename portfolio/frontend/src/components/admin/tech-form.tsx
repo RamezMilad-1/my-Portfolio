@@ -17,6 +17,7 @@ import type { TechItem } from '@/lib/types';
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required'),
+  category: z.string().optional(),
   position: z.number().int().default(0),
   isPublished: z.boolean().default(true),
 });
@@ -41,6 +42,7 @@ export function TechForm({ item }: Props) {
     resolver: zodResolver(schema),
     defaultValues: {
       name: item?.name ?? '',
+      category: item?.category ?? '',
       position: item?.position ?? 0,
       isPublished: item?.isPublished ?? true,
     },
@@ -88,6 +90,14 @@ export function TechForm({ item }: Props) {
             Use the brand name. The public Tech Stack grid auto-picks a logo
             (Devicon / Simple Icons) from this name.
           </p>
+        </div>
+        <div className="space-y-1.5 md:col-span-2">
+          <Label htmlFor="category">Category</Label>
+          <Input
+            id="category"
+            placeholder="Languages · Frameworks · Databases · Tools"
+            {...register('category')}
+          />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="position">Position</Label>

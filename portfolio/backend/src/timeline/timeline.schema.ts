@@ -11,6 +11,11 @@ export class TimelineEntry {
 
   @Prop({ required: true }) body: string;
 
+  @Prop({ default: 'education', enum: ['education', 'work', 'achievement', 'personal'] })
+  type: string;
+
+  @Prop({ default: '' }) organization: string;
+
   @Prop({ default: 0 }) position: number;
 
   @Prop({ default: true }) isPublished: boolean;

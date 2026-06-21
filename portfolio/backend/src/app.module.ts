@@ -14,6 +14,7 @@ import { TeamModule } from './team/team.module';
 import { CertificatesModule } from './certificates/certificates.module';
 import { TimelineModule } from './timeline/timeline.module';
 import { TechModule } from './tech/tech.module';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { TechModule } from './tech/tech.module';
     CertificatesModule,
     TimelineModule,
     TechModule,
+    MessagesModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

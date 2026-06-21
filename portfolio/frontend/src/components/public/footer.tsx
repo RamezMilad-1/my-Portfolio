@@ -23,7 +23,7 @@ export function Footer() {
             aria-hidden
             className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] text-[10px] font-bold text-white"
           >
-            R
+            {data?.logoInitial?.trim() || 'R'}
           </span>
           <span className="ek-gradient-text-static">{name}</span>
         </Link>

@@ -75,4 +75,12 @@ export class UpdateProfileDto {
   @ValidateNested({ each: true })
   @Type(() => AboutFocusBlockDto)
   aboutFocusBlocks?: AboutFocusBlockDto[];
+
+  @IsOptional() @IsString() logoInitial?: string;
+  @IsOptional() @IsString() heroCTALabel?: string;
+  @IsOptional() @IsString() heroSeeking?: string;
+  @IsOptional() @IsString() aboutFactAcademics?: string;
+  @IsOptional() @IsString() aboutDividerLabel?: string;
+  @IsOptional() @IsString() contactCTALabel?: string;
+  @IsOptional() @IsString() responseTime?: string;
 }

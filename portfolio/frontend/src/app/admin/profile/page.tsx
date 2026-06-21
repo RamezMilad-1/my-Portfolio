@@ -23,6 +23,9 @@ const schema = z.object({
   email: z.string().optional(),
   avatarUrl: z.string().optional(),
   resumeUrl: z.string().optional(),
+  logoInitial: z.string().optional(),
+  heroCTALabel: z.string().optional(),
+  heroSeeking: z.string().optional(),
   socials: z.object({
     github: z.string().optional(),
     linkedin: z.string().optional(),
@@ -40,6 +43,10 @@ const schema = z.object({
   aboutFactLocation: z.string().optional(),
   aboutFactStack: z.string().optional(),
   aboutFactAvailable: z.string().optional(),
+  aboutFactAcademics: z.string().optional(),
+  aboutDividerLabel: z.string().optional(),
+  contactCTALabel: z.string().optional(),
+  responseTime: z.string().optional(),
   aboutCapabilities: z.array(z.string()).default([]),
   aboutFocusKicker: z.string().optional(),
   aboutFocusTitle: z.string().optional(),
@@ -71,6 +78,9 @@ export default function AdminProfilePage() {
       email: '',
       avatarUrl: '',
       resumeUrl: '',
+      logoInitial: '',
+      heroCTALabel: '',
+      heroSeeking: '',
       socials: { github: '', linkedin: '', x: '', website: '' },
       headlines: [],
       stats: {},
@@ -79,6 +89,10 @@ export default function AdminProfilePage() {
       aboutFactLocation: '',
       aboutFactStack: '',
       aboutFactAvailable: '',
+      aboutFactAcademics: '',
+      aboutDividerLabel: '',
+      contactCTALabel: '',
+      responseTime: '',
       aboutCapabilities: [],
       aboutFocusKicker: '',
       aboutFocusTitle: '',
@@ -107,6 +121,9 @@ export default function AdminProfilePage() {
         email: profile.email ?? '',
         avatarUrl: profile.avatarUrl ?? '',
         resumeUrl: profile.resumeUrl ?? '',
+        logoInitial: profile.logoInitial ?? '',
+        heroCTALabel: profile.heroCTALabel ?? '',
+        heroSeeking: profile.heroSeeking ?? '',
         socials: {
           github: profile.socials?.github ?? '',
           linkedin: profile.socials?.linkedin ?? '',
@@ -124,6 +141,10 @@ export default function AdminProfilePage() {
         aboutFactLocation: profile.aboutFactLocation ?? '',
         aboutFactStack: profile.aboutFactStack ?? '',
         aboutFactAvailable: profile.aboutFactAvailable ?? '',
+        aboutFactAcademics: profile.aboutFactAcademics ?? '',
+        aboutDividerLabel: profile.aboutDividerLabel ?? '',
+        contactCTALabel: profile.contactCTALabel ?? '',
+        responseTime: profile.responseTime ?? '',
         aboutCapabilities: profile.aboutCapabilities ?? [],
         aboutFocusKicker: profile.aboutFocusKicker ?? '',
         aboutFocusTitle: profile.aboutFocusTitle ?? '',
@@ -264,8 +285,20 @@ export default function AdminProfilePage() {
           <Input id="displayName" {...form.register('displayName')} />
         </div>
         <div className="space-y-1.5">
+          <Label htmlFor="logoInitial">Logo initial</Label>
+          <Input id="logoInitial" placeholder="R" {...form.register('logoInitial')} />
+        </div>
+        <div className="space-y-1.5">
           <Label htmlFor="email">Email</Label>
           <Input id="email" {...form.register('email')} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="heroCTALabel">Hero button label</Label>
+          <Input
+            id="heroCTALabel"
+            placeholder="View My Work"
+            {...form.register('heroCTALabel')}
+          />
         </div>
         <div className="space-y-1.5 md:col-span-2">
           <Label htmlFor="headline">Hero subtitle</Label>
@@ -273,6 +306,14 @@ export default function AdminProfilePage() {
             One-liner shown under the big role headline in the hero.
           </p>
           <Input id="headline" {...form.register('headline')} />
+        </div>
+        <div className="space-y-1.5 md:col-span-2">
+          <Label htmlFor="heroSeeking">Hero &quot;currently seeking&quot; line</Label>
+          <Input
+            id="heroSeeking"
+            placeholder="Summer 2026 internships"
+            {...form.register('heroSeeking')}
+          />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="education">Education</Label>
@@ -390,7 +431,7 @@ export default function AdminProfilePage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
           <div className="space-y-1.5">
             <Label htmlFor="aboutFactLocation">Location fact</Label>
             <Input
@@ -415,6 +456,23 @@ export default function AdminProfilePage() {
               {...form.register('aboutFactAvailable')}
             />
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="aboutFactAcademics">Academics fact</Label>
+            <Input
+              id="aboutFactAcademics"
+              placeholder="GPA 3.8 / 4.0"
+              {...form.register('aboutFactAcademics')}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="aboutDividerLabel">About divider label</Label>
+          <Input
+            id="aboutDividerLabel"
+            placeholder="What I bring"
+            {...form.register('aboutDividerLabel')}
+          />
         </div>
 
         <div className="space-y-3">
@@ -634,6 +692,28 @@ export default function AdminProfilePage() {
           <Input {...form.register('socials.linkedin')} placeholder="LinkedIn URL" />
           <Input {...form.register('socials.x')} placeholder="X / Twitter URL" />
           <Input {...form.register('socials.website')} placeholder="Website URL" />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Contact CTA</Label>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="contactCTALabel">Contact button label</Label>
+            <Input
+              id="contactCTALabel"
+              placeholder="Send me a message"
+              {...form.register('contactCTALabel')}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="responseTime">Response time note</Label>
+            <Input
+              id="responseTime"
+              placeholder="Usually responds within 24 hours"
+              {...form.register('responseTime')}
+            />
+          </div>
         </div>
       </div>
 

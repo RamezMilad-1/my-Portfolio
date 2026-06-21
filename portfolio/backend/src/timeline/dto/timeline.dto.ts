@@ -6,6 +6,8 @@ export class CreateTimelineEntryDto {
   @IsString() body: string;
 
   @IsOptional() @IsString() topic?: string;
+  @IsOptional() @IsString() type?: string;
+  @IsOptional() @IsString() organization?: string;
   @IsOptional() @IsInt() position?: number;
   @IsOptional() @IsBoolean() isPublished?: boolean;
 }

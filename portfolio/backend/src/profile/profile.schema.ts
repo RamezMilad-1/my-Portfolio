@@ -66,6 +66,14 @@ export class Profile {
   @Prop({ default: '' }) aboutFocusSubtitle: string;
   @Prop({ type: [AboutFocusBlockSchema], default: [] })
   aboutFocusBlocks: AboutFocusBlock[];
+
+  @Prop({ default: '' }) logoInitial: string;
+  @Prop({ default: '' }) heroCTALabel: string;
+  @Prop({ default: '' }) heroSeeking: string;
+  @Prop({ default: '' }) aboutFactAcademics: string;
+  @Prop({ default: '' }) aboutDividerLabel: string;
+  @Prop({ default: '' }) contactCTALabel: string;
+  @Prop({ default: '' }) responseTime: string;
 }
 
 export const ProfileSchema = SchemaFactory.createForClass(Profile);

@@ -1,6 +1,7 @@
 'use client';
 
 import { Sparkles } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 type Tone = 'violet' | 'emerald';
 
@@ -8,6 +9,13 @@ interface Props {
   label: string;
   icon?: React.ReactNode;
   tone?: Tone;
+  className?: string;
+  haloClassName?: string;
+  pingClassName?: string;
+  dotClassName?: string;
+  labelClassName?: string;
+  iconClassName?: string;
+  borderGradient?: string;
 }
 
 const toneStyles: Record<
@@ -41,28 +49,55 @@ const toneStyles: Record<
   },
 };
 
-export function StatusBadge({ label, icon, tone = 'violet' }: Props) {
+export function StatusBadge({
+  label,
+  icon,
+  tone = 'violet',
+  className,
+  haloClassName,
+  pingClassName,
+  dotClassName,
+  labelClassName,
+  iconClassName,
+  borderGradient,
+}: Props) {
   const t = toneStyles[tone];
   return (
     <span
-      className="relative inline-flex items-center gap-2 rounded-full border border-transparent px-3.5 py-1.5 text-xs font-medium"
+      className={cn(
+        'relative inline-flex items-center gap-2 rounded-full border border-transparent px-3.5 py-1.5 text-xs font-medium',
+        className,
+      )}
       style={{
-        background: `linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box, ${t.border} border-box`,
+        background: `linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box, ${borderGradient ?? t.border} border-box`,
       }}
     >
       <span
-        className={`absolute inset-0 -z-10 rounded-full bg-gradient-to-r ${t.halo} blur-md`}
+        className={cn(
+          `absolute inset-0 -z-10 rounded-full bg-gradient-to-r ${t.halo} blur-md`,
+          haloClassName,
+        )}
       />
       <span className="relative flex h-1.5 w-1.5 items-center justify-center">
         <span
-          className={`absolute h-1.5 w-1.5 animate-ping rounded-full ${t.dotPing} opacity-75`}
+          className={cn(
+            `absolute h-1.5 w-1.5 animate-ping rounded-full ${t.dotPing} opacity-75`,
+            pingClassName,
+          )}
         />
         <span
-          className={`relative inline-block h-1.5 w-1.5 rounded-full ${t.dot}`}
+          className={cn(
+            `relative inline-block h-1.5 w-1.5 rounded-full ${t.dot}`,
+            dotClassName,
+          )}
         />
       </span>
-      <span className={`font-semibold ${t.label}`}>{label}</span>
-      {icon ?? <Sparkles className={`h-3.5 w-3.5 ${t.icon}`} />}
+      <span className={cn('font-semibold', t.label, labelClassName)}>
+        {label}
+      </span>
+      {icon ?? (
+        <Sparkles className={cn('h-3.5 w-3.5', t.icon, iconClassName)} />
+      )}
     </span>
   );
 }

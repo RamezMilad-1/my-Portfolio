@@ -57,7 +57,7 @@ export function SectionHeading({
               aria-hidden
               className="h-px w-14 bg-gradient-to-r from-transparent to-[hsl(var(--brand-violet)/0.7)] md:w-20"
             />
-            <span className="font-display text-[10.5px] font-semibold uppercase tracking-[0.34em] text-[hsl(220_22%_76%)] md:text-[11.5px]">
+            <span className="font-display text-[11.5px] font-semibold uppercase tracking-[0.34em] text-[hsl(220_22%_76%)] md:text-[12.5px]">
               {kicker}
             </span>
             <span

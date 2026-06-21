@@ -4,6 +4,7 @@ import { PartialType } from '@nestjs/mapped-types';
 export class CreateTechItemDto {
   @IsString() name: string;
 
+  @IsOptional() @IsString() category?: string;
   @IsOptional() @IsInt() position?: number;
   @IsOptional() @IsBoolean() isPublished?: boolean;
 }
