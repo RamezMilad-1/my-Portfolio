@@ -206,6 +206,8 @@ export function IconCloud({ icons, images }: IconCloudProps) {
     if (iconPositions.length === 0) return;
 
     let cancelled = false;
+    let frameRunning = false;
+    let inView = true;
 
     const animate = () => {
       if (cancelled) return;
@@ -283,16 +285,51 @@ export function IconCloud({ icons, images }: IconCloudProps) {
 
         ctx.restore();
       });
-      animationFrameRef.current = requestAnimationFrame(animate);
+      if (!cancelled && frameRunning) {
+        animationFrameRef.current = requestAnimationFrame(animate);
+      }
     };
 
-    animationFrameRef.current = requestAnimationFrame(animate);
+    // Only burn frames while the hero canvas is on-screen and the tab is
+    // visible. Scrolled away (About/Portfolio/Contact) or a hidden tab pauses
+    // the loop entirely so it stops competing for the main thread when the
+    // user is interacting elsewhere.
+    const start = () => {
+      if (cancelled || frameRunning || !inView || document.hidden) return;
+      frameRunning = true;
+      animationFrameRef.current = requestAnimationFrame(animate);
+    };
+    const stop = () => {
+      frameRunning = false;
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = 0;
+      }
+    };
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        inView = entries[0]?.isIntersecting ?? false;
+        if (inView) start();
+        else stop();
+      },
+      { threshold: 0 },
+    );
+    io.observe(canvas);
+
+    const onVisibility = () => {
+      if (document.hidden) stop();
+      else start();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    start();
 
     return () => {
       cancelled = true;
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
+      stop();
+      io.disconnect();
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, [icons, images, iconPositions]);
 

@@ -13,11 +13,29 @@ try {
   /* keep defaults */
 }
 
+// Origin that actually serves uploaded files (the backend). Uploads are
+// proxied through the Next server (see `rewrites` below) so they're same-origin
+// and can go through the image optimizer.
+const uploadsBase = (
+  process.env.NEXT_PUBLIC_UPLOADS_BASE ??
+  `${uploadsProtocol}://${uploadsHost}${uploadsPort ? `:${uploadsPort}` : ''}`
+).replace(/\/$/, '');
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   devIndicators: false,
   turbopack: {
     root: process.cwd(),
+  },
+  async rewrites() {
+    // Serve backend uploads from the frontend origin so `next/image` can
+    // optimize them (the optimizer rejects cross-origin localhost URLs).
+    return [
+      {
+        source: '/uploads/:path*',
+        destination: `${uploadsBase}/uploads/:path*`,
+      },
+    ];
   },
   images: {
     remotePatterns: [

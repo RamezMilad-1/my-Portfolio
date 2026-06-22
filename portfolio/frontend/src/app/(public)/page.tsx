@@ -28,6 +28,7 @@ import { TechGrid } from '@/components/public/tech-grid';
 import { Timeline } from '@/components/public/timeline';
 import { GradientButton } from '@/components/public/gradient-button';
 import { ContactForm } from '@/components/public/contact-form';
+import { Reveal } from '@/components/motion/reveal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { uploadsUrl } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -495,24 +496,26 @@ export default function HomePage() {
 
           {/* What I can ship — recruiter-facing CV snapshot */}
           {aboutRecruiterSignals.length > 0 ? (
-            <div className="relative mt-6 overflow-hidden rounded-3xl bg-white/[0.03] p-7 ring-1 ring-inset ring-white/[0.06] backdrop-blur-[7px] sm:p-10">
-              <span
-                aria-hidden
-                className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-[hsl(var(--brand-violet)/0.08)] blur-3xl"
-              />
-              <span
-                aria-hidden
-                className="pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.15] to-transparent"
-              />
-              <dl className="relative grid grid-cols-1 gap-x-12 gap-y-7 sm:grid-cols-2 sm:gap-y-9">
-                {aboutRecruiterSignals.map((signal, index) => (
-                  <Capability
-                    key={`${signal.label}-${signal.value}-${index}`}
-                    signal={signal}
-                  />
-                ))}
-              </dl>
-            </div>
+            <Reveal y={32} margin="-60px" className="mt-6">
+              <div className="relative overflow-hidden rounded-3xl bg-white/[0.03] p-7 ring-1 ring-inset ring-white/[0.06] backdrop-blur-[7px] sm:p-10">
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-[hsl(var(--brand-violet)/0.08)] blur-3xl"
+                />
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.15] to-transparent"
+                />
+                <dl className="relative grid grid-cols-1 gap-x-12 gap-y-7 sm:grid-cols-2 sm:gap-y-9">
+                  {aboutRecruiterSignals.map((signal, index) => (
+                    <Capability
+                      key={`${signal.label}-${signal.value}-${index}`}
+                      signal={signal}
+                    />
+                  ))}
+                </dl>
+              </div>
+            </Reveal>
           ) : null}
         </div>
       </section>
@@ -660,42 +663,50 @@ export default function HomePage() {
           <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(20rem,1fr)]">
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-1">
               {profile?.email ? (
-                <ContactCard
-                  icon={<Mail className="h-5 w-5" />}
-                  label="Email"
-                  value={profile.email}
-                  href={`mailto:${profile.email}`}
-                  action="Copy"
-                  onAction={copyEmail}
-                  note={profile.responseTime?.trim() || undefined}
-                />
+                <Reveal x={-56} y={8} delay={0} margin="-60px">
+                  <ContactCard
+                    icon={<Mail className="h-5 w-5" />}
+                    label="Email"
+                    value={profile.email}
+                    href={`mailto:${profile.email}`}
+                    action="Copy"
+                    onAction={copyEmail}
+                    note={profile.responseTime?.trim() || undefined}
+                  />
+                </Reveal>
               ) : null}
               {profile?.socials?.github ? (
-                <ContactCard
-                  icon={<Github className="h-5 w-5" />}
-                  label="GitHub"
-                  value={profile.socials.github.replace(/^https?:\/\//, '')}
-                  href={profile.socials.github}
-                  external
-                />
+                <Reveal x={-40} delay={0.08} margin="-60px">
+                  <ContactCard
+                    icon={<Github className="h-5 w-5" />}
+                    label="GitHub"
+                    value={profile.socials.github.replace(/^https?:\/\//, '')}
+                    href={profile.socials.github}
+                    external
+                  />
+                </Reveal>
               ) : null}
               {profile?.socials?.linkedin ? (
-                <ContactCard
-                  icon={<Linkedin className="h-5 w-5" />}
-                  label="LinkedIn"
-                  value={profile.socials.linkedin.replace(/^https?:\/\//, '')}
-                  href={profile.socials.linkedin}
-                  external
-                />
+                <Reveal x={-48} y={-8} delay={0.16} margin="-60px">
+                  <ContactCard
+                    icon={<Linkedin className="h-5 w-5" />}
+                    label="LinkedIn"
+                    value={profile.socials.linkedin.replace(/^https?:\/\//, '')}
+                    href={profile.socials.linkedin}
+                    external
+                  />
+                </Reveal>
               ) : null}
               {profile?.socials?.x ? (
-                <ContactCard
-                  icon={<Twitter className="h-5 w-5" />}
-                  label="X / Twitter"
-                  value={profile.socials.x.replace(/^https?:\/\//, '')}
-                  href={profile.socials.x}
-                  external
-                />
+                <Reveal x={-40} delay={0.24} margin="-60px">
+                  <ContactCard
+                    icon={<Twitter className="h-5 w-5" />}
+                    label="X / Twitter"
+                    value={profile.socials.x.replace(/^https?:\/\//, '')}
+                    href={profile.socials.x}
+                    external
+                  />
+                </Reveal>
               ) : null}
               {!profile?.email &&
                 !profile?.socials?.github &&
@@ -704,7 +715,9 @@ export default function HomePage() {
                 )}
             </div>
 
-            <ContactForm />
+            <Reveal x={48} delay={0.12} margin="-60px">
+              <ContactForm />
+            </Reveal>
           </div>
 
           {profile?.email ? (
@@ -734,15 +747,17 @@ function AboutPortrait({
   alt: string;
   initials: string;
 }) {
+  const [imgErrored, setImgErrored] = useState(false);
   return (
     <div className="relative mx-auto aspect-square w-full max-w-[11rem] sm:max-w-[13rem]">
       <div className="absolute -inset-3 rounded-3xl bg-gradient-to-tr from-[hsl(var(--brand-indigo)/0.22)] to-[hsl(var(--brand-violet-soft)/0.22)] opacity-70 blur-2xl" />
       <div className="ek-glass relative h-full w-full overflow-hidden rounded-3xl">
-        {src ? (
+        {src && !imgErrored ? (
           <Image
             src={src}
             alt={alt}
             fill
+            onError={() => setImgErrored(true)}
             sizes="(min-width: 640px) 16rem, 14rem"
             className="object-cover"
           />

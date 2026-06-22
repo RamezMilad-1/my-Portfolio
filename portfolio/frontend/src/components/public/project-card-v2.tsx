@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
@@ -26,6 +27,10 @@ export function ProjectCardV2({ project, index = 0 }: Props) {
         ? uploadsUrl(project.media.find((m) => m.kind === 'image')!.url)
         : null;
 
+  // Fall back to the initials placeholder if the cover fails to load, instead
+  // of leaving the browser's broken-image glyph (same pattern as the detail page).
+  const [coverErrored, setCoverErrored] = useState(false);
+
   const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
 
   return (
@@ -45,12 +50,13 @@ export function ProjectCardV2({ project, index = 0 }: Props) {
       </Link>
 
       <div className="relative aspect-[16/9] overflow-hidden bg-[linear-gradient(135deg,hsl(244_30%_18%/0.85)_0%,hsl(225_30%_12%/0.85)_60%,hsl(275_35%_20%/0.85)_100%)]">
-        {cover ? (
+        {cover && !coverErrored ? (
           <Image
             src={cover}
             alt={project.name}
             fill
             sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+            onError={() => setCoverErrored(true)}
             className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
           />
         ) : (
@@ -125,7 +131,7 @@ export function ProjectCardV2({ project, index = 0 }: Props) {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={stopPropagation}
-                className="group/link inline-flex items-center gap-1 text-xs font-semibold transition-opacity duration-200 hover:opacity-90"
+                className="group/link inline-flex items-center gap-1 rounded-full border border-white/15 bg-[hsl(220_30%_8%/0.55)] px-2.5 py-1 text-xs font-semibold backdrop-blur-md transition-colors duration-200 hover:border-white/30 hover:bg-[hsl(220_30%_14%/0.7)]"
               >
                 <span className="bg-gradient-to-r from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] bg-clip-text text-transparent">
                   {project.liveLabel ?? 'Live Demo'}

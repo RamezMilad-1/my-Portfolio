@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FileDown, Menu, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useProfile } from '@/lib/api/profile';
@@ -27,6 +27,17 @@ export function Nav() {
   const [activeId, setActiveId] = useState<string>('home');
   const [open, setOpen] = useState(false);
 
+  // True while a click-initiated smooth scroll is animating. The scroll-spy
+  // observer is frozen during this window so the active pill animates once to
+  // the clicked target instead of thrashing through every section the scroll
+  // flies past — that re-render/relayout burst is what made button-scroll jank
+  // on heavy displays while trackpad scrolling stayed smooth.
+  const programmaticScrollRef = useRef(false);
+  const scrollSettleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const scrollEndHandlerRef = useRef<(() => void) | null>(null);
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
     onScroll();
@@ -39,6 +50,9 @@ export function Nav() {
 
     const observer = new IntersectionObserver(
       (entries) => {
+        // Ignore observer churn while a click-scroll is in flight — the target
+        // is already pinned as active in handleClick.
+        if (programmaticScrollRef.current) return;
         const visible = entries
           .filter((e) => e.isIntersecting)
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
@@ -85,6 +99,19 @@ export function Nav() {
     };
   }, [isHome]);
 
+  // Clean up any in-flight scroll-settle listener/timer if the nav unmounts
+  // mid-scroll.
+  useEffect(() => {
+    return () => {
+      if (scrollSettleTimerRef.current) {
+        clearTimeout(scrollSettleTimerRef.current);
+      }
+      if (scrollEndHandlerRef.current) {
+        window.removeEventListener('scrollend', scrollEndHandlerRef.current);
+      }
+    };
+  }, []);
+
   const handleClick = (id: string) => {
     setOpen(false);
     if (!isHome) {
@@ -92,9 +119,41 @@ export function Nav() {
       return;
     }
     const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!el) return;
+
+    // Pin the pill to the clicked target and freeze the scroll-spy observer
+    // until the smooth scroll settles, so the nav doesn't re-render on every
+    // section the scroll passes through.
+    setActiveId(id);
+    programmaticScrollRef.current = true;
+
+    // Tear down any release pending from a previous rapid click.
+    if (scrollSettleTimerRef.current) {
+      clearTimeout(scrollSettleTimerRef.current);
     }
+    if (scrollEndHandlerRef.current) {
+      window.removeEventListener('scrollend', scrollEndHandlerRef.current);
+    }
+
+    const release = () => {
+      programmaticScrollRef.current = false;
+      if (scrollEndHandlerRef.current) {
+        window.removeEventListener('scrollend', scrollEndHandlerRef.current);
+        scrollEndHandlerRef.current = null;
+      }
+      if (scrollSettleTimerRef.current) {
+        clearTimeout(scrollSettleTimerRef.current);
+        scrollSettleTimerRef.current = null;
+      }
+    };
+    scrollEndHandlerRef.current = release;
+    // `scrollend` is the precise settle signal on modern Chrome/Safari; the
+    // timeout is a fallback for browsers without it and a safety net when the
+    // target is already in view (no scroll → no scrollend fires).
+    window.addEventListener('scrollend', release);
+    scrollSettleTimerRef.current = setTimeout(release, 1000);
+
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   return (
@@ -102,7 +161,7 @@ export function Nav() {
       className={cn(
         'fixed inset-x-0 top-0 z-50 transition-all duration-300',
         scrolled
-          ? 'border-b border-[hsl(var(--brand-violet)/0.15)] bg-[hsl(var(--background)/0.65)] backdrop-blur-xl'
+          ? 'border-b border-[hsl(var(--brand-violet)/0.15)] bg-[hsl(var(--background)/0.65)] backdrop-blur-md'
           : 'border-b border-transparent',
       )}
     >
