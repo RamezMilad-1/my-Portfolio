@@ -10,7 +10,6 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "db:seed": "ts-node -r tsconfig-paths/register scripts/seed.ts",
     "create-admin": "ts-node -r tsconfig-paths/register scripts/create-admin.ts"
   },
   "dependencies": {

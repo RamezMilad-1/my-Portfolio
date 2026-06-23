@@ -14,10 +14,10 @@
 **/.env.*.local
 
 # uploads
-portfolio/backend/uploads/*
-!portfolio/backend/uploads/.gitkeep
-!portfolio/backend/uploads/images/.gitkeep
-!portfolio/backend/uploads/videos/.gitkeep
+backend/uploads/*
+!backend/uploads/.gitkeep
+!backend/uploads/images/.gitkeep
+!backend/uploads/videos/.gitkeep
 
 # legacy backups
 _legacy/

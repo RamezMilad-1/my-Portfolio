@@ -309,7 +309,18 @@ interface Props {
 }
 
 export function TechGrid({ items }: Props) {
-  if (items.length === 0) {
+  // Drop duplicate techs (case-insensitive) so the same item can't render
+  // twice — e.g. a tech added twice in the admin. Besides the visual repeat,
+  // duplicates would collide on the React `key` below. Keeps first occurrence.
+  const seen = new Set<string>();
+  const uniqueItems = items.filter((it) => {
+    const id = normalize(it.name);
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+
+  if (uniqueItems.length === 0) {
     return (
       <div className="ek-glass mx-auto max-w-md rounded-2xl p-8 text-center">
         <Sparkles className="mx-auto h-8 w-8 text-[hsl(var(--brand-violet))]" />
@@ -320,7 +331,7 @@ export function TechGrid({ items }: Props) {
     );
   }
 
-  const groups = items.reduce<Record<string, TechGridEntry[]>>((acc, it) => {
+  const groups = uniqueItems.reduce<Record<string, TechGridEntry[]>>((acc, it) => {
     const key = it.category?.trim() || 'Other';
     (acc[key] ??= []).push(it);
     return acc;

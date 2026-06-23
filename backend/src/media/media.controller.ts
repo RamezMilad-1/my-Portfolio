@@ -49,8 +49,7 @@ export class MediaController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: (req, file, cb) => {
-          const cfg = (req as any).app?.get?.('config');
+        destination: (_req, file, cb) => {
           const base = process.env.UPLOADS_DIR ?? './uploads';
           const sub = file.mimetype.startsWith('image/') ? 'images' : 'videos';
           const dest = join(base, sub);

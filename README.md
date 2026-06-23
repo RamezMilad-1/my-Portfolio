@@ -6,18 +6,17 @@ A personal portfolio with a built-in admin CMS. **Local-only** — runs on your 
 
 - **Frontend** — Next.js 16 (App Router) · React 19 · Tailwind 4 · TanStack Query · Axios · Framer Motion · Radix UI
 - **Backend** — NestJS 11 · Mongoose · MongoDB · JWT-in-cookie auth
-- **Storage** — Files on disk under `portfolio/backend/uploads/` (avatars, project galleries, resume)
+- **Storage** — Files on disk under `backend/uploads/` (avatars, project galleries, resume)
 
 ## Layout
 
 ```
 my-Portfolio/
-└── portfolio/
-    ├── frontend/   Next.js public site + admin UI
-    └── backend/    NestJS API
+├── frontend/   Next.js public site + admin UI
+└── backend/    NestJS API
 ```
 
-Backend modules: `auth`, `admins`, `profile`, `projects`, `media`, `team`.
+Backend modules: `auth`, `admins`, `profile`, `projects`, `media`, `team`, `certificates`, `timeline`, `tech`, `messages`.
 
 ## Prerequisites
 
@@ -33,10 +32,9 @@ Node 20 or 22 recommended.
 
 ```sh
 # Backend
-cd portfolio/backend
+cd backend
 cp .env.example .env
 npm install
-npm run db:seed          # profile + 4 sample projects
 npm run create-admin     # prompts for email + password
 
 # Frontend
@@ -49,11 +47,11 @@ npm install
 
 ```sh
 # Terminal 1 — backend
-cd portfolio/backend
+cd backend
 npm run start:dev        # → http://localhost:3001
 
 # Terminal 2 — frontend
-cd portfolio/frontend
+cd frontend
 npm run dev              # → http://localhost:3000
 ```
 
@@ -65,7 +63,7 @@ Sign in at `/login`, then use the sidebar:
 
 - **Dashboard** — counts and quick links
 - **Projects** — create, edit, delete, reorder. Each project has tagline, problem, description, architecture, outcome, tech tags, features list, GitHub URL, optional live URL, role, media gallery, team picker, draft/published status
-- **Media** — drop-zone uploader for images and videos. Files land in `portfolio/backend/uploads/`. Used for project galleries and avatars
+- **Media** — drop-zone uploader for images and videos. Files land in `backend/uploads/`. Used for project galleries and avatars
 - **Team** — minimal collaborator roster (name + GitHub + LinkedIn) you can attach to multiple projects
 - **Profile** — edit display name, headline, bio, education, availability, email, avatar, resume, and social links
 
@@ -79,7 +77,7 @@ Sign in at `/login`, then use the sidebar:
 
 ## Changing your profile photo
 
-Admin → **Profile** → click **Upload** next to **Avatar**, pick the image, then **Save profile**. The file is stored under `portfolio/backend/uploads/images/` and the homepage hero updates immediately.
+Admin → **Profile** → click **Upload** next to **Avatar**, pick the image, then **Save profile**. The file is stored under `backend/uploads/images/` and the homepage hero updates immediately.
 
 ## Notes
 
@@ -166,7 +164,7 @@ Or paste content manually into the production admin — only takes ~30 minutes f
 
 ### 6. Re-upload media
 
-The image and video files in `portfolio/backend/uploads/` live on your laptop's disk; the database stores paths to them. When you deploy, re-upload the same files via the production admin's Media uploader.
+The image and video files in `backend/uploads/` live on your laptop's disk; the database stores paths to them. When you deploy, re-upload the same files via the production admin's Media uploader.
 
 ### 7. Final checks
 
