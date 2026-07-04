@@ -115,11 +115,7 @@ function LoginInner() {
         </form>
 
         <p className="mt-6 text-center text-xs text-[hsl(var(--muted-foreground))]">
-          One admin per portfolio. Bootstrap with{' '}
-          <code className="rounded bg-[hsl(var(--muted))] px-1.5 py-0.5 text-[11px]">
-            npm run create-admin
-          </code>
-          .
+          Access is limited to the portfolio owner.
         </p>
       </div>
     </div>

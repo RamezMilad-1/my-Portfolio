@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
+  FileDown,
   Github,
   Linkedin,
   Mail,
@@ -32,75 +33,6 @@ import { Reveal } from '@/components/motion/reveal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { uploadsUrl } from '@/lib/utils';
 import { toast } from 'sonner';
-
-const LEGACY_ABOUT_CAPABILITIES = [
-  'I ship full-stack apps end-to-end — Figma to deployed, with no awkward seams in between.',
-  'I care about the front edge — micro-interactions, accessibility, and dark mode handled before someone asks.',
-  "I write backends I'd want to come back to — strict NestJS modules, real validation, no surprises.",
-  "I write databases I trust six months later — schemas, migrations, and queries I'd defend in review.",
-];
-
-const DEFAULT_ABOUT_CAPABILITIES = [
-  'Front-end execution: React and Next.js screens with responsive layouts, accessible states, forms, and clean interaction details.',
-  'Backend execution: NestJS modules, typed DTOs, validation, auth-aware routes, and predictable API behavior.',
-  'Data literacy: MongoDB or Postgres schemas, query patterns, reporting flows, and careful handling of real application data.',
-  'Team readiness: readable code, clear module boundaries, honest status updates, and work I can explain in review.',
-];
-
-const LEGACY_ABOUT_CAPABILITY_COPY = new Map([
-  [LEGACY_ABOUT_CAPABILITIES[0], DEFAULT_ABOUT_CAPABILITIES[0]],
-  [LEGACY_ABOUT_CAPABILITIES[1], DEFAULT_ABOUT_CAPABILITIES[1]],
-  [LEGACY_ABOUT_CAPABILITIES[2], DEFAULT_ABOUT_CAPABILITIES[2]],
-  [LEGACY_ABOUT_CAPABILITIES[3], DEFAULT_ABOUT_CAPABILITIES[3]],
-  [
-    'Full-stack apps from Figma to deploy — typed APIs, accessible UIs, clean builds.',
-    DEFAULT_ABOUT_CAPABILITIES[0],
-  ],
-  [
-    'Production React / Next.js frontends with motion, dark mode, and a11y baked in.',
-    DEFAULT_ABOUT_CAPABILITIES[1],
-  ],
-  [
-    'Strict NestJS backends — validation, auth, and clean module boundaries.',
-    DEFAULT_ABOUT_CAPABILITIES[2],
-  ],
-  [
-    'Real data layers — MongoDB or Postgres — with proper schemas, not just CRUD.',
-    DEFAULT_ABOUT_CAPABILITIES[3],
-  ],
-]);
-
-function rewriteLegacyAboutCapability(value: string | null | undefined) {
-  const text = typeof value === 'string' ? value.trim() : '';
-  const normalized = text.toLowerCase().replace(/\s+/g, ' ').trim();
-
-  if (
-    normalized.includes('full-stack apps from figma') &&
-    normalized.includes('typed apis')
-  ) {
-    return DEFAULT_ABOUT_CAPABILITIES[0];
-  }
-  if (
-    normalized.includes('production react') &&
-    normalized.includes('dark mode')
-  ) {
-    return DEFAULT_ABOUT_CAPABILITIES[1];
-  }
-  if (
-    normalized.includes('strict nestjs backends') &&
-    normalized.includes('clean module boundaries')
-  ) {
-    return DEFAULT_ABOUT_CAPABILITIES[2];
-  }
-  if (
-    normalized.includes('real data layers') &&
-    normalized.includes('not just crud')
-  ) {
-    return DEFAULT_ABOUT_CAPABILITIES[3];
-  }
-
-  return LEGACY_ABOUT_CAPABILITY_COPY.get(text) ?? text;
-}
 
 type RecruiterSignal = {
   label: string;
@@ -134,8 +66,7 @@ function splitCapabilityCopy(source: string) {
 function recruiterSignalFromText(
   text: string | null | undefined,
 ): RecruiterSignal {
-  const displayText = rewriteLegacyAboutCapability(text);
-  return splitCapabilityCopy(displayText);
+  return splitCapabilityCopy(typeof text === 'string' ? text : '');
 }
 
 function recruiterSignalFromFocusBlock(
@@ -148,6 +79,35 @@ function recruiterSignalFromFocusBlock(
     label: heading || 'Profile',
     value: body || '',
   };
+}
+
+/**
+ * Section heading driven purely by DB content — renders nothing when the
+ * profile has no copy for the section.
+ */
+function DbSectionHeading({
+  kicker,
+  title,
+  subtitle,
+  variant,
+}: {
+  kicker?: string;
+  title?: string;
+  subtitle?: string;
+  variant?: 'line' | 'classic';
+}) {
+  const k = kicker?.trim();
+  const t = title?.trim();
+  const s = subtitle?.trim();
+  if (!k && !t && !s) return null;
+  return (
+    <SectionHeading
+      kicker={k || undefined}
+      title={t || undefined}
+      subtitle={s || undefined}
+      variant={variant}
+    />
+  );
 }
 
 export default function HomePage() {
@@ -206,41 +166,21 @@ export default function HomePage() {
     return techList.map((name) => ({ name }));
   }, [techItems, techList]);
 
-  const stats = useMemo(() => {
-    const userStats = profile?.stats ?? {};
-    return {
-      projectsShipped:
-        userStats.projectsShipped ?? projects.filter((p) => p.status === 'published').length,
-      technologies: userStats.technologies ?? techList.length,
-      yearsCoding: userStats.yearsCoding ?? 3,
-    };
-  }, [profile, projects, techList]);
-
-  // Body paragraphs come from `profile.bio` split on blank lines. When the
-  // bio is empty, fall back to the two-paragraph default that ships with the
-  // site so the layout stays meaningful out of the box.
+  // Body paragraphs come from `profile.bio` split on blank lines.
   const aboutBodyParagraphs = useMemo<string[]>(() => {
     const bio = profile?.bio?.trim();
-    if (bio) {
-      return bio
-        .split(/\n\s*\n/)
-        .map((p) => p.trim())
-        .filter(Boolean);
-    }
-    return [
-      'Most of my time goes into TypeScript: React or Next.js on the front, NestJS on the back, MongoDB or Postgres underneath. I care about the parts most people skip — micro-interactions that feel right, types that hold the system together, and code that still reads cleanly when I come back to it cold.',
-      "I'm at the stage where I want to push past student projects into real work — full-stack TypeScript, shipped end-to-end, and honest about what's done versus what I'd refactor if I had another day.",
-    ];
+    if (!bio) return [];
+    return bio
+      .split(/\n\s*\n/)
+      .map((p) => p.trim())
+      .filter(Boolean);
   }, [profile?.bio]);
 
   // CV-style rows for the compact capability snapshot.
   const aboutCapabilitiesList = useMemo<string[]>(() => {
-    const items = (profile?.aboutCapabilities ?? [])
-      .map(rewriteLegacyAboutCapability)
-      .map((s) => s.trim())
+    return (profile?.aboutCapabilities ?? [])
+      .map((s) => (typeof s === 'string' ? s.trim() : ''))
       .filter(Boolean);
-    if (items.length > 0) return items;
-    return DEFAULT_ABOUT_CAPABILITIES;
   }, [profile?.aboutCapabilities]);
 
   const aboutRecruiterSignals = useMemo<RecruiterSignal[]>(() => {
@@ -256,21 +196,46 @@ export default function HomePage() {
       .filter((signal) => signal.label.trim() && signal.value.trim());
   }, [aboutCapabilitiesList, profile?.aboutFocusBlocks]);
 
+  // Scannable fact cells for the recruiter card — only cells with DB values.
+  const aboutFactCells = useMemo(
+    () =>
+      [
+        { label: 'Education', value: profile?.education?.trim() },
+        { label: 'Location', value: profile?.aboutFactLocation?.trim() },
+        { label: 'Core stack', value: profile?.aboutFactStack?.trim() },
+        { label: 'Available for', value: profile?.aboutFactAvailable?.trim() },
+      ].filter((f): f is { label: string; value: string } => Boolean(f.value)),
+    [profile],
+  );
+
+  const hasAboutSocials = Boolean(
+    profile?.socials?.github ||
+      profile?.socials?.linkedin ||
+      profile?.socials?.x ||
+      profile?.email,
+  );
+
+  const aboutLede = profile?.aboutLede?.trim() ?? '';
+  const aboutDividerLabel = profile?.aboutDividerLabel?.trim() ?? '';
+
+  const portraitName = profile?.displayName?.trim() ?? '';
+  const portraitSrc = profile?.avatarUrl ? uploadsUrl(profile.avatarUrl) : null;
+  const portraitInitials = portraitName
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
+  const aboutPortrait =
+    portraitSrc || portraitInitials
+      ? { src: portraitSrc, alt: portraitName || 'Portrait', initials: portraitInitials }
+      : null;
+
   const [showAllProjects, setShowAllProjects] = useState(false);
   const visibleProjects = showAllProjects ? sortedProjects : sortedProjects.slice(0, 6);
 
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
 
-  const aboutTextReveal = useScrollReveal<HTMLDivElement>({
-    x: -40,
-    y: 0,
-    margin: '-80px',
-  });
-  const aboutPortraitReveal = useScrollReveal<HTMLDivElement>({
-    x: 40,
-    y: 0,
-    margin: '-80px',
-  });
   const metricsReveal = useScrollReveal<HTMLDivElement>({
     y: 16,
     margin: '-50px',
@@ -296,10 +261,10 @@ export default function HomePage() {
         className="relative scroll-mt-20 px-4 py-10 sm:px-6 md:py-16"
       >
         <div className="mx-auto max-w-6xl">
-          <SectionHeading
-            kicker={profile?.aboutKicker?.trim() || 'About'}
-            title={profile?.aboutTitle?.trim() || 'The short version.'}
-            subtitle={profile?.aboutSubtitle?.trim() || undefined}
+          <DbSectionHeading
+            kicker={profile?.aboutKicker}
+            title={profile?.aboutTitle}
+            subtitle={profile?.aboutSubtitle}
             variant="classic"
           />
 
@@ -337,66 +302,68 @@ export default function HomePage() {
               </div>
             ) : (
               <>
-                {/* Identity line + status pill */}
-                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-                  <h3 className="font-display text-base font-semibold tracking-tight text-[hsl(var(--foreground))] sm:text-lg md:text-xl">
-                    {profile?.displayName ?? 'Ramez Milad'}
-                    <span className="text-[hsl(220_15%_64%)] font-normal">
-                      {' '}
-                      {profile?.aboutTagline?.trim() ||
-                        '— Full-stack TypeScript developer'}
-                    </span>
-                  </h3>
-                  <StatusBadge
-                    tone="violet"
-                    label={
-                      profile?.availability ??
-                      'Open to internships · Cairo / remote'
-                    }
-                  />
-                </div>
+                {/* Identity line + status pill + CV */}
+                {profile?.displayName ||
+                profile?.aboutTagline?.trim() ||
+                profile?.availability ||
+                profile?.resumeUrl ? (
+                  <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+                    {profile?.displayName || profile?.aboutTagline?.trim() ? (
+                      <h3 className="font-display text-base font-semibold tracking-tight text-[hsl(var(--foreground))] sm:text-lg md:text-xl">
+                        {profile?.displayName ?? ''}
+                        {profile?.aboutTagline?.trim() ? (
+                          <span className="text-[hsl(220_15%_64%)] font-normal">
+                            {' '}
+                            {profile.aboutTagline.trim()}
+                          </span>
+                        ) : null}
+                      </h3>
+                    ) : null}
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      {profile?.availability ? (
+                        <StatusBadge tone="violet" label={profile.availability} />
+                      ) : null}
+                      {profile?.resumeUrl ? (
+                        <GradientButton
+                          asChild
+                          variant="outline"
+                          className="h-8 px-4 text-xs font-medium"
+                        >
+                          <a
+                            href={uploadsUrl(profile.resumeUrl)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download
+                          >
+                            <FileDown className="h-3.5 w-3.5" /> Download CV
+                          </a>
+                        </GradientButton>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : null}
 
-                <div
-                  aria-hidden
-                  className="my-4 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent"
-                />
-
-                {/* Scannable facts — Role / Location / Stack / Available for */}
-                <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
-                  <FactCell
-                    label="Role"
-                    value={
-                      profile?.education ?? '3rd-year CS · Software Engineering'
-                    }
-                  />
-                  <FactCell
-                    label="Location"
-                    value={
-                      profile?.aboutFactLocation?.trim() ||
-                      'Cairo, Egypt · GMT+2'
-                    }
-                  />
-                  <FactCell
-                    label="Core stack"
-                    value={
-                      profile?.aboutFactStack?.trim() ||
-                      'TypeScript · React · Next.js · NestJS'
-                    }
-                  />
-                  <FactCell
-                    label="Available for"
-                    value={
-                      profile?.aboutFactAvailable?.trim() ||
-                      'Internships · Junior · Remote'
-                    }
-                  />
-                </div>
+                {/* Scannable facts — Education / Location / Stack / Available for */}
+                {aboutFactCells.length > 0 ? (
+                  <>
+                    <div
+                      aria-hidden
+                      className="my-4 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent"
+                    />
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+                      {aboutFactCells.map((fact) => (
+                        <FactCell
+                          key={fact.label}
+                          label={fact.label}
+                          value={fact.value}
+                        />
+                      ))}
+                    </div>
+                  </>
+                ) : null}
 
                 {/* Find me on — social trust signals */}
-                {profile?.socials?.github ||
-                profile?.socials?.linkedin ||
-                profile?.socials?.x ||
-                profile?.email ? (
+                {hasAboutSocials ? (
                   <>
                     <div
                       aria-hidden
@@ -444,55 +411,49 @@ export default function HomePage() {
           </motion.div>
 
           {/* Reflective prose + portrait */}
-          <div className="mt-14 grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
-            <motion.div
-              ref={aboutTextReveal.ref}
-              initial={aboutTextReveal.initial}
-              animate={aboutTextReveal.animate}
-              transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-              className="lg:col-span-8"
-            >
-              {/* Confident lede */}
-              <p className="font-display text-xl font-semibold leading-[1.22] tracking-tight text-[hsl(var(--foreground))] md:text-[22px]">
-                {profile?.aboutLede?.trim() ||
-                  'I build production-grade web apps end-to-end — typed all the way through, with the kind of detail that holds up six months later.'}
-              </p>
+          {aboutLede || aboutBodyParagraphs.length > 0 || aboutPortrait ? (
+            <div className="mt-14 grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
+              <Reveal x={-40} y={0} margin="-80px" className="lg:col-span-8">
+                {/* Confident lede */}
+                {aboutLede ? (
+                  <p className="font-display text-xl font-semibold leading-[1.22] tracking-tight text-[hsl(var(--foreground))] md:text-[22px]">
+                    {aboutLede}
+                  </p>
+                ) : null}
 
-              {/* Reflective paragraphs */}
-              {aboutBodyParagraphs.map((para, i) => (
-                <p
-                  key={i}
-                  className={`${
-                    i === 0 ? 'mt-4' : 'mt-3'
-                  } text-[13.5px] leading-relaxed text-[hsl(var(--muted-foreground))] md:text-[14.5px]`}
+                {/* Reflective paragraphs */}
+                {aboutBodyParagraphs.map((para, i) => (
+                  <p
+                    key={i}
+                    className={`${
+                      i === 0 && aboutLede ? 'mt-4' : i === 0 ? '' : 'mt-3'
+                    } text-[13.5px] leading-relaxed text-[hsl(var(--muted-foreground))] md:text-[14.5px]`}
+                  >
+                    {para}
+                  </p>
+                ))}
+              </Reveal>
+
+              {aboutPortrait ? (
+                <Reveal
+                  x={40}
+                  y={0}
+                  delay={0.15}
+                  margin="-80px"
+                  className="lg:col-span-4"
                 >
-                  {para}
-                </p>
-              ))}
-            </motion.div>
-
-            <motion.div
-              ref={aboutPortraitReveal.ref}
-              initial={aboutPortraitReveal.initial}
-              animate={aboutPortraitReveal.animate}
-              transition={{ duration: 1, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
-              className="lg:col-span-4"
-            >
-              <AboutPortrait
-                src={profile?.avatarUrl ? uploadsUrl(profile.avatarUrl) : null}
-                alt={profile?.displayName ?? 'Ramez Milad'}
-                initials={(profile?.displayName ?? 'Ramez Milad')
-                  .split(' ')
-                  .slice(0, 2)
-                  .map((w) => w[0])
-                  .join('')
-                  .toUpperCase()}
-              />
-            </motion.div>
-          </div>
+                  <AboutPortrait
+                    src={aboutPortrait.src}
+                    alt={aboutPortrait.alt}
+                    initials={aboutPortrait.initials}
+                  />
+                </Reveal>
+              ) : null}
+            </div>
+          ) : null}
 
           {/* Stylish hairline divider — bridges the bio and the CV grid */}
-          <AboutDivider />
+          {aboutDividerLabel ? <AboutDivider label={aboutDividerLabel} /> : null}
 
           {/* What I can ship — recruiter-facing CV snapshot */}
           {aboutRecruiterSignals.length > 0 ? (
@@ -526,13 +487,10 @@ export default function HomePage() {
         className="relative scroll-mt-20 px-4 py-16 sm:px-6 md:py-24"
       >
         <div className="mx-auto max-w-6xl">
-          <SectionHeading
-            kicker={profile?.portfolioKicker?.trim() || 'Portfolio showcase'}
-            title={profile?.portfolioTitle?.trim() || 'Selected work'}
-            subtitle={
-              profile?.portfolioSubtitle?.trim() ||
-              'Production-grade student projects — built end-to-end, deployed, and actively used.'
-            }
+          <DbSectionHeading
+            kicker={profile?.portfolioKicker}
+            title={profile?.portfolioTitle}
+            subtitle={profile?.portfolioSubtitle}
           />
 
           <div className="mt-10">
@@ -601,13 +559,10 @@ export default function HomePage() {
           className="relative scroll-mt-20 px-4 py-16 sm:px-6 md:py-24"
         >
           <div className="mx-auto max-w-3xl">
-            <SectionHeading
-              kicker={profile?.lifelineKicker?.trim() || 'Lifeline'}
-              title={profile?.lifelineTitle?.trim() || 'The road so far'}
-              subtitle={
-                profile?.lifelineSubtitle?.trim() ||
-                'A short timeline of milestones — the moments that shaped the work behind everything above.'
-              }
+            <DbSectionHeading
+              kicker={profile?.lifelineKicker}
+              title={profile?.lifelineTitle}
+              subtitle={profile?.lifelineSubtitle}
             />
             {timelineEntries.length > 0 ? (
               <Timeline entries={timelineEntries} />
@@ -651,13 +606,10 @@ export default function HomePage() {
         className="relative scroll-mt-20 px-4 py-16 sm:px-6 md:py-24"
       >
         <div className="mx-auto max-w-6xl">
-          <SectionHeading
-            kicker={profile?.contactKicker?.trim() || 'Get in touch'}
-            title={profile?.contactTitle?.trim() || "Let's build something"}
-            subtitle={
-              profile?.contactSubtitle?.trim() ||
-              'Open to internships, well-scoped student projects, and ambitious side projects.'
-            }
+          <DbSectionHeading
+            kicker={profile?.contactKicker}
+            title={profile?.contactTitle}
+            subtitle={profile?.contactSubtitle}
           />
 
           <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(20rem,1fr)]">
@@ -720,12 +672,12 @@ export default function HomePage() {
             </Reveal>
           </div>
 
-          {profile?.email ? (
+          {profile?.email && profile?.contactCTALabel?.trim() ? (
             <div className="mt-10 flex justify-center">
               <GradientButton asChild>
                 <a href={`mailto:${profile.email}`}>
                   <Send className="h-4 w-4" />
-                  {profile?.contactCTALabel?.trim() || 'Send me a message'}
+                  {profile.contactCTALabel.trim()}
                 </a>
               </GradientButton>
             </div>
@@ -827,15 +779,15 @@ function Capability({
   );
 }
 
-function AboutDivider() {
+function AboutDivider({ label }: { label: string }) {
   return (
     <div
-      className="mt-10 flex items-center justify-center gap-4"
+      className="mt-5 flex items-center justify-center gap-4"
       aria-hidden
     >
       <span className="h-px w-20 bg-gradient-to-r from-transparent to-[hsl(var(--brand-violet)/0.7)]" />
       <p className="font-display text-[10.5px] font-semibold uppercase tracking-[0.34em] text-[hsl(220_20%_74%)]">
-        What I bring
+        {label}
       </p>
       <span className="h-px w-20 bg-gradient-to-r from-[hsl(var(--brand-violet)/0.7)] to-transparent" />
     </div>

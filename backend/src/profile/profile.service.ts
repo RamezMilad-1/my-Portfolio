@@ -11,11 +11,9 @@ export class ProfileService {
   async get() {
     const existing = await this.model.findById('singleton').exec();
     if (existing) return existing.toObject();
-    const created = await this.model.create({
-      _id: 'singleton',
-      displayName: 'Ramez Milad',
-      headline: '3rd-year Computer Science student · Software Engineering major',
-    });
+    // Bare singleton — all content comes from the DB via the admin panel;
+    // schema defaults keep every field empty until it's filled in.
+    const created = await this.model.create({ _id: 'singleton' });
     return created.toObject();
   }
 

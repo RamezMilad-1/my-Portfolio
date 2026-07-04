@@ -8,25 +8,32 @@ export function Footer() {
   const { data } = useProfile();
   const socials = data?.socials ?? {};
   const year = new Date().getFullYear();
-  const name = data?.displayName ?? 'Ramez Milad';
+  const name = data?.displayName?.trim() ?? '';
+  const logoInitial = data?.logoInitial?.trim() ?? '';
 
   return (
     <footer className="relative mt-24 border-t border-[hsl(var(--brand-violet)/0.15)] py-12">
       <div className="absolute inset-x-0 top-0 mx-auto h-px max-w-md bg-gradient-to-r from-transparent via-[hsl(var(--brand-violet))] to-transparent" />
 
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 sm:px-6">
-        <Link
-          href="/"
-          className="font-display inline-flex items-center gap-2 text-base font-bold tracking-tight"
-        >
-          <span
-            aria-hidden
-            className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] text-[10px] font-bold text-white"
+        {logoInitial || name ? (
+          <Link
+            href="/"
+            className="font-display inline-flex items-center gap-2 text-base font-bold tracking-tight"
           >
-            {data?.logoInitial?.trim() || 'R'}
-          </span>
-          <span className="ek-gradient-text-static">{name}</span>
-        </Link>
+            {logoInitial ? (
+              <span
+                aria-hidden
+                className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] text-[10px] font-bold text-white"
+              >
+                {logoInitial}
+              </span>
+            ) : null}
+            {name ? (
+              <span className="ek-gradient-text-static">{name}</span>
+            ) : null}
+          </Link>
+        ) : null}
 
         <div className="flex items-center gap-3">
           {socials.github ? (
@@ -57,7 +64,7 @@ export function Footer() {
         </div>
 
         <p className="text-center text-xs text-[hsl(var(--muted-foreground))]">
-          © {year} {name}. Built with{' '}
+          © {year}{name ? ` ${name}` : ''}. Built with{' '}
           <Heart
             className="inline h-3 w-3 fill-[hsl(var(--brand-violet))] text-[hsl(var(--brand-violet))]"
             aria-label="love"

@@ -176,15 +176,19 @@ export function Nav() {
             }
           }}
         >
-          <span
-            aria-hidden
-            className="relative inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] text-[10px] font-bold text-white shadow-[0_4px_20px_-4px_hsl(var(--brand-violet)/0.6)]"
-          >
-            {profile?.logoInitial?.trim() || 'R'}
-          </span>
-          <span className="ek-gradient-text-static">
-            {profile?.displayName ?? 'Ramez Milad'}
-          </span>
+          {profile?.logoInitial?.trim() ? (
+            <span
+              aria-hidden
+              className="relative inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] text-[10px] font-bold text-white shadow-[0_4px_20px_-4px_hsl(var(--brand-violet)/0.6)]"
+            >
+              {profile.logoInitial.trim()}
+            </span>
+          ) : null}
+          {profile?.displayName ? (
+            <span className="ek-gradient-text-static">
+              {profile.displayName}
+            </span>
+          ) : null}
         </Link>
 
         <nav className="relative ml-2 hidden flex-1 items-center gap-1 md:flex">

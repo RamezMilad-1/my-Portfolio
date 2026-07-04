@@ -22,8 +22,8 @@ const AboutFocusBlockSchema = SchemaFactory.createForClass(AboutFocusBlock);
 export class Profile {
   @Prop({ default: 'singleton' }) _id: string;
 
-  @Prop({ required: true }) displayName: string;
-  @Prop({ required: true }) headline: string;
+  @Prop({ default: '' }) displayName: string;
+  @Prop({ default: '' }) headline: string;
   @Prop({ default: '' }) bio: string;
   @Prop({ default: '' }) education: string;
   @Prop({ default: '' }) availability: string;

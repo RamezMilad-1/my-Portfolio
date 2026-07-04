@@ -21,7 +21,7 @@ function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
 }
 
-export function IconCloud({ icons, images }: IconCloudProps) {
+function IconCloudInner({ icons, images }: IconCloudProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [iconPositions, setIconPositions] = useState<Icon[]>([]);
 
@@ -348,3 +348,7 @@ export function IconCloud({ icons, images }: IconCloudProps) {
     />
   );
 }
+
+// Memoized: the hero re-renders when the profile query resolves, and without
+// this the canvas + every icon image would be rebuilt from scratch each time.
+export const IconCloud = React.memo(IconCloudInner);

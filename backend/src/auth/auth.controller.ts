@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  NotFoundException,
   Post,
   Req,
   Res,
@@ -13,6 +14,7 @@ import { Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
@@ -49,6 +51,20 @@ export class AuthController {
     const { token, admin } = await this.auth.login(dto.email, dto.password);
     res.cookie(this.cookieName(), token, this.cookieOptions());
     return { admin };
+  }
+
+  // Creates a plain 'user' account that cannot sign in until its role is
+  // flipped to 'admin' directly in the database. Tightly rate-limited, and
+  // can be disabled entirely with AUTH_REGISTER_ENABLED=false (responds 404
+  // as if the route didn't exist).
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  @Post('register')
+  @HttpCode(201)
+  async register(@Body() dto: RegisterDto) {
+    const enabled =
+      this.cfg.get<string>('AUTH_REGISTER_ENABLED', 'true') !== 'false';
+    if (!enabled) throw new NotFoundException();
+    return this.auth.register(dto.email, dto.password);
   }
 
   @Post('logout')

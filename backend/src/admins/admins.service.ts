@@ -14,4 +14,8 @@ export class AdminsService {
   findById(id: string) {
     return this.model.findById(id).exec();
   }
+
+  create(data: { email: string; passwordHash: string; role: 'user' | 'admin' }) {
+    return this.model.create(data);
+  }
 }

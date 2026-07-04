@@ -10,6 +10,12 @@ export class Admin {
 
   @Prop({ required: true })
   passwordHash: string;
+
+  // Accounts self-registered via /auth/register are plain users and cannot
+  // sign in; promotion to 'admin' happens directly in the database
+  // (Compass/Atlas) — never through the API.
+  @Prop({ default: 'user', enum: ['user', 'admin'] })
+  role: 'user' | 'admin';
 }
 
 export const AdminSchema = SchemaFactory.createForClass(Admin);

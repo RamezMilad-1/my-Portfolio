@@ -33,21 +33,27 @@ export default async function PublicLayout({
   const siteUrl = (
     process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
   ).replace(/\/$/, '');
-  const personJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Person',
-    name: profile?.displayName ?? 'Ramez Milad',
-    jobTitle: profile?.headline ?? 'Full-stack developer',
-    url: siteUrl,
-    sameAs: Object.values(profile?.socials ?? {}).filter(Boolean),
-  };
+  // Structured data is only emitted when the profile actually exists in the
+  // DB — no hardcoded identity fallbacks.
+  const personJsonLd = profile?.displayName
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'Person',
+        name: profile.displayName,
+        ...(profile.headline ? { jobTitle: profile.headline } : {}),
+        url: siteUrl,
+        sameAs: Object.values(profile.socials ?? {}).filter(Boolean),
+      }
+    : null;
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
-      />
+      {personJsonLd ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+        />
+      ) : null}
       <AnimatedBackground />
       <Nav />
       <main id="main-content" className="relative">

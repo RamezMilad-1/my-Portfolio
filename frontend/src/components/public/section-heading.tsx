@@ -5,7 +5,7 @@ import { useScrollReveal } from '../motion/use-scroll-reveal';
 
 interface Props {
   kicker?: string;
-  title: string;
+  title?: string;
   subtitle?: string;
   centered?: boolean;
   id?: string;
@@ -77,15 +77,17 @@ export function SectionHeading({
           </motion.p>
         )
       ) : null}
-      <motion.h2
-        ref={titleReveal.ref}
-        initial={titleReveal.initial}
-        animate={titleReveal.animate}
-        transition={{ duration: 0.6, delay: 0.05, ease: easing }}
-        className="font-display mt-3 text-2xl font-bold tracking-tight md:text-3xl"
-      >
-        <span className="ek-gradient-text">{title}</span>
-      </motion.h2>
+      {title ? (
+        <motion.h2
+          ref={titleReveal.ref}
+          initial={titleReveal.initial}
+          animate={titleReveal.animate}
+          transition={{ duration: 0.6, delay: 0.05, ease: easing }}
+          className="font-display mt-3 text-2xl font-bold tracking-tight md:text-3xl"
+        >
+          <span className="ek-gradient-text">{title}</span>
+        </motion.h2>
+      ) : null}
       {subtitle ? (
         <motion.p
           ref={subtitleReveal.ref}

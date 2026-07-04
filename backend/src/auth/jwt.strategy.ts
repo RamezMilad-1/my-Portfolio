@@ -27,8 +27,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload) {
-    const admin = await this.admins.findById(payload.sub);
-    if (!admin) throw new UnauthorizedException();
-    return { id: admin._id.toString(), email: admin.email };
+    const account = await this.admins.findById(payload.sub);
+    // Role is re-checked on every request: demoting an account in the
+    // database immediately invalidates any session it still holds.
+    if (!account || account.role !== 'admin') throw new UnauthorizedException();
+    return { id: account._id.toString(), email: account.email };
   }
 }

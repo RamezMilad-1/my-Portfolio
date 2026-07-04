@@ -78,9 +78,11 @@ export function CertificateCard({ certificate, index = 0, onClick }: Props) {
                 aria-hidden
                 className="relative h-px w-10 bg-gradient-to-r from-transparent via-[hsl(var(--brand-violet)/0.55)] to-transparent"
               />
-              <p className="relative line-clamp-1 max-w-[80%] text-[10px] text-[hsl(220_15%_72%)]">
-                {certificate.issuer ?? 'Awarded'}
-              </p>
+              {certificate.issuer ? (
+                <p className="relative line-clamp-1 max-w-[80%] text-[10px] text-[hsl(220_15%_72%)]">
+                  {certificate.issuer}
+                </p>
+              ) : null}
             </div>
           )}
 

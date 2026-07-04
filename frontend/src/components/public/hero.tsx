@@ -81,17 +81,13 @@ const heroFadeOnly: Variants = {
   visible: { opacity: 1, transition: { duration: 0.8 } },
 };
 
-const DEFAULT_ROLE = 'Full-Stack Developer';
-const DEFAULT_SUBTITLE =
-  'Full-stack TypeScript — typed all the way through, with the kind of detail that holds up six months later.';
-
 function buildHeroCopy(profile: Profile | null | undefined) {
   const role =
     (profile?.headlines ?? [])
       .map((s) => s?.trim())
-      .find((s): s is string => Boolean(s)) || DEFAULT_ROLE;
+      .find((s): s is string => Boolean(s)) ?? '';
 
-  const subtitle = profile?.headline?.trim() || DEFAULT_SUBTITLE;
+  const subtitle = profile?.headline?.trim() ?? '';
 
   return { role, subtitle };
 }
@@ -101,8 +97,8 @@ interface Props {
 }
 
 export function Hero({ profile }: Props) {
-  const availability = profile?.availability?.trim() || 'Open to opportunities';
-  const displayName = profile?.displayName?.trim() || 'Ramez Milad';
+  const availability = profile?.availability?.trim() ?? '';
+  const displayName = profile?.displayName?.trim() ?? '';
   const { role, subtitle } = buildHeroCopy(profile);
   const socials = profile?.socials ?? {};
   const prefersReduced = useReducedMotion();
@@ -120,50 +116,58 @@ export function Hero({ profile }: Props) {
           animate="visible"
           className="hero-copy relative z-10 max-w-[38rem]"
         >
-          <motion.div variants={prefersReduced ? undefined : heroFadeLeft}>
-            <StatusBadge
-              label={availability}
-              tone="emerald"
-              className="px-3 py-1 text-[11px]"
-              borderGradient="linear-gradient(90deg, hsl(246 46% 58% / 0.72), hsl(272 38% 62% / 0.58))"
-              haloClassName="opacity-25 blur-sm"
-              pingClassName="bg-[hsl(152_55%_54%)] opacity-35"
-              dotClassName="bg-[hsl(152_55%_54%)] opacity-90"
-              labelClassName="font-medium text-[hsl(220_24%_88%)]"
-              iconClassName="h-3 w-3 text-[hsl(260_26%_72%)] opacity-65"
-            />
-          </motion.div>
+          {availability ? (
+            <motion.div variants={prefersReduced ? undefined : heroFadeLeft}>
+              <StatusBadge
+                label={availability}
+                tone="emerald"
+                className="px-3 py-1 text-[11px]"
+                borderGradient="linear-gradient(90deg, hsl(246 46% 58% / 0.72), hsl(272 38% 62% / 0.58))"
+                haloClassName="opacity-25 blur-sm"
+                pingClassName="bg-[hsl(152_55%_54%)] opacity-35"
+                dotClassName="bg-[hsl(152_55%_54%)] opacity-90"
+                labelClassName="font-medium text-[hsl(220_24%_88%)]"
+                iconClassName="h-3 w-3 text-[hsl(260_26%_72%)] opacity-65"
+              />
+            </motion.div>
+          ) : null}
 
-          <motion.p
-            variants={prefersReduced ? undefined : heroFadeUp}
-            className="mt-4 text-[11px] font-medium uppercase tracking-[0.36em] text-[hsl(260_24%_74%/0.82)] md:text-xs"
-          >
-            {displayName}
-          </motion.p>
-
-          <motion.h1
-            variants={prefersReduced ? undefined : heroHeadline}
-            className="mt-2 font-sans text-[clamp(2rem,4.6vw,3rem)] font-semibold leading-[1.03] tracking-[0]"
-          >
-            <span
-              className="ek-hero-title block whitespace-nowrap"
-              style={{
-                backgroundImage:
-                  'linear-gradient(110deg, hsl(258 70% 78%) 0%, hsl(274 66% 74%) 30%, hsl(286 72% 86%) 46%, hsl(266 72% 80%) 56%, hsl(280 62% 75%) 70%, hsl(258 70% 78%) 100%)',
-                filter:
-                  'drop-shadow(0 1px 0 hsl(0 0% 100% / 0.08)) drop-shadow(0 6px 22px hsl(270 48% 42% / 0.14))',
-              }}
+          {displayName ? (
+            <motion.p
+              variants={prefersReduced ? undefined : heroFadeUp}
+              className="mt-4 text-[11px] font-medium uppercase tracking-[0.36em] text-[hsl(260_24%_74%/0.82)] md:text-xs"
             >
-              {role}
-            </span>
-          </motion.h1>
+              {displayName}
+            </motion.p>
+          ) : null}
 
-          <motion.p
-            variants={prefersReduced ? undefined : heroFadeUp}
-            className="mt-4 max-w-[36rem] text-[15px] leading-[1.75] text-[hsl(220_18%_76%)] md:text-[16px]"
-          >
-            {subtitle}
-          </motion.p>
+          {role ? (
+            <motion.h1
+              variants={prefersReduced ? undefined : heroHeadline}
+              className="mt-2 font-sans text-[clamp(2rem,4.6vw,3rem)] font-semibold leading-[1.03] tracking-[0]"
+            >
+              <span
+                className="ek-hero-title block whitespace-nowrap"
+                style={{
+                  backgroundImage:
+                    'linear-gradient(110deg, hsl(258 70% 78%) 0%, hsl(274 66% 74%) 30%, hsl(286 72% 86%) 46%, hsl(266 72% 80%) 56%, hsl(280 62% 75%) 70%, hsl(258 70% 78%) 100%)',
+                  filter:
+                    'drop-shadow(0 1px 0 hsl(0 0% 100% / 0.08)) drop-shadow(0 6px 22px hsl(270 48% 42% / 0.14))',
+                }}
+              >
+                {role}
+              </span>
+            </motion.h1>
+          ) : null}
+
+          {subtitle ? (
+            <motion.p
+              variants={prefersReduced ? undefined : heroFadeUp}
+              className="mt-4 max-w-[36rem] text-[15px] leading-[1.75] text-[hsl(220_18%_76%)] md:text-[16px]"
+            >
+              {subtitle}
+            </motion.p>
+          ) : null}
 
           <motion.div
             variants={prefersReduced ? undefined : heroFadeUp}
