@@ -13,11 +13,10 @@
 **/.env.local
 **/.env.*.local
 
-# uploads
-backend/uploads/*
-!backend/uploads/.gitkeep
-!backend/uploads/images/.gitkeep
-!backend/uploads/videos/.gitkeep
+# uploads are tracked so deployments (Render) ship the media files;
+# note: files uploaded on the server after deploy live on ephemeral disk —
+# download and commit them locally to keep them across redeploys.
+backend/uploads/.DS_Store
 
 # legacy backups
 _legacy/
