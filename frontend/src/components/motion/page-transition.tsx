@@ -1,8 +1,19 @@
 'use client';
 
-import { motion, useReducedMotion } from 'framer-motion';
+import { m, useReducedMotion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import { ReactNode } from 'react';
+import { DISTANCE, TRANSITION } from './tokens';
+
+interface Props {
+  children: ReactNode;
+  /**
+   * 'default' — public pages: soft rise + fade.
+   * 'fast'    — dashboards/auth: quick opacity-only fade (tools should feel
+   *             instant; only marketing surfaces get the lift).
+   */
+  variant?: 'default' | 'fast';
+}
 
 /**
  * Fades each route in on mount. We avoid AnimatePresence + mode="wait"
@@ -10,20 +21,22 @@ import { ReactNode } from 'react';
  * new route stuck in its initial (invisible) state when the old route
  * unmounts before exit completes.
  */
-export function PageTransition({ children }: { children: ReactNode }) {
+export function PageTransition({ children, variant = 'default' }: Props) {
   const pathname = usePathname();
   const prefersReduced = useReducedMotion();
 
   if (prefersReduced) return <>{children}</>;
 
+  const fast = variant === 'fast';
+
   return (
-    <motion.div
+    <m.div
       key={pathname}
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: fast ? 0 : DISTANCE.sm }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      transition={fast ? TRANSITION.fast : TRANSITION.base}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }

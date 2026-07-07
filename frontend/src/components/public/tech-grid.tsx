@@ -1,9 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { m, useReducedMotion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { useScrollReveal } from '../motion/use-scroll-reveal';
+import {
+  DISTANCE,
+  DURATION,
+  EASE_PREMIUM,
+  STAGGER,
+  VIEWPORT,
+  staggerDelay,
+} from '../motion/tokens';
 
 /**
  * Multicolor brand logos come from Devicon (https://devicon.dev).
@@ -361,8 +369,8 @@ export function TechGrid({ items }: Props) {
 
 function TechGridItem({ tech, index }: { tech: string; index: number }) {
   const { ref, initial, animate } = useScrollReveal<HTMLDivElement>({
-    y: 20,
-    margin: '-50px',
+    y: DISTANCE.md,
+    margin: VIEWPORT.chrome,
   });
   const prefersReduced = useReducedMotion();
 
@@ -374,14 +382,14 @@ function TechGridItem({ tech, index }: { tech: string; index: number }) {
   const bobAmplitude = 3 + (index % 3); // 3px … 5px
 
   return (
-    <motion.div
+    <m.div
       ref={ref}
       initial={initial}
       animate={animate}
       transition={{
-        duration: 0.5,
-        delay: index * 0.04,
-        ease: [0.22, 1, 0.36, 1],
+        duration: DURATION.moderate,
+        delay: staggerDelay(index, STAGGER.tight),
+        ease: EASE_PREMIUM,
       }}
       // Outer cell is the hover target. `py-2` adds an invisible cushion so
       // the cursor stays inside even while the inner element bobs — that
@@ -437,6 +445,6 @@ function TechGridItem({ tech, index }: { tech: string; index: number }) {
           {tech}
         </p>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

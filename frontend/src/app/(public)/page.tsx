@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   FileDown,
   Github,
@@ -20,6 +20,13 @@ import { useTechPublic } from '@/lib/api/tech';
 import { Hero } from '@/components/public/hero';
 import { StatusBadge } from '@/components/public/status-badge';
 import { useScrollReveal } from '@/components/motion/use-scroll-reveal';
+import {
+  DISTANCE,
+  STAGGER,
+  TRANSITION,
+  VIEWPORT,
+  staggerDelay,
+} from '@/components/motion/tokens';
 import { SectionHeading } from '@/components/public/section-heading';
 import { TabsPortfolio } from '@/components/public/tabs-portfolio';
 import { ProjectCardV2 } from '@/components/public/project-card-v2';
@@ -237,8 +244,8 @@ export default function HomePage() {
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
 
   const metricsReveal = useScrollReveal<HTMLDivElement>({
-    y: 16,
-    margin: '-50px',
+    y: DISTANCE.md,
+    margin: VIEWPORT.chrome,
   });
 
   const copyEmail = async () => {
@@ -269,11 +276,11 @@ export default function HomePage() {
           />
 
           {/* Recruiter card — name + role + status + scannable facts */}
-          <motion.div
+          <m.div
             ref={metricsReveal.ref}
             initial={metricsReveal.initial}
             animate={metricsReveal.animate}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            transition={TRANSITION.slow}
             className="ek-glass ek-card-sheen relative mt-14 overflow-hidden rounded-2xl p-4 sm:p-5"
           >
             <div
@@ -408,12 +415,12 @@ export default function HomePage() {
                 ) : null}
               </>
             )}
-          </motion.div>
+          </m.div>
 
           {/* Reflective prose + portrait */}
           {aboutLede || aboutBodyParagraphs.length > 0 || aboutPortrait ? (
             <div className="mt-14 grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
-              <Reveal x={-40} y={0} margin="-80px" className="lg:col-span-8">
+              <Reveal x={-DISTANCE.lg} y={0} className="lg:col-span-8">
                 {/* Confident lede */}
                 {aboutLede ? (
                   <p className="font-display text-xl font-semibold leading-[1.22] tracking-tight text-[hsl(var(--foreground))] md:text-[22px]">
@@ -436,10 +443,9 @@ export default function HomePage() {
 
               {aboutPortrait ? (
                 <Reveal
-                  x={40}
+                  x={DISTANCE.lg}
                   y={0}
-                  delay={0.15}
-                  margin="-80px"
+                  delay={STAGGER.loose}
                   className="lg:col-span-4"
                 >
                   <AboutPortrait
@@ -457,8 +463,8 @@ export default function HomePage() {
 
           {/* What I can ship — recruiter-facing CV snapshot */}
           {aboutRecruiterSignals.length > 0 ? (
-            <Reveal y={32} margin="-60px" className="mt-6">
-              <div className="relative overflow-hidden rounded-3xl bg-white/[0.03] p-7 ring-1 ring-inset ring-white/[0.06] backdrop-blur-[7px] sm:p-10">
+            <Reveal y={DISTANCE.lg} className="mt-6">
+              <div className="relative overflow-hidden rounded-3xl bg-white/[0.03] p-7 ring-1 ring-inset ring-white/[0.06] sm:p-10">
                 <span
                   aria-hidden
                   className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-[hsl(var(--brand-violet)/0.08)] blur-3xl"
@@ -615,7 +621,7 @@ export default function HomePage() {
           <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(20rem,1fr)]">
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-1">
               {profile?.email ? (
-                <Reveal x={-56} y={8} delay={0} margin="-60px">
+                <Reveal x={-DISTANCE.lg} y={DISTANCE.sm} delay={staggerDelay(0, STAGGER.loose)}>
                   <ContactCard
                     icon={<Mail className="h-5 w-5" />}
                     label="Email"
@@ -628,7 +634,7 @@ export default function HomePage() {
                 </Reveal>
               ) : null}
               {profile?.socials?.github ? (
-                <Reveal x={-40} delay={0.08} margin="-60px">
+                <Reveal x={-DISTANCE.lg} delay={staggerDelay(1, STAGGER.loose)}>
                   <ContactCard
                     icon={<Github className="h-5 w-5" />}
                     label="GitHub"
@@ -639,7 +645,7 @@ export default function HomePage() {
                 </Reveal>
               ) : null}
               {profile?.socials?.linkedin ? (
-                <Reveal x={-48} y={-8} delay={0.16} margin="-60px">
+                <Reveal x={-DISTANCE.lg} y={-DISTANCE.sm} delay={staggerDelay(2, STAGGER.loose)}>
                   <ContactCard
                     icon={<Linkedin className="h-5 w-5" />}
                     label="LinkedIn"
@@ -650,7 +656,7 @@ export default function HomePage() {
                 </Reveal>
               ) : null}
               {profile?.socials?.x ? (
-                <Reveal x={-40} delay={0.24} margin="-60px">
+                <Reveal x={-DISTANCE.lg} delay={staggerDelay(3, STAGGER.loose)}>
                   <ContactCard
                     icon={<Twitter className="h-5 w-5" />}
                     label="X / Twitter"
@@ -667,7 +673,7 @@ export default function HomePage() {
                 )}
             </div>
 
-            <Reveal x={48} delay={0.12} margin="-60px">
+            <Reveal x={DISTANCE.lg} delay={STAGGER.loose}>
               <ContactForm />
             </Reveal>
           </div>
@@ -846,7 +852,7 @@ function ContactCard({
         <button
           type="button"
           onClick={onAction}
-          className="relative rounded-full border border-white/15 bg-white/[0.04] px-3 py-1 text-xs font-semibold text-[hsl(220_25%_92%)] backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/10 hover:text-white active:scale-[0.97]"
+          className="relative rounded-full border border-white/15 bg-white/[0.04] px-3 py-1 text-xs font-semibold text-[hsl(220_25%_92%)] transition-[transform,color,border-color,background-color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/10 hover:text-white active:scale-[0.97]"
         >
           {action}
         </button>

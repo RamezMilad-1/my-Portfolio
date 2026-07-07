@@ -2,9 +2,17 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Award, ExternalLink } from 'lucide-react';
 import { useScrollReveal } from '../motion/use-scroll-reveal';
+import {
+  DISTANCE,
+  DURATION,
+  EASE_PREMIUM,
+  STAGGER,
+  VIEWPORT,
+  staggerDelay,
+} from '../motion/tokens';
 import type { Certificate } from '@/lib/types';
 import { uploadsUrl } from '@/lib/utils';
 
@@ -20,18 +28,22 @@ export function CertificateCard({ certificate, index = 0, onClick }: Props) {
   const [broken, setBroken] = useState(false);
   const showImage = !!img && !broken;
   const { ref, initial, animate } = useScrollReveal<HTMLButtonElement>({
-    y: 18,
-    margin: '-40px',
+    y: DISTANCE.md,
+    margin: VIEWPORT.chrome,
   });
 
   return (
-    <motion.button
+    <m.button
       ref={ref}
       type="button"
       onClick={onClick}
       initial={initial}
       animate={animate}
-      transition={{ duration: 0.5, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
+      transition={{
+        duration: DURATION.moderate,
+        delay: staggerDelay(index, STAGGER.tight),
+        ease: EASE_PREMIUM,
+      }}
       className="group ek-glass ek-card-sheen ek-ring-conic ek-glow relative block w-full overflow-hidden rounded-xl text-left transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1"
     >
       {/* Top violet hairline accent */}
@@ -90,7 +102,7 @@ export function CertificateCard({ certificate, index = 0, onClick }: Props) {
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[hsl(220_40%_4%/0.55)] via-[hsl(220_40%_4%/0.04)] to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
           {/* External link arrow (hover) */}
-          <div className="absolute right-2 top-2 flex h-7 w-7 -translate-y-1 translate-x-1 items-center justify-center rounded-full border border-white/15 bg-[hsl(220_30%_8%/0.55)] text-white opacity-0 shadow-[0_6px_18px_-8px_hsl(220_40%_4%/0.6)] backdrop-blur-md transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-0 group-hover:translate-y-0 group-hover:border-white/30 group-hover:bg-[hsl(220_30%_14%/0.75)] group-hover:opacity-100">
+          <div className="absolute right-2 top-2 flex h-7 w-7 -translate-y-1 translate-x-1 items-center justify-center rounded-full border border-white/15 bg-[hsl(220_30%_8%/0.55)] text-white opacity-0 shadow-[0_6px_18px_-8px_hsl(220_40%_4%/0.6)] backdrop-blur-md transition-[transform,opacity,border-color,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-0 group-hover:translate-y-0 group-hover:border-white/30 group-hover:bg-[hsl(220_30%_14%/0.75)] group-hover:opacity-100">
             <ExternalLink className="h-3 w-3" />
           </div>
 
@@ -122,6 +134,6 @@ export function CertificateCard({ certificate, index = 0, onClick }: Props) {
           </p>
         ) : null}
       </div>
-    </motion.button>
+    </m.button>
   );
 }

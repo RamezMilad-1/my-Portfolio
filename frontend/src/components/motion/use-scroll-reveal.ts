@@ -2,20 +2,16 @@
 
 import { useRef } from 'react';
 import { useInView, useReducedMotion, type Target } from 'framer-motion';
+import { DISTANCE, VIEWPORT } from './tokens';
 
 export interface ScrollRevealOptions {
+  /** Vertical entry offset in px (positive = rises from below). */
   y?: number;
+  /** Horizontal entry offset in px (negative = slides from the left). */
   x?: number;
+  /** In-view root margin; use a VIEWPORT token. */
   margin?: string;
   amount?: number | 'some' | 'all';
-  // Re-fire on every viewport entry. Defaults to false (animate once and
-  // stay): once a section has been seen, scrolling back doesn't replay it.
-  // This is the Motion.dev / web.dev recommendation and prevents recruiter-
-  // style scroll-backs from triggering animation cascades.
-  once?: boolean;
-  exitFactor?: number;
-  exitOpacity?: number;
-  firstMultiplier?: number;
 }
 
 export interface ScrollRevealReturn<T extends HTMLElement = HTMLElement> {
@@ -25,18 +21,19 @@ export interface ScrollRevealReturn<T extends HTMLElement = HTMLElement> {
   inView: boolean;
 }
 
+/**
+ * Once-on-first-view reveal state. The hidden offset is exactly the distance
+ * passed in (use DISTANCE tokens — 8/16/24px): reveals are meant to settle,
+ * not travel. Once a section has been seen, scrolling back never replays it.
+ */
 export function useScrollReveal<T extends HTMLElement = HTMLElement>(
   options: ScrollRevealOptions = {},
 ): ScrollRevealReturn<T> {
   const {
-    y = 24,
+    y = DISTANCE.md,
     x = 0,
-    margin = '-80px',
+    margin = VIEWPORT.card,
     amount = 0.15,
-    once = true,
-    exitFactor = 0.9,
-    exitOpacity = 0.05,
-    firstMultiplier = 4,
   } = options;
 
   const prefersReduced = useReducedMotion();
@@ -44,42 +41,19 @@ export function useScrollReveal<T extends HTMLElement = HTMLElement>(
   const inView = useInView(ref, {
     margin: margin as `${number}px` | `${number}%`,
     amount,
-    once,
+    once: true,
   });
-  const hasEntered = useRef(false);
-  if (inView) hasEntered.current = true;
 
   const visible: Target = { opacity: 1, y: 0, x: 0 };
-  const firstHidden: Target = {
-    opacity: 0,
-    y: y * firstMultiplier,
-    x: x * firstMultiplier,
-  };
-  const subtle: Target = {
-    opacity: exitOpacity,
-    y: y * exitFactor,
-    x: x * exitFactor,
-  };
 
   if (prefersReduced) {
     return { ref, initial: visible, animate: visible, inView };
   }
 
-  // Once-only path (default): hold visible after first entry, no re-fire.
-  if (once) {
-    return {
-      ref,
-      initial: firstHidden,
-      animate: hasEntered.current ? visible : firstHidden,
-      inView,
-    };
-  }
-
-  // Opt-in: subtle retreat on leave, gentler re-entry on subsequent views.
   return {
     ref,
-    initial: firstHidden,
-    animate: inView ? visible : hasEntered.current ? subtle : firstHidden,
+    initial: { opacity: 0, y, x },
+    animate: inView ? visible : { opacity: 0, y, x },
     inView,
   };
 }

@@ -17,7 +17,10 @@ export const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      'fixed inset-0 z-50 bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+      // ek-dialog-overlay: real fade keyframes from globals.css — the old
+      // animate-in/fade-in-0 utilities came from a plugin that isn't
+      // installed, so overlays used to pop in with no animation.
+      'ek-dialog-overlay fixed inset-0 z-50 bg-black/60 backdrop-blur-sm',
       className,
     )}
     {...props}
@@ -34,7 +37,7 @@ export const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-lg sm:rounded-2xl',
+        'ek-dialog-content fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-lg sm:rounded-2xl',
         className,
       )}
       {...props}

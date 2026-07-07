@@ -34,6 +34,15 @@
 
 @layer base {
   :root {
+    /* Motion language — mirrors components/motion/tokens.ts. Every CSS
+       transition/keyframe should reference these instead of re-typing the
+       curve, so JS-driven and CSS-driven motion stay in lockstep. */
+    --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+    --dur-instant: 150ms;
+    --dur-fast: 200ms;
+    --dur-base: 350ms;
+    --dur-moderate: 500ms;
+
     --background: 0 0% 100%;
     --foreground: 222 47% 8%;
     --muted: 220 14% 96%;
@@ -283,8 +292,14 @@
       radial-gradient(120% 80% at 0% 0%, hsl(0 0% 100% / 0.05), transparent 55%),
       radial-gradient(110% 80% at 50% 115%, hsl(var(--brand-indigo) / 0.10), transparent 65%);
     border: 1px solid hsl(0 0% 100% / 0.10);
-    backdrop-filter: saturate(150%) blur(14px);
-    -webkit-backdrop-filter: saturate(150%) blur(14px);
+    /* No backdrop-filter here on purpose. These cards sit in normal flow
+       over the fixed page background, so scrolling forced the GPU to
+       re-blur every card's backdrop on every frame — the single biggest
+       scroll cost on the page. At a 62%-opaque dark fill over a near-
+       uniform dark background, the blur had no visible source material;
+       the frosted look comes from the fill + gradients + inner highlight.
+       (The nav, mobile menu, and lightbox keep their blur: they overlap
+       real scrolling content, where it's actually visible.) */
     box-shadow:
       inset 0 1px 0 hsl(0 0% 100% / 0.10),
       inset 0 -1px 0 hsl(var(--brand-indigo) / 0.08),
@@ -308,9 +323,9 @@
     );
     box-shadow: 0 0 8px -2px hsl(var(--brand-violet) / 0.35);
     transition:
-      width 320ms cubic-bezier(0.22, 1, 0.36, 1),
-      background 320ms cubic-bezier(0.22, 1, 0.36, 1),
-      box-shadow 320ms cubic-bezier(0.22, 1, 0.36, 1);
+      width 320ms var(--ease-premium),
+      background 320ms var(--ease-premium),
+      box-shadow 320ms var(--ease-premium);
   }
   .group:hover .ek-underline {
     width: 52px;
@@ -327,9 +342,9 @@
      omitted from the transition list to drop a paint property per frame. */
   .ek-glow {
     transition:
-      box-shadow 360ms cubic-bezier(0.22, 1, 0.36, 1),
-      border-color 360ms cubic-bezier(0.22, 1, 0.36, 1),
-      transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
+      box-shadow 360ms var(--ease-premium),
+      border-color 360ms var(--ease-premium),
+      transform 360ms var(--ease-premium);
   }
   .ek-glow:hover {
     border-color: hsl(0 0% 100% / 0.18);
@@ -389,7 +404,7 @@
     -webkit-mask-composite: xor;
             mask-composite: exclude;
     opacity: 0;
-    transition: opacity 420ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition: opacity 420ms var(--ease-premium);
     pointer-events: none;
     z-index: 1;
   }
@@ -414,7 +429,7 @@
       transparent 65%
     );
     transform: translateX(-100%);
-    transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition: transform 900ms var(--ease-premium);
     pointer-events: none;
     z-index: 0;
   }
@@ -442,10 +457,10 @@
       inset 0 1px 0 hsl(0 0% 100% / 0.10),
       0 1px 4px -1px hsl(var(--brand-indigo) / 0.25);
     transition:
-      background 220ms cubic-bezier(0.22, 1, 0.36, 1),
-      border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
-      color 220ms cubic-bezier(0.22, 1, 0.36, 1),
-      box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+      background 220ms var(--ease-premium),
+      border-color 220ms var(--ease-premium),
+      color 220ms var(--ease-premium),
+      box-shadow 220ms var(--ease-premium);
   }
   .ek-tag:hover {
     border-color: hsl(var(--brand-indigo) / 0.60);
@@ -491,9 +506,9 @@
       inset 0 1px 0 hsl(0 0% 100% / 0.16),
       0 6px 16px -10px hsl(220 40% 4% / 0.65);
     transition:
-      transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
-      border-color 280ms cubic-bezier(0.22, 1, 0.36, 1),
-      box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1);
+      transform 280ms var(--ease-premium),
+      border-color 280ms var(--ease-premium),
+      box-shadow 280ms var(--ease-premium);
   }
   .group:hover .ek-icon-tile {
     transform: scale(1.04);
@@ -600,9 +615,9 @@
       inset 0 1px 0 hsl(0 0% 100% / 0.18),
       inset 0 -1px 0 hsl(0 0% 0% / 0.25);
     transition:
-      background-position 600ms cubic-bezier(0.22, 1, 0.36, 1),
-      box-shadow 320ms cubic-bezier(0.22, 1, 0.36, 1),
-      transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+      background-position 600ms var(--ease-premium),
+      box-shadow 320ms var(--ease-premium),
+      transform 220ms var(--ease-premium);
   }
   .gb-primary:hover {
     background-position: 100% 50%;
@@ -632,7 +647,7 @@
       transparent 70%
     );
     transform: translateX(-120%);
-    transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition: transform 900ms var(--ease-premium);
     pointer-events: none;
     mix-blend-mode: overlay;
     z-index: 0;
@@ -705,9 +720,9 @@
       inset 0 1px 0 hsl(var(--brand-violet-soft) / 0.10),
       0 10px 28px -18px hsl(var(--brand-violet) / 0.45);
     transition:
-      background-color 280ms cubic-bezier(0.22, 1, 0.36, 1),
-      box-shadow 320ms cubic-bezier(0.22, 1, 0.36, 1),
-      transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+      background-color 280ms var(--ease-premium),
+      box-shadow 320ms var(--ease-premium),
+      transform 220ms var(--ease-premium);
   }
   .gb-outline:hover {
     background-color: hsl(var(--brand-violet-soft) / 0.12);
@@ -734,16 +749,17 @@
       linear-gradient(180deg, hsl(var(--brand-violet-soft) / 0.10), hsl(var(--brand-indigo) / 0.06)),
       hsl(var(--card) / 0.55);
     border: 1px solid hsl(var(--brand-violet-soft) / 0.30);
-    backdrop-filter: saturate(160%) blur(10px);
-    -webkit-backdrop-filter: saturate(160%) blur(10px);
+    /* backdrop-filter removed — see the .ek-glass note: in-flow chips over
+       the fixed background paid a per-frame re-blur during scroll for no
+       visible effect. */
     box-shadow:
       inset 0 1px 0 hsl(var(--brand-violet-soft) / 0.18),
       0 4px 14px -8px hsl(var(--brand-violet) / 0.35);
     transition:
-      transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
-      box-shadow 260ms cubic-bezier(0.22, 1, 0.36, 1),
-      border-color 260ms cubic-bezier(0.22, 1, 0.36, 1),
-      color 260ms cubic-bezier(0.22, 1, 0.36, 1);
+      transform 260ms var(--ease-premium),
+      box-shadow 260ms var(--ease-premium),
+      border-color 260ms var(--ease-premium),
+      color 260ms var(--ease-premium);
   }
   .ek-pill::before {
     content: '';
@@ -757,7 +773,7 @@
     );
     pointer-events: none;
     opacity: 0;
-    transition: opacity 260ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition: opacity 260ms var(--ease-premium);
   }
   .ek-pill:hover {
     transform: translateY(-1px);
@@ -794,6 +810,25 @@
     animation-fill-mode: both;
   }
 
+  /* Dialog entrance (admin). The component previously referenced
+     tailwindcss-animate utilities that were never installed, so dialogs
+     popped in with zero animation. Opacity/transform only; the global
+     reduced-motion block below flattens these to 0.01ms. */
+  @keyframes ek-dialog-overlay-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  .ek-dialog-overlay[data-state='open'] {
+    animation: ek-dialog-overlay-in var(--dur-fast) var(--ease-premium) both;
+  }
+  @keyframes ek-dialog-content-in {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.97); }
+    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  }
+  .ek-dialog-content[data-state='open'] {
+    animation: ek-dialog-content-in var(--dur-fast) var(--ease-premium) both;
+  }
+
   /* TechGrid icon bob — compositor-only translate-y. Each item gets its
      own duration / delay via inline style so the grid drifts independently
      instead of bobbing in sync. Cheaper than a per-item framer-motion
@@ -809,6 +844,19 @@
     will-change: transform;
   }
 
+}
+
+/* While the user is actively scrolling (class managed by
+   components/motion/scroll-paint-pause.tsx), hold the gradient-text shimmers
+   still. These animate background-position under background-clip: text, so
+   every frame re-rasterizes the glyphs on the main thread — on the
+   viewport-wide project-detail headline that alone can blow the frame
+   budget. The loops run 10–22s, so a 150ms hold is imperceptible, and a
+   paused headline scrolls as an already-painted composited texture. */
+html.is-scrolling .gradient-text,
+html.is-scrolling .ek-gradient-text,
+html.is-scrolling .ek-hero-title {
+  animation-play-state: paused;
 }
 
 @media (prefers-reduced-motion: reduce) {

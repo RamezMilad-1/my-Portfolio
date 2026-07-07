@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, useReducedMotion, type Variants } from 'framer-motion';
+import { m, useReducedMotion, type Variants } from 'framer-motion';
 import {
   ArrowRight,
   FileDown,
@@ -15,6 +15,8 @@ import { GradientButton } from './gradient-button';
 import { IconCloud } from '@/components/magicui/icon-cloud';
 import type { Profile } from '@/lib/types';
 import { uploadsUrl } from '@/lib/utils';
+import { DISTANCE, STAGGER, TRANSITION } from '../motion/tokens';
+import { usePausedOffscreen } from '../motion/use-paused-offscreen';
 
 // Tech icons rendered into the 3D hero cloud. `color` overrides the
 // official brand color when that color disappears against the dark canvas
@@ -37,15 +39,13 @@ const techCloudImages = techCloud.map(
   ({ slug, color }) => `https://cdn.simpleicons.org/${slug}/${color ?? slug}`,
 );
 
-const easing = [0.22, 1, 0.36, 1] as const;
-
 // One parent variants tree instead of separate motion.divs each with their
 // own delay. Framer-motion bookkeeps the parent timeline and children
 // inherit through `staggerChildren`.
 const heroContainerVariants: Variants = {
   hidden: {},
   visible: {
-    transition: { staggerChildren: 0.1, delayChildren: 0.05 },
+    transition: { staggerChildren: STAGGER.section, delayChildren: 0.05 },
   },
 };
 
@@ -54,16 +54,16 @@ const heroFadeUp: Variants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.7, ease: easing },
+    transition: TRANSITION.slow,
   },
 };
 
 const heroFadeLeft: Variants = {
-  hidden: { opacity: 0, x: -16 },
+  hidden: { opacity: 0, x: -DISTANCE.md },
   visible: {
     opacity: 1,
     x: 0,
-    transition: { duration: 0.7, ease: easing },
+    transition: TRANSITION.slow,
   },
 };
 
@@ -72,13 +72,13 @@ const heroHeadline: Variants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.8, ease: easing },
+    transition: TRANSITION.slower,
   },
 };
 
 const heroFadeOnly: Variants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.8 } },
+  visible: { opacity: 1, transition: TRANSITION.slower },
 };
 
 function buildHeroCopy(profile: Profile | null | undefined) {
@@ -102,6 +102,9 @@ export function Hero({ profile }: Props) {
   const { role, subtitle } = buildHeroCopy(profile);
   const socials = profile?.socials ?? {};
   const prefersReduced = useReducedMotion();
+  // The headline shimmer repaints its glyphs every frame; stop paying that
+  // while the hero is scrolled out of view.
+  const titleRef = usePausedOffscreen<HTMLSpanElement>();
 
   return (
     <section
@@ -110,14 +113,14 @@ export function Hero({ profile }: Props) {
       aria-label="Introduction"
     >
       <div className="relative mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-12 px-4 py-12 sm:px-6 md:grid-cols-2 md:py-20">
-        <motion.div
+        <m.div
           variants={heroContainerVariants}
           initial={prefersReduced ? false : 'hidden'}
           animate="visible"
           className="hero-copy relative z-10 max-w-[38rem]"
         >
           {availability ? (
-            <motion.div variants={prefersReduced ? undefined : heroFadeLeft}>
+            <m.div variants={prefersReduced ? undefined : heroFadeLeft}>
               <StatusBadge
                 label={availability}
                 tone="emerald"
@@ -129,24 +132,25 @@ export function Hero({ profile }: Props) {
                 labelClassName="font-medium text-[hsl(220_24%_88%)]"
                 iconClassName="h-3 w-3 text-[hsl(260_26%_72%)] opacity-65"
               />
-            </motion.div>
+            </m.div>
           ) : null}
 
           {displayName ? (
-            <motion.p
+            <m.p
               variants={prefersReduced ? undefined : heroFadeUp}
               className="mt-4 text-[11px] font-medium uppercase tracking-[0.36em] text-[hsl(260_24%_74%/0.82)] md:text-xs"
             >
               {displayName}
-            </motion.p>
+            </m.p>
           ) : null}
 
           {role ? (
-            <motion.h1
+            <m.h1
               variants={prefersReduced ? undefined : heroHeadline}
               className="mt-2 font-sans text-[clamp(2rem,4.6vw,3rem)] font-semibold leading-[1.03] tracking-[0]"
             >
               <span
+                ref={titleRef}
                 className="ek-hero-title block whitespace-nowrap"
                 style={{
                   backgroundImage:
@@ -157,19 +161,19 @@ export function Hero({ profile }: Props) {
               >
                 {role}
               </span>
-            </motion.h1>
+            </m.h1>
           ) : null}
 
           {subtitle ? (
-            <motion.p
+            <m.p
               variants={prefersReduced ? undefined : heroFadeUp}
               className="mt-4 max-w-[36rem] text-[15px] leading-[1.75] text-[hsl(220_18%_76%)] md:text-[16px]"
             >
               {subtitle}
-            </motion.p>
+            </m.p>
           ) : null}
 
-          <motion.div
+          <m.div
             variants={prefersReduced ? undefined : heroFadeUp}
             className="mt-6 flex flex-wrap items-center gap-2.5 sm:gap-3"
           >
@@ -203,9 +207,9 @@ export function Hero({ profile }: Props) {
                 </a>
               </GradientButton>
             ) : null}
-          </motion.div>
+          </m.div>
 
-          <motion.div
+          <m.div
             variants={prefersReduced ? undefined : heroFadeOnly}
             className="mt-6 flex items-center gap-2.5"
           >
@@ -234,8 +238,8 @@ export function Hero({ profile }: Props) {
                 <Mail className="h-4 w-4" />
               </SocialLink>
             ) : null}
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
 
         <div className="relative flex size-full items-center justify-center overflow-visible md:justify-end md:pr-2 lg:pr-6">
           <IconCloud images={techCloudImages} />
@@ -260,7 +264,7 @@ function SocialLink({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
-      className="hero-social-link ek-glass flex h-9 w-9 items-center justify-center rounded-full text-[hsl(220_18%_72%)] transition-all duration-300 hover:-translate-y-0.5 hover:text-[hsl(230_26%_92%)]"
+      className="hero-social-link ek-glass flex h-9 w-9 items-center justify-center rounded-full text-[hsl(220_18%_72%)] transition-[transform,color,border-color,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:text-[hsl(230_26%_92%)]"
     >
       {children}
     </a>

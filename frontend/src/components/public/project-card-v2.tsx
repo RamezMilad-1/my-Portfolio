@@ -3,9 +3,17 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { ArrowUpRight, ExternalLink, Github } from 'lucide-react';
 import { useScrollReveal } from '../motion/use-scroll-reveal';
+import {
+  DISTANCE,
+  EASE_PREMIUM,
+  DURATION,
+  STAGGER,
+  VIEWPORT,
+  staggerDelay,
+} from '../motion/tokens';
 import { uploadsUrl } from '@/lib/utils';
 import type { Project } from '@/lib/types';
 
@@ -16,8 +24,8 @@ interface Props {
 
 export function ProjectCardV2({ project, index = 0 }: Props) {
   const { ref, initial, animate } = useScrollReveal<HTMLDivElement>({
-    y: 32,
-    margin: '-60px',
+    y: DISTANCE.lg,
+    margin: VIEWPORT.card,
   });
 
   const cover =
@@ -34,11 +42,15 @@ export function ProjectCardV2({ project, index = 0 }: Props) {
   const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
 
   return (
-    <motion.div
+    <m.div
       ref={ref}
       initial={initial}
       animate={animate}
-      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: index * 0.07 }}
+      transition={{
+        duration: DURATION.slow,
+        ease: EASE_PREMIUM,
+        delay: staggerDelay(index, STAGGER.loose),
+      }}
       className="group ek-glass ek-card-sheen ek-ring-conic ek-glow relative overflow-hidden rounded-xl transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5"
     >
       <Link
@@ -79,7 +91,7 @@ export function ProjectCardV2({ project, index = 0 }: Props) {
         {/* Bottom darkening for legibility — softer */}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[hsl(220_40%_4%/0.60)] via-[hsl(220_40%_4%/0.05)] to-transparent opacity-70 transition-opacity duration-500 group-hover:opacity-90" />
 
-        <div className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[hsl(220_30%_8%/0.55)] text-white backdrop-blur-md shadow-[0_6px_18px_-8px_hsl(220_40%_4%/0.6)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:border-white/30 group-hover:bg-[hsl(220_30%_14%/0.75)]">
+        <div className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[hsl(220_30%_8%/0.55)] text-white backdrop-blur-md shadow-[0_6px_18px_-8px_hsl(220_40%_4%/0.6)] transition-[border-color,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:border-white/30 group-hover:bg-[hsl(220_30%_14%/0.75)]">
           <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
         </div>
 
@@ -152,12 +164,12 @@ export function ProjectCardV2({ project, index = 0 }: Props) {
               </a>
             ) : null}
           </div>
-          <span className="inline-flex items-center gap-1 text-xs font-semibold text-[hsl(220_15%_70%)] transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-white">
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-[hsl(220_15%_70%)] transition-[transform,color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-0.5 group-hover:text-white">
             Details
             <span aria-hidden>→</span>
           </span>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

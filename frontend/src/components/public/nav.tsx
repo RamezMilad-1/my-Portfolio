@@ -4,10 +4,11 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { FileDown, Menu, X } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { useProfile } from '@/lib/api/profile';
 import { cn, uploadsUrl } from '@/lib/utils';
 import { GradientButton } from './gradient-button';
+import { SPRING, TRANSITION } from '../motion/tokens';
 
 const SECTIONS: { id: string; label: string }[] = [
   { id: 'home', label: 'Home' },
@@ -159,7 +160,7 @@ export function Nav() {
   return (
     <header
       className={cn(
-        'fixed inset-x-0 top-0 z-50 transition-all duration-300',
+        'fixed inset-x-0 top-0 z-50 transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
         scrolled
           ? 'border-b border-[hsl(var(--brand-violet)/0.15)] bg-[hsl(var(--background)/0.65)] backdrop-blur-md'
           : 'border-b border-transparent',
@@ -206,9 +207,9 @@ export function Nav() {
                 )}
               >
                 {active ? (
-                  <motion.span
+                  <m.span
                     layoutId="nav-pill"
-                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    transition={SPRING.snappy}
                     className="absolute inset-0 rounded-full bg-gradient-to-r from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))]"
                   />
                 ) : null}
@@ -249,11 +250,11 @@ export function Nav() {
 
       <AnimatePresence>
         {open ? (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
+            transition={TRANSITION.fast}
             className="mx-4 mb-2 rounded-2xl border border-[hsl(var(--brand-violet)/0.18)] bg-[hsl(var(--background)/0.92)] p-2 backdrop-blur-xl md:hidden"
           >
             {SECTIONS.map((s) => {
@@ -273,7 +274,7 @@ export function Nav() {
                 </button>
               );
             })}
-          </motion.div>
+          </m.div>
         ) : null}
       </AnimatePresence>
     </header>

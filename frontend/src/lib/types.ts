@@ -87,6 +87,11 @@ export interface ProjectTeamLink {
   memberId: TeamMember | string;
 }
 
+export interface GalleryItem {
+  url: string;
+  title?: string;
+}
+
 export interface Project {
   _id: string;
   slug: string;
@@ -107,7 +112,8 @@ export interface Project {
   isFeatured: boolean;
   status: 'draft' | 'published';
   position: number;
-  gallery?: string[];
+  /** Legacy documents store plain URL strings; new saves store objects. */
+  gallery?: (string | GalleryItem)[];
   highlights?: string[];
   liveLabel?: string;
   sourceLabel?: string;
@@ -135,7 +141,7 @@ export interface ProjectInput {
   isFeatured?: boolean;
   status?: 'draft' | 'published';
   position?: number;
-  gallery?: string[];
+  gallery?: GalleryItem[];
   highlights?: string[];
   liveLabel?: string;
   sourceLabel?: string;

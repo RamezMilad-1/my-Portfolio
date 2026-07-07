@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, m, useReducedMotion } from 'framer-motion';
 import {
   ArrowLeft,
   Check,
@@ -20,7 +20,19 @@ import { TeamGrid } from '@/components/public/team-grid';
 import { GradientButton } from '@/components/public/gradient-button';
 import { SectionHeading } from '@/components/public/section-heading';
 import { useScrollReveal } from '@/components/motion/use-scroll-reveal';
-import { uploadsUrl } from '@/lib/utils';
+import { usePausedOffscreen } from '@/components/motion/use-paused-offscreen';
+import {
+  DISTANCE,
+  DURATION,
+  EASE_PREMIUM,
+  SPRING,
+  STAGGER,
+  VIEWPORT,
+  staggerDelay,
+} from '@/components/motion/tokens';
+import { normalizeGalleryItem, uploadsUrl } from '@/lib/utils';
+
+type GallerySlide = { src: string; title: string };
 
 export function ProjectDetailClient({ slug }: { slug: string }) {
   const { data: project, isLoading, error } = useProject(slug);
@@ -30,6 +42,8 @@ export function ProjectDetailClient({ slug }: { slug: string }) {
   const [coverErrored, setCoverErrored] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const prefersReduced = useReducedMotion();
+  // Title shimmer repaints per frame — pause it while scrolled away.
+  const titleShimmerRef = usePausedOffscreen<HTMLSpanElement>();
 
   // Right-rail height-aware sticky: pin the rail's bottom 24 px above the
   // viewport bottom ONCE the rail is fully visible, then freeze it there
@@ -89,19 +103,33 @@ export function ProjectDetailClient({ slug }: { slug: string }) {
       ? uploadsUrl(coverFromMedia)
       : null;
 
-  const galleryImages: string[] = [
-    ...(project.gallery ?? []).map((u) => uploadsUrl(u)),
+  const gallerySlides: GallerySlide[] = [
+    ...(project.gallery ?? [])
+      .map(normalizeGalleryItem)
+      .map((g) => ({ src: uploadsUrl(g.url), title: g.title })),
     ...(project.media ?? [])
       .filter((m) => m && m.kind === 'image' && m.url)
-      .map((m) => uploadsUrl(m.url)),
-  ].filter((u): u is string => Boolean(u));
+      .map((m) => ({ src: uploadsUrl(m.url), title: m.caption ?? '' })),
+  ].filter((s) => Boolean(s.src));
 
-  const showGallery = galleryImages.length > 0;
+  const showGallery = gallerySlides.length > 0;
   const showCover = !showGallery && !!cover && !coverErrored;
-  const safeIdx = Math.min(galleryIdx, Math.max(0, galleryImages.length - 1));
+  const safeIdx = Math.min(galleryIdx, Math.max(0, gallerySlides.length - 1));
+  const currentSlide = gallerySlides[safeIdx];
+
+  // Thumbnails paginate in fixed-size groups so the strip always shows the
+  // page containing the active image (and the last page shows whatever few
+  // images remain).
+  const THUMBS_PER_PAGE = 4;
+  const thumbPageStart =
+    Math.floor(safeIdx / THUMBS_PER_PAGE) * THUMBS_PER_PAGE;
+  const thumbPage = gallerySlides.slice(
+    thumbPageStart,
+    thumbPageStart + THUMBS_PER_PAGE,
+  );
 
   const goTo = (next: number) => {
-    const len = galleryImages.length;
+    const len = gallerySlides.length;
     if (len === 0) return;
     const normalized = ((next % len) + len) % len;
     setDirection(normalized === safeIdx ? 0 : normalized > safeIdx ? 1 : -1);
@@ -146,7 +174,9 @@ export function ProjectDetailClient({ slug }: { slug: string }) {
             </div>
 
             <h1 className="font-display mt-3 text-[clamp(2rem,5vw,3.5rem)] font-bold leading-[1.05] tracking-tight">
-              <span className="ek-gradient-text">{project.name}</span>
+              <span ref={titleShimmerRef} className="ek-gradient-text">
+                {project.name}
+              </span>
             </h1>
 
             {/* Iconic underline — gradient bar that fades, with a glowing endcap dot */}
@@ -348,10 +378,13 @@ export function ProjectDetailClient({ slug }: { slug: string }) {
                     >
                       {showGallery ? (
                         <AnimatePresence initial={false} custom={direction} mode="sync">
-                          <motion.img
-                            key={galleryImages[safeIdx]}
-                            src={galleryImages[safeIdx]}
-                            alt={`${project.name} screenshot ${safeIdx + 1}`}
+                          <m.img
+                            key={currentSlide.src}
+                            src={currentSlide.src}
+                            alt={
+                              currentSlide.title ||
+                              `${project.name} screenshot ${safeIdx + 1}`
+                            }
                             onClick={() => setLightboxOpen(true)}
                             custom={direction}
                             variants={slideVariants}
@@ -360,10 +393,13 @@ export function ProjectDetailClient({ slug }: { slug: string }) {
                             exit="exit"
                             transition={
                               prefersReduced
-                                ? { opacity: { duration: 0.2 } }
+                                ? { opacity: { duration: DURATION.fast } }
                                 : {
-                                    x: { type: 'spring', stiffness: 240, damping: 32 },
-                                    opacity: { duration: 0.32, ease: [0.22, 1, 0.36, 1] },
+                                    x: SPRING.smooth,
+                                    opacity: {
+                                      duration: 0.32,
+                                      ease: EASE_PREMIUM,
+                                    },
                                   }
                             }
                             className="absolute inset-0 h-full w-full cursor-zoom-in object-contain drop-shadow-[0_14px_24px_hsl(220_40%_2%/0.35)]"
@@ -386,13 +422,13 @@ export function ProjectDetailClient({ slug }: { slug: string }) {
                         className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent"
                       />
 
-                      {showGallery && galleryImages.length > 1 ? (
+                      {showGallery && gallerySlides.length > 1 ? (
                         <>
                           <button
                             type="button"
                             onClick={() => goTo(safeIdx - 1)}
                             aria-label="Previous"
-                            className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[hsl(220_30%_8%/0.55)] text-white shadow-[0_6px_18px_-8px_hsl(220_40%_4%/0.6)] backdrop-blur-md transition-all duration-200 hover:scale-105 hover:border-white/30 hover:bg-[hsl(220_30%_14%/0.75)] hover:text-[hsl(var(--brand-violet-soft))]"
+                            className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[hsl(220_30%_8%/0.55)] text-white shadow-[0_6px_18px_-8px_hsl(220_40%_4%/0.6)] backdrop-blur-md transition-[transform,border-color,background-color,color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:scale-105 hover:border-white/30 hover:bg-[hsl(220_30%_14%/0.75)] hover:text-[hsl(var(--brand-violet-soft))]"
                           >
                             <ChevronLeft className="h-4 w-4" />
                           </button>
@@ -400,50 +436,79 @@ export function ProjectDetailClient({ slug }: { slug: string }) {
                             type="button"
                             onClick={() => goTo(safeIdx + 1)}
                             aria-label="Next"
-                            className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[hsl(220_30%_8%/0.55)] text-white shadow-[0_6px_18px_-8px_hsl(220_40%_4%/0.6)] backdrop-blur-md transition-all duration-200 hover:scale-105 hover:border-white/30 hover:bg-[hsl(220_30%_14%/0.75)] hover:text-[hsl(var(--brand-violet-soft))]"
+                            className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[hsl(220_30%_8%/0.55)] text-white shadow-[0_6px_18px_-8px_hsl(220_40%_4%/0.6)] backdrop-blur-md transition-[transform,border-color,background-color,color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:scale-105 hover:border-white/30 hover:bg-[hsl(220_30%_14%/0.75)] hover:text-[hsl(var(--brand-violet-soft))]"
                           >
                             <ChevronRight className="h-4 w-4" />
                           </button>
-                          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/15 bg-[hsl(220_30%_8%/0.55)] px-2.5 py-1.5 shadow-[0_6px_18px_-8px_hsl(220_40%_4%/0.6)] backdrop-blur-md">
-                            {galleryImages.map((_, i) => (
-                              <button
-                                key={i}
-                                type="button"
-                                onClick={() => goTo(i)}
-                                aria-label={`Go to image ${i + 1}`}
-                                className={`h-1.5 rounded-full transition-all duration-300 ${
-                                  i === safeIdx
-                                    ? 'w-6 bg-gradient-to-r from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] shadow-[0_0_10px_-1px_hsl(var(--brand-violet)/0.55)]'
-                                    : 'w-1.5 bg-[hsl(220_15%_70%/0.30)] hover:bg-[hsl(220_15%_85%/0.45)]'
-                                }`}
-                              />
-                            ))}
-                          </div>
                         </>
                       ) : null}
                     </div>
 
-                    {/* Bottom film strip — only when gallery has >1 image. */}
-                    {showGallery && galleryImages.length > 1 ? (
-                      <div className="relative border-t border-white/[0.08] bg-[hsl(232_28%_10%/0.45)] px-3 py-2.5 backdrop-blur-md">
-                        {/* Counter on the right — dark capsule */}
-                        <div className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 rounded-full border border-white/10 bg-[hsl(220_30%_8%/0.55)] px-2 py-0.5 text-[10px] font-semibold tracking-wide text-[hsl(220_25%_90%)] backdrop-blur sm:flex">
-                          <span className="text-[hsl(var(--brand-violet-soft))]">
-                            {safeIdx + 1}
-                          </span>
-                          <span className="text-[hsl(220_15%_55%)]">/</span>
-                          <span>{galleryImages.length}</span>
+                    {/* Caption bar — the slide's title on the left, position
+                        counter on the right. Same glass tier as the strip. */}
+                    {showGallery ? (
+                      <div className="flex items-center justify-between gap-3 border-t border-white/[0.08] bg-[hsl(232_28%_10%/0.45)] px-4 py-2.5 backdrop-blur-md">
+                        <div className="flex min-w-0 items-center gap-2.5">
+                          <span
+                            aria-hidden
+                            className="h-3.5 w-[2px] flex-shrink-0 rounded-full bg-gradient-to-b from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] shadow-[0_0_8px_-1px_hsl(var(--brand-violet)/0.5)]"
+                          />
+                          <AnimatePresence mode="wait" initial={false}>
+                            <m.p
+                              key={safeIdx}
+                              initial={
+                                prefersReduced
+                                  ? { opacity: 0 }
+                                  : { opacity: 0, y: 6 }
+                              }
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={
+                                prefersReduced
+                                  ? { opacity: 0 }
+                                  : { opacity: 0, y: -6 }
+                              }
+                              transition={{
+                                duration: DURATION.fast,
+                                ease: EASE_PREMIUM,
+                              }}
+                              className={`text-[13px] font-medium leading-snug ${
+                                currentSlide.title
+                                  ? 'text-[hsl(220_25%_92%)]'
+                                  : 'italic text-[hsl(220_15%_55%)]'
+                              }`}
+                            >
+                              {currentSlide.title || `Screenshot ${safeIdx + 1}`}
+                            </m.p>
+                          </AnimatePresence>
                         </div>
+                        {gallerySlides.length > 1 ? (
+                          <p className="flex-shrink-0 text-[11px] font-semibold tabular-nums tracking-[0.14em] text-[hsl(220_15%_58%)]">
+                            <span className="text-[hsl(var(--brand-violet-soft))]">
+                              {String(safeIdx + 1).padStart(2, '0')}
+                            </span>
+                            <span className="mx-1 text-[hsl(220_15%_45%)]">/</span>
+                            {String(gallerySlides.length).padStart(2, '0')}
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : null}
 
-                        <div className="flex gap-2 overflow-x-auto pr-0 sm:pr-14">
-                          {galleryImages.map((src, i) => (
-                            <motion.button
+                    {/* Bottom film strip — only when gallery has >1 image. */}
+                    {showGallery && gallerySlides.length > 1 ? (
+                      <div className="relative border-t border-white/[0.08] bg-[hsl(232_28%_10%/0.45)] px-3 py-2.5 backdrop-blur-md">
+                        <div className="flex gap-2 overflow-x-auto">
+                          {thumbPage.map(({ src, title }, j) => {
+                            const i = thumbPageStart + j;
+                            return (
+                            <m.button
                               key={`${src}-${i}`}
+                              title={title || undefined}
+                              aria-label={title || `Go to image ${i + 1}`}
                               type="button"
                               onClick={() => goTo(i)}
                               whileHover={{ y: -2 }}
-                              transition={{ type: 'spring', stiffness: 320, damping: 24 }}
-                              className={`relative h-11 w-16 flex-shrink-0 overflow-hidden rounded-md border bg-[hsl(220_30%_10%/0.45)] backdrop-blur transition-all duration-300 ${
+                              transition={SPRING.lift}
+                              className={`relative h-11 w-16 flex-shrink-0 overflow-hidden rounded-md border bg-[hsl(220_30%_10%/0.45)] backdrop-blur transition-[border-color,opacity,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                                 i === safeIdx
                                   ? 'border-[hsl(var(--brand-indigo)/0.65)] opacity-100 shadow-[0_0_0_1px_hsl(var(--brand-indigo)/0.30),0_6px_14px_-6px_hsl(var(--brand-violet)/0.45)]'
                                   : 'border-white/10 opacity-65 hover:border-white/25 hover:opacity-100'
@@ -455,8 +520,9 @@ export function ProjectDetailClient({ slug }: { slug: string }) {
                                 alt=""
                                 className="h-full w-full object-contain p-0.5"
                               />
-                            </motion.button>
-                          ))}
+                            </m.button>
+                            );
+                          })}
                         </div>
                       </div>
                     ) : null}
@@ -548,7 +614,9 @@ export function ProjectDetailClient({ slug }: { slug: string }) {
       {/* ──────── Image lightbox ──────── */}
       <ImageLightbox
         open={lightboxOpen}
-        images={showGallery ? galleryImages : cover ? [cover] : []}
+        slides={
+          showGallery ? gallerySlides : cover ? [{ src: cover, title: '' }] : []
+        }
         index={showGallery ? safeIdx : 0}
         onClose={() => setLightboxOpen(false)}
         onNavigate={(i) => goTo(i)}
@@ -560,14 +628,14 @@ export function ProjectDetailClient({ slug }: { slug: string }) {
 
 function ImageLightbox({
   open,
-  images,
+  slides,
   index,
   onClose,
   onNavigate,
   alt,
 }: {
   open: boolean;
-  images: string[];
+  slides: GallerySlide[];
   index: number;
   onClose: () => void;
   onNavigate: (i: number) => void;
@@ -577,11 +645,11 @@ function ImageLightbox({
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
-      if (e.key === 'ArrowRight' && images.length > 1) {
-        onNavigate((index + 1) % images.length);
+      if (e.key === 'ArrowRight' && slides.length > 1) {
+        onNavigate((index + 1) % slides.length);
       }
-      if (e.key === 'ArrowLeft' && images.length > 1) {
-        onNavigate((index - 1 + images.length) % images.length);
+      if (e.key === 'ArrowLeft' && slides.length > 1) {
+        onNavigate((index - 1 + slides.length) % slides.length);
       }
     };
     document.addEventListener('keydown', handler);
@@ -590,18 +658,19 @@ function ImageLightbox({
       document.removeEventListener('keydown', handler);
       document.body.style.overflow = '';
     };
-  }, [open, index, images.length, onClose, onNavigate]);
+  }, [open, index, slides.length, onClose, onNavigate]);
 
-  const src = images[index];
+  const src = slides[index]?.src;
+  const title = slides[index]?.title ?? '';
 
   return (
     <AnimatePresence>
       {open && src ? (
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: DURATION.fast, ease: EASE_PREMIUM }}
           onClick={onClose}
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md sm:p-8"
         >
@@ -612,21 +681,21 @@ function ImageLightbox({
               onClose();
             }}
             aria-label="Close"
-            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition-all hover:scale-105 hover:bg-white/20"
+            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition-[transform,background-color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:scale-105 hover:bg-white/20"
           >
             <X className="h-5 w-5" />
           </button>
 
-          {images.length > 1 ? (
+          {slides.length > 1 ? (
             <>
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onNavigate((index - 1 + images.length) % images.length);
+                  onNavigate((index - 1 + slides.length) % slides.length);
                 }}
                 aria-label="Previous"
-                className="absolute left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition-all hover:scale-105 hover:bg-white/20 sm:left-6"
+                className="absolute left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition-[transform,background-color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:scale-105 hover:bg-white/20 sm:left-6"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
@@ -634,33 +703,59 @@ function ImageLightbox({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onNavigate((index + 1) % images.length);
+                  onNavigate((index + 1) % slides.length);
                 }}
                 aria-label="Next"
-                className="absolute right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition-all hover:scale-105 hover:bg-white/20 sm:right-6"
+                className="absolute right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition-[transform,background-color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:scale-105 hover:bg-white/20 sm:right-6"
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
-              <div className="absolute bottom-5 left-1/2 z-10 -translate-x-1/2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-white backdrop-blur-md">
-                {index + 1} / {images.length}
-              </div>
             </>
           ) : null}
 
+          {/* Caption bar — the slide's title plus the position counter,
+              in the same glass language as the page's gallery card. */}
+          {title || slides.length > 1 ? (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="absolute bottom-5 left-1/2 z-10 flex max-w-[min(85vw,560px)] -translate-x-1/2 items-center gap-3 rounded-full border border-white/15 bg-[hsl(220_30%_8%/0.72)] px-5 py-2.5 shadow-[0_10px_30px_-10px_hsl(220_40%_2%/0.7)] backdrop-blur-md"
+            >
+              {title ? (
+                <AnimatePresence mode="wait" initial={false}>
+                  <m.p
+                    key={index}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: DURATION.fast, ease: EASE_PREMIUM }}
+                    className="truncate text-sm font-medium text-white/95"
+                  >
+                    {title}
+                  </m.p>
+                </AnimatePresence>
+              ) : null}
+              {slides.length > 1 ? (
+                <span className="flex-shrink-0 border-l border-white/15 pl-3 text-xs font-semibold tabular-nums text-white/60 first:border-l-0 first:pl-0">
+                  {index + 1} / {slides.length}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+
           <AnimatePresence mode="wait">
-            <motion.img
+            <m.img
               key={src}
               src={src}
-              alt={alt}
+              alt={title || alt}
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.25, ease: EASE_PREMIUM }}
               onClick={(e) => e.stopPropagation()}
               className="max-h-[90vh] max-w-[92vw] cursor-zoom-out rounded-xl object-contain shadow-[0_30px_80px_-20px_hsl(220_40%_2%/0.8)]"
             />
           </AnimatePresence>
-        </motion.div>
+        </m.div>
       ) : null}
     </AnimatePresence>
   );
@@ -668,43 +763,51 @@ function ImageLightbox({
 
 function HighlightItem({ text, index }: { text: string; index: number }) {
   const { ref, initial, animate } = useScrollReveal<HTMLLIElement>({
-    y: 10,
-    margin: '-40px',
+    y: DISTANCE.sm,
+    margin: VIEWPORT.chrome,
   });
   return (
-    <motion.li
+    <m.li
       ref={ref}
       initial={initial}
       animate={animate}
-      transition={{ delay: index * 0.06, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      transition={{
+        delay: staggerDelay(index, STAGGER.base),
+        duration: DURATION.slow,
+        ease: EASE_PREMIUM,
+      }}
       className="ek-glass flex items-start gap-3 rounded-xl p-3.5"
     >
       <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet-soft))] text-white">
         <Sparkles className="h-3 w-3" />
       </span>
       <span className="text-sm text-[hsl(var(--foreground))]">{text}</span>
-    </motion.li>
+    </m.li>
   );
 }
 
 function FeatureItem({ text, index }: { text: string; index: number }) {
   const { ref, initial, animate } = useScrollReveal<HTMLLIElement>({
-    y: 10,
-    margin: '-40px',
+    y: DISTANCE.sm,
+    margin: VIEWPORT.chrome,
   });
   return (
-    <motion.li
+    <m.li
       ref={ref}
       initial={initial}
       animate={animate}
-      transition={{ delay: index * 0.05, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      transition={{
+        delay: staggerDelay(index, STAGGER.base),
+        duration: DURATION.slow,
+        ease: EASE_PREMIUM,
+      }}
       className="ek-glass flex items-start gap-3 rounded-xl p-3.5"
     >
       <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[hsl(var(--brand-violet-soft)/0.14)] text-[hsl(var(--brand-indigo))]">
         <Check className="h-3 w-3" />
       </span>
       <span className="text-sm text-[hsl(var(--foreground))]">{text}</span>
-    </motion.li>
+    </m.li>
   );
 }
 

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PageTransition } from '@/components/motion/page-transition';
 
 // Unlisted utility page — reachable only by typing the URL, never indexed.
 export const metadata: Metadata = {
@@ -11,5 +12,5 @@ export default function CreateUserLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return <PageTransition variant="fast">{children}</PageTransition>;
 }

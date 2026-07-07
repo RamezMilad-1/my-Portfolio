@@ -1,8 +1,9 @@
 'use client';
 
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import {
-  motion,
+  m,
+  useMotionValue,
   useReducedMotion,
   useScroll,
   useSpring,
@@ -10,6 +11,15 @@ import {
 } from 'framer-motion';
 import { Award, Briefcase, GraduationCap, Star } from 'lucide-react';
 import { useScrollReveal } from '../motion/use-scroll-reveal';
+import {
+  DISTANCE,
+  DURATION,
+  EASE_PREMIUM,
+  SPRING,
+  STAGGER,
+  VIEWPORT,
+  staggerDelay,
+} from '../motion/tokens';
 import type { TimelineEntry } from '@/lib/types';
 
 interface Props {
@@ -31,19 +41,33 @@ const TYPE_ICONS = {
  */
 export function Timeline({ entries }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const railRef = useRef<HTMLDivElement>(null);
   const prefersReduced = useReducedMotion();
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start 0.85', 'end 0.2'],
   });
-  const lineScale = useSpring(scrollYProgress, {
-    stiffness: 60,
-    damping: 20,
-    mass: 0.8,
-  });
-  // Map 0..1 progress to a vertical % position for the travelling rail head.
-  const headTop = useTransform(lineScale, (v) => `${Math.min(Math.max(v, 0), 1) * 100}%`);
+  const lineScale = useSpring(scrollYProgress, SPRING.gentle);
+
+  // The travelling head rides the rail as a pure translateY. Positioning it
+  // via `top: %` would re-run layout on every scroll frame, so we measure the
+  // rail once (and on resize) and map progress → px on the compositor.
+  const railHeight = useMotionValue(0);
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(([entry]) => {
+      railHeight.set(entry.contentRect.height);
+    });
+    observer.observe(rail);
+    return () => observer.disconnect();
+  }, [railHeight]);
+
+  const headY = useTransform(
+    [lineScale, railHeight] as const,
+    ([v, h]: number[]) => Math.min(Math.max(v, 0), 1) * h,
+  );
   // Hide the head before the section enters view and after it leaves.
   const headOpacity = useTransform(lineScale, [0, 0.04, 0.96, 1], [0, 1, 1, 0]);
 
@@ -53,6 +77,7 @@ export function Timeline({ entries }: Props) {
     <div ref={containerRef} className="relative mt-12">
       {/* Rail frame — defines the rail's vertical extent. */}
       <div
+        ref={railRef}
         aria-hidden
         className="pointer-events-none absolute bottom-1 left-5 top-1 w-px sm:left-6"
       >
@@ -60,18 +85,23 @@ export function Timeline({ entries }: Props) {
         <div className="absolute inset-0 w-px rounded-full bg-gradient-to-b from-white/[0.04] via-white/10 to-white/[0.04]" />
 
         {/* Foreground rail — purple gradient, grows with scroll */}
-        <motion.div
+        <m.div
           style={prefersReduced ? undefined : { scaleY: lineScale }}
           className="absolute inset-0 w-[1.5px] origin-top rounded-full bg-gradient-to-b from-[hsl(var(--brand-indigo)/0.9)] via-[hsl(var(--brand-violet)/0.85)] to-[hsl(var(--brand-violet-soft)/0.7)]"
         />
 
-        {/* Travelling head — soft glowing dot at the leading edge of the rail */}
+        {/* Travelling head — soft glowing dot at the leading edge of the
+            rail. Outer span owns the animated translateY (framer replaces
+            the whole inline transform); inner span keeps the static
+            centering offsets. */}
         {!prefersReduced ? (
-          <motion.span
+          <m.span
             aria-hidden
-            style={{ top: headTop, opacity: headOpacity }}
-            className="absolute left-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[hsl(var(--brand-violet-soft))] shadow-[0_0_18px_4px_hsl(var(--brand-violet)/0.6),0_0_32px_8px_hsl(var(--brand-violet)/0.25)]"
-          />
+            style={{ y: headY, opacity: headOpacity }}
+            className="absolute left-1/2 top-0"
+          >
+            <span className="block h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[hsl(var(--brand-violet-soft))] shadow-[0_0_18px_4px_hsl(var(--brand-violet)/0.6),0_0_32px_8px_hsl(var(--brand-violet)/0.25)]" />
+          </m.span>
         ) : null}
       </div>
 
@@ -107,22 +137,22 @@ function TimelineRow({
   isLatest: boolean;
 }) {
   const reveal = useScrollReveal<HTMLLIElement>({
-    x: 32,
-    y: 18,
-    margin: '-100px',
+    x: DISTANCE.md,
+    y: DISTANCE.sm,
+    margin: VIEWPORT.card,
   });
   const Icon =
     TYPE_ICONS[entry.type as keyof typeof TYPE_ICONS] ?? TYPE_ICONS.education;
 
   return (
-    <motion.li
+    <m.li
       ref={reveal.ref}
       initial={reveal.initial}
       animate={reveal.animate}
       transition={{
-        duration: 0.7,
-        ease: [0.22, 1, 0.36, 1],
-        delay: index * 0.05,
+        duration: DURATION.slow,
+        ease: EASE_PREMIUM,
+        delay: staggerDelay(index, STAGGER.base),
       }}
       className="group relative"
     >
@@ -130,11 +160,15 @@ function TimelineRow({
           shared `reveal.inView` state — no per-bullet spring on each entry,
           which keeps long timelines from spawning N parallel framer-motion
           animations as the viewport scrolls. */}
-      <motion.span
+      <m.span
         aria-hidden
         initial={{ scale: 0, opacity: 0 }}
         animate={reveal.inView ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
-        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: index * 0.05 + 0.1 }}
+        transition={{
+          duration: DURATION.base,
+          ease: EASE_PREMIUM,
+          delay: staggerDelay(index, STAGGER.base) + 0.1,
+        }}
         className="absolute left-5 top-3 z-[5] -translate-x-1/2 sm:left-6"
       >
         <span className="relative flex h-4 w-4 items-center justify-center">
@@ -152,7 +186,7 @@ function TimelineRow({
             <Icon className="h-3.5 w-3.5" />
           </span>
         </span>
-      </motion.span>
+      </m.span>
 
       {/* Year column + card */}
       <div className="flex items-start gap-3 pl-12 sm:gap-5 sm:pl-16">
@@ -207,6 +241,6 @@ function TimelineRow({
           </p>
         </div>
       </div>
-    </motion.li>
+    </m.li>
   );
 }

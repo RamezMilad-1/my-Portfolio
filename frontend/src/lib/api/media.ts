@@ -36,6 +36,21 @@ export function useUploadMedia() {
   });
 }
 
+export function useUpdateMedia() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, caption }: { id: string; caption: string }) => {
+      const { data } = await api.patch<Media>(`/media/${id}`, { caption });
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: mediaKey });
+      // Project queries embed populated media, so their captions are stale too.
+      qc.invalidateQueries({ queryKey: ['projects'] });
+    },
+  });
+}
+
 export function useDeleteMedia() {
   const qc = useQueryClient();
   return useMutation({

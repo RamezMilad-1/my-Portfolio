@@ -66,8 +66,10 @@ export class Project {
   @Prop({ default: 0 })
   position: number;
 
-  @Prop({ type: [String], default: [] })
-  gallery: string[];
+  // Mixed so legacy documents that stored plain URL strings keep loading;
+  // new writes always store { url, title } objects (shape enforced in the DTO).
+  @Prop({ type: [MongooseSchema.Types.Mixed], default: [] })
+  gallery: Array<string | { url: string; title?: string }>;
 
   @Prop({ type: [String], default: [] })
   highlights: string[];

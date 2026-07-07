@@ -17,8 +17,13 @@ import {
   useUpdateProject,
 } from '@/lib/api/projects';
 import { useTeam } from '@/lib/api/team';
-import { useMediaList, useUploadMedia, useDeleteMedia } from '@/lib/api/media';
-import { uploadsUrl } from '@/lib/utils';
+import {
+  useMediaList,
+  useUploadMedia,
+  useDeleteMedia,
+  useUpdateMedia,
+} from '@/lib/api/media';
+import { normalizeGalleryItem, uploadsUrl } from '@/lib/utils';
 import type { Project, TeamMember, Media } from '@/lib/types';
 
 const schema = z.object({
@@ -32,7 +37,9 @@ const schema = z.object({
   tech: z.array(z.string()).default([]),
   features: z.array(z.string()).default([]),
   highlights: z.array(z.string()).default([]),
-  gallery: z.array(z.string()).default([]),
+  gallery: z
+    .array(z.object({ url: z.string().min(1), title: z.string().default('') }))
+    .default([]),
   githubUrl: z.string().optional(),
   liveUrl: z.string().optional(),
   liveLabel: z.string().optional(),
@@ -61,6 +68,7 @@ export function ProjectForm({ project }: Props) {
   const { data: mediaList } = useMediaList();
   const upload = useUploadMedia();
   const delMedia = useDeleteMedia();
+  const updateMedia = useUpdateMedia();
 
   const {
     register,
@@ -82,7 +90,8 @@ export function ProjectForm({ project }: Props) {
       tech: project?.tech ?? [],
       features: project?.features ?? [],
       highlights: project?.highlights ?? [],
-      gallery: project?.gallery ?? [],
+      // Legacy projects store gallery entries as plain URL strings.
+      gallery: (project?.gallery ?? []).map(normalizeGalleryItem),
       githubUrl: project?.githubUrl ?? '',
       liveUrl: project?.liveUrl ?? '',
       liveLabel: project?.liveLabel ?? '',
@@ -172,8 +181,8 @@ export function ProjectForm({ project }: Props) {
   const addGalleryUrl = () => {
     const v = galleryInput.trim();
     if (!v) return;
-    if (gallery.includes(v)) return;
-    setValue('gallery', [...gallery, v], { shouldDirty: true });
+    if (gallery.some((g) => g.url === v)) return;
+    setValue('gallery', [...gallery, { url: v, title: '' }], { shouldDirty: true });
     setGalleryInput('');
   };
   const removeGalleryUrl = (i: number) => {
@@ -186,12 +195,20 @@ export function ProjectForm({ project }: Props) {
   const handleGalleryUpload = async (file: File) => {
     try {
       const created = await upload.mutateAsync({ file, projectId: project?._id });
-      setValue('gallery', [...gallery, created.url], { shouldDirty: true });
+      setValue('gallery', [...gallery, { url: created.url, title: '' }], {
+        shouldDirty: true,
+      });
       toast.success('Image added to gallery');
     } catch {
       toast.error('Upload failed');
     }
   };
+  const updateGalleryTitle = (i: number, title: string) =>
+    setValue(
+      'gallery',
+      gallery.map((g, idx) => (idx === i ? { ...g, title } : g)),
+      { shouldDirty: true },
+    );
 
   const addTeammate = (memberId: string) => {
     if (teamLinks.find((l) => l.memberId === memberId)) return;
@@ -439,14 +456,14 @@ export function ProjectForm({ project }: Props) {
           </label>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-          {gallery.map((url, i) => (
+          {gallery.map((item, i) => (
             <div
-              key={`${url}-${i}`}
+              key={`${item.url}-${i}`}
               className="group relative overflow-hidden rounded-md border border-[hsl(var(--border))]"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={uploadsUrl(url)}
+                src={uploadsUrl(item.url)}
                 alt=""
                 className="aspect-video w-full object-cover"
               />
@@ -458,6 +475,16 @@ export function ProjectForm({ project }: Props) {
               >
                 <X className="h-3 w-3" />
               </button>
+              <Input
+                value={item.title}
+                onChange={(e) => updateGalleryTitle(i, e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') e.preventDefault();
+                }}
+                placeholder="Image title…"
+                aria-label="Image title"
+                className="h-8 rounded-none border-0 border-t border-[hsl(var(--border))] bg-[hsl(var(--card))] px-2 text-xs"
+              />
             </div>
           ))}
         </div>
@@ -517,6 +544,15 @@ export function ProjectForm({ project }: Props) {
         onToggle={toggleMedia}
         onUpload={handleUploadClick}
         onDelete={(media) => setPendingMediaDelete(media)}
+        onCaptionSave={(id, caption) =>
+          updateMedia.mutate(
+            { id, caption },
+            {
+              onSuccess: () => toast.success('Caption saved'),
+              onError: () => toast.error('Could not save caption'),
+            },
+          )
+        }
       />
 
       <ConfirmDialog
@@ -615,12 +651,14 @@ function MediaPicker({
   onToggle,
   onUpload,
   onDelete,
+  onCaptionSave,
 }: {
   media: Media[];
   selected: string[];
   onToggle: (id: string) => void;
   onUpload: (file: File) => Promise<void>;
   onDelete: (media: Media) => void;
+  onCaptionSave: (id: string, caption: string) => void;
 }) {
   return (
     <div className="space-y-3">
@@ -669,6 +707,28 @@ function MediaPicker({
               >
                 <Trash2 className="h-3 w-3" />
               </button>
+              {isSel && m.kind === 'image' ? (
+                // Uncontrolled + save-on-blur: captions live on the Media
+                // document, not the project, so they save independently of
+                // the form submit. `key` re-syncs after a server refresh.
+                <Input
+                  key={`${m._id}-${m.caption}`}
+                  defaultValue={m.caption}
+                  placeholder="Caption (shown in gallery)…"
+                  aria-label="Media caption"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      (e.target as HTMLInputElement).blur();
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value !== m.caption)
+                      onCaptionSave(m._id, e.target.value);
+                  }}
+                  className="mt-1 h-8 px-2 text-xs"
+                />
+              ) : null}
             </div>
           );
         })}

@@ -1,7 +1,15 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useScrollReveal } from '../motion/use-scroll-reveal';
+import { usePausedOffscreen } from '../motion/use-paused-offscreen';
+import {
+  DISTANCE,
+  DURATION,
+  EASE_PREMIUM,
+  TRANSITION,
+  VIEWPORT,
+} from '../motion/tokens';
 
 interface Props {
   kicker?: string;
@@ -18,8 +26,6 @@ interface Props {
   variant?: 'line' | 'classic';
 }
 
-const easing = [0.22, 1, 0.36, 1] as const;
-
 export function SectionHeading({
   kicker,
   title,
@@ -28,10 +34,25 @@ export function SectionHeading({
   id,
   variant = 'line',
 }: Props) {
-  const kickerReveal = useScrollReveal<HTMLDivElement>({ y: 8, margin: '-40px' });
-  const titleReveal = useScrollReveal<HTMLHeadingElement>({ y: 16, margin: '-40px' });
-  const subtitleReveal = useScrollReveal<HTMLParagraphElement>({ y: 16, margin: '-40px' });
-  const dividerReveal = useScrollReveal<HTMLDivElement>({ y: 0, margin: '-40px' });
+  const kickerReveal = useScrollReveal<HTMLDivElement>({
+    y: DISTANCE.sm,
+    margin: VIEWPORT.chrome,
+  });
+  const titleReveal = useScrollReveal<HTMLHeadingElement>({
+    y: DISTANCE.md,
+    margin: VIEWPORT.chrome,
+  });
+  const subtitleReveal = useScrollReveal<HTMLParagraphElement>({
+    y: DISTANCE.md,
+    margin: VIEWPORT.chrome,
+  });
+  const dividerReveal = useScrollReveal<HTMLDivElement>({
+    y: 0,
+    margin: VIEWPORT.chrome,
+  });
+  // The title's gradient shimmer repaints its glyphs every frame; pause it
+  // whenever this heading is offscreen.
+  const shimmerRef = usePausedOffscreen<HTMLSpanElement>();
 
   return (
     <div
@@ -44,11 +65,11 @@ export function SectionHeading({
     >
       {kicker ? (
         variant === 'line' ? (
-          <motion.div
+          <m.div
             ref={kickerReveal.ref}
             initial={kickerReveal.initial}
             animate={kickerReveal.animate}
-            transition={{ duration: 0.5, ease: easing }}
+            transition={TRANSITION.moderate}
             className={`flex items-center gap-4 ${
               centered ? 'justify-center' : 'justify-start'
             }`}
@@ -64,51 +85,65 @@ export function SectionHeading({
               aria-hidden
               className="h-px w-14 bg-gradient-to-r from-[hsl(var(--brand-violet)/0.7)] to-transparent md:w-20"
             />
-          </motion.div>
+          </m.div>
         ) : (
-          <motion.p
+          <m.p
             ref={kickerReveal.ref}
             initial={kickerReveal.initial}
             animate={kickerReveal.animate}
-            transition={{ duration: 0.5, ease: easing }}
+            transition={TRANSITION.moderate}
             className="text-xs font-semibold uppercase tracking-[0.24em] text-[hsl(var(--brand-violet-soft))] md:text-sm"
           >
             {kicker}
-          </motion.p>
+          </m.p>
         )
       ) : null}
       {title ? (
-        <motion.h2
+        <m.h2
           ref={titleReveal.ref}
           initial={titleReveal.initial}
           animate={titleReveal.animate}
-          transition={{ duration: 0.6, delay: 0.05, ease: easing }}
+          transition={{
+            duration: DURATION.moderate,
+            delay: 0.05,
+            ease: EASE_PREMIUM,
+          }}
           className="font-display mt-3 text-2xl font-bold tracking-tight md:text-3xl"
         >
-          <span className="ek-gradient-text">{title}</span>
-        </motion.h2>
+          <span ref={shimmerRef} className="ek-gradient-text">
+            {title}
+          </span>
+        </m.h2>
       ) : null}
       {subtitle ? (
-        <motion.p
+        <m.p
           ref={subtitleReveal.ref}
           initial={subtitleReveal.initial}
           animate={subtitleReveal.animate}
-          transition={{ duration: 0.6, delay: 0.12, ease: easing }}
+          transition={{
+            duration: DURATION.moderate,
+            delay: 0.1,
+            ease: EASE_PREMIUM,
+          }}
           className="mt-3 text-sm text-[hsl(var(--muted-foreground))] md:text-base"
         >
           {subtitle}
-        </motion.p>
+        </m.p>
       ) : null}
       {variant === 'classic' ? (
-        <motion.div
+        <m.div
           ref={dividerReveal.ref}
           initial={{ opacity: 0, scaleX: 0 }}
           animate={
             dividerReveal.inView
               ? { opacity: 1, scaleX: 1 }
-              : { opacity: 0.4, scaleX: 0.4 }
+              : { opacity: 0, scaleX: 0 }
           }
-          transition={{ duration: 0.6, delay: 0.2, ease: easing }}
+          transition={{
+            duration: DURATION.moderate,
+            delay: 0.16,
+            ease: EASE_PREMIUM,
+          }}
           className={`mt-5 h-px bg-gradient-to-r from-transparent via-[hsl(var(--brand-violet-soft))] to-transparent ${
             centered ? 'mx-auto w-48 md:w-64' : 'w-48 md:w-64'
           }`}

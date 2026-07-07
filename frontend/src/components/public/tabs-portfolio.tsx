@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { FolderKanban, Award, Cpu } from 'lucide-react';
+import { DISTANCE, DURATION, SPRING, TRANSITION } from '../motion/tokens';
 
 type Tab = 'projects' | 'certificates' | 'tech';
 
@@ -47,9 +48,9 @@ export function TabsPortfolio({ projects, certificates, tech, counts }: Props) {
                 className="relative rounded-full px-4 py-2 text-sm font-medium transition-colors sm:px-5 sm:py-2.5"
               >
                 {isActive ? (
-                  <motion.span
+                  <m.span
                     layoutId="portfolio-tab-pill"
-                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    transition={SPRING.snappy}
                     className="absolute inset-0 rounded-full bg-gradient-to-r from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))]"
                   />
                 ) : null}
@@ -81,15 +82,21 @@ export function TabsPortfolio({ projects, certificates, tech, counts }: Props) {
       </div>
 
       <AnimatePresence mode="wait">
-        <motion.div
+        <m.div
           key={active}
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: DISTANCE.sm }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -12 }}
-          transition={{ duration: 0.3 }}
+          // Fast opacity-only exit: the switch should feel like the new
+          // panel answers immediately, not like the old one performs a
+          // departure. mode="wait" stays because panel heights differ.
+          exit={{
+            opacity: 0,
+            transition: { duration: DURATION.instant, ease: 'easeOut' },
+          }}
+          transition={TRANSITION.base}
         >
           {content}
-        </motion.div>
+        </m.div>
       </AnimatePresence>
     </div>
   );

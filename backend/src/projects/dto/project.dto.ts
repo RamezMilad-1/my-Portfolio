@@ -15,6 +15,11 @@ export class TeamLinkDto {
   @IsString() memberId: string;
 }
 
+export class GalleryItemDto {
+  @IsString() url: string;
+  @IsOptional() @IsString() title?: string;
+}
+
 export class CreateProjectDto {
   @IsString()
   @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
@@ -42,7 +47,8 @@ export class CreateProjectDto {
   @IsOptional() @IsEnum(['draft', 'published']) status?: 'draft' | 'published';
   @IsOptional() @IsInt() position?: number;
 
-  @IsOptional() @IsArray() @IsString({ each: true }) gallery?: string[];
+  @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => GalleryItemDto)
+  gallery?: GalleryItemDto[];
   @IsOptional() @IsArray() @IsString({ each: true }) highlights?: string[];
   @IsOptional() @IsString() liveLabel?: string;
   @IsOptional() @IsString() sourceLabel?: string;

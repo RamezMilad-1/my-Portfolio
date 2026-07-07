@@ -34,6 +34,18 @@ export class MediaService {
     return created;
   }
 
+  async update(id: string, dto: { caption?: string; projectId?: string }) {
+    const set: Record<string, unknown> = {};
+    if (dto.caption !== undefined) set.caption = dto.caption;
+    if (dto.projectId) set.projectId = new Types.ObjectId(dto.projectId);
+    const updated = await this.model
+      .findByIdAndUpdate(id, { $set: set }, { new: true })
+      .lean()
+      .exec();
+    if (!updated) throw new NotFoundException('Media not found');
+    return updated;
+  }
+
   async remove(id: string) {
     const doc = await this.model.findById(id).exec();
     if (!doc) throw new NotFoundException('Media not found');

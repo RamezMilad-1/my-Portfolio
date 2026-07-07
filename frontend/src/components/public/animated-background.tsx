@@ -40,13 +40,29 @@ export function AnimatedBackground() {
 
     let width = 0;
     let height = 0;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // 1.5 instead of full devicePixelRatio: this layer is 0.1-alpha hairlines
+    // and 1–2px dots — at 1.5x they rasterize identically to the eye, while
+    // per-frame pixel throughput drops ~44% on 2x displays.
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     let visible = !document.hidden;
-    // Frame throttling — on Hi-DPI screens the canvas is large; skipping
-    // every other frame still reads as smooth motion on subtle particles
-    // and halves GPU upload cost.
-    const throttle = dpr > 1;
-    let oddFrame = false;
+    // Cap the redraw rate at ~30fps unconditionally. This loop competes with
+    // scroll input handling and compositing on the main thread — the ambient
+    // particles drift at ~0.18px/frame, so halving the redraw rate is
+    // invisible but halves the continuous main-thread cost, including while
+    // the user is scrolling. Previously this only throttled on Hi-DPI
+    // screens, so standard-DPI desktops paid the full-rate cost.
+    const frameBudgetMs = 1000 / 30;
+    let lastFrameTime = 0;
+    // While the user is actively scrolling, skip drawing entirely: the
+    // particles drift ~0.2px/frame, so freezing them for the duration of a
+    // scroll is imperceptible, and it hands the whole frame budget to scroll
+    // handling and compositing. Resumes ~150ms after the last scroll event.
+    let lastScrollTime = -Infinity;
+    const scrollIdleMs = 150;
+    const onScroll = () => {
+      lastScrollTime = performance.now();
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
 
     const resize = () => {
       width = window.innerWidth;
@@ -84,18 +100,19 @@ export function AnimatedBackground() {
     const maxDist = 130;
     const maxDistSq = maxDist * maxDist;
 
-    const tick = () => {
+    const tick = (now: number) => {
       if (!visible) {
         rafRef.current = null;
         return;
       }
-      if (throttle) {
-        oddFrame = !oddFrame;
-        if (oddFrame) {
-          rafRef.current = requestAnimationFrame(tick);
-          return;
-        }
+      if (
+        now - lastFrameTime < frameBudgetMs ||
+        now - lastScrollTime < scrollIdleMs
+      ) {
+        rafRef.current = requestAnimationFrame(tick);
+        return;
       }
+      lastFrameTime = now;
 
       ctx.clearRect(0, 0, width, height);
 
@@ -178,6 +195,7 @@ export function AnimatedBackground() {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       window.removeEventListener('resize', resize);
+      window.removeEventListener('scroll', onScroll);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, [canDrawCanvas]);

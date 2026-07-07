@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { AdminSidebar } from '@/components/admin/sidebar';
+import { PageTransition } from '@/components/motion/page-transition';
 
 export const metadata: Metadata = {
   title: 'Admin',
@@ -19,7 +20,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="flex min-h-dvh">
       <AdminSidebar />
       <div className="flex-1" id="main-content">
-        <div className="mx-auto max-w-5xl p-6 md:p-10">{children}</div>
+        <div className="mx-auto max-w-5xl p-6 md:p-10">
+          <PageTransition variant="fast">{children}</PageTransition>
+        </div>
       </div>
     </div>
   );

@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, m, useReducedMotion } from 'framer-motion';
+import { DURATION, EASE_PREMIUM } from '../motion/tokens';
 import { ChevronLeft, ChevronRight, ExternalLink, X } from 'lucide-react';
 import type { Certificate } from '@/lib/types';
 import { uploadsUrl } from '@/lib/utils';
@@ -45,11 +46,14 @@ export function CertificateLightbox({
   return (
     <AnimatePresence mode="wait">
       {open && cert ? (
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: prefersReduced ? 0 : 0.2 }}
+          transition={{
+            duration: prefersReduced ? 0 : DURATION.fast,
+            ease: EASE_PREMIUM,
+          }}
           // will-change: backdrop-filter keeps the blurred overlay layer on
           // the GPU during the cross-fade — avoids a frame of stalled paint
           // on first open.
@@ -57,11 +61,14 @@ export function CertificateLightbox({
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
           onClick={onClose}
         >
-          <motion.div
+          <m.div
             initial={prefersReduced ? false : { scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={prefersReduced ? { opacity: 0 } : { scale: 0.95, opacity: 0 }}
-            transition={{ duration: prefersReduced ? 0 : 0.25 }}
+            transition={{
+              duration: prefersReduced ? 0 : 0.25,
+              ease: EASE_PREMIUM,
+            }}
             className="ek-glass relative mx-auto w-full max-w-4xl overflow-hidden rounded-3xl"
             onClick={(e) => e.stopPropagation()}
           >
@@ -141,8 +148,8 @@ export function CertificateLightbox({
                 </a>
               ) : null}
             </div>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       ) : null}
     </AnimatePresence>
   );

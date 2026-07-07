@@ -4,6 +4,8 @@ import { ReactNode, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'sonner';
+import { MotionProvider } from './motion/motion-provider';
+import { ScrollPaintPause } from './motion/scroll-paint-pause';
 
 export function Providers({ children }: { children: ReactNode }) {
   const [client] = useState(
@@ -27,7 +29,8 @@ export function Providers({ children }: { children: ReactNode }) {
       enableSystem={false}
     >
       <QueryClientProvider client={client}>
-        {children}
+        <ScrollPaintPause />
+        <MotionProvider>{children}</MotionProvider>
         <Toaster richColors position="top-right" closeButton />
       </QueryClientProvider>
     </ThemeProvider>
