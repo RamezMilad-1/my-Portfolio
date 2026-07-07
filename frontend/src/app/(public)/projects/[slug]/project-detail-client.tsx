@@ -402,7 +402,7 @@ export function ProjectDetailClient({ slug }: { slug: string }) {
                                     },
                                   }
                             }
-                            className="absolute inset-0 h-full w-full cursor-zoom-in object-contain drop-shadow-[0_14px_24px_hsl(220_40%_2%/0.35)]"
+                            className="absolute inset-0 h-full w-full cursor-zoom-in object-cover drop-shadow-[0_14px_24px_hsl(220_40%_2%/0.35)]"
                           />
                         </AnimatePresence>
                       ) : showCover ? (
@@ -412,7 +412,7 @@ export function ProjectDetailClient({ slug }: { slug: string }) {
                           alt={project.name}
                           onClick={() => setLightboxOpen(true)}
                           onError={() => setCoverErrored(true)}
-                          className="absolute inset-0 h-full w-full cursor-zoom-in object-contain drop-shadow-[0_14px_24px_hsl(220_40%_2%/0.35)]"
+                          className="absolute inset-0 h-full w-full cursor-zoom-in object-cover drop-shadow-[0_14px_24px_hsl(220_40%_2%/0.35)]"
                         />
                       ) : null}
 
