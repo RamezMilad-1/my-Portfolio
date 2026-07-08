@@ -2,6 +2,7 @@ import { Nav } from '@/components/public/nav';
 import { Footer } from '@/components/public/footer';
 import { AnimatedBackground } from '@/components/public/animated-background';
 import { PageTransition } from '@/components/motion/page-transition';
+import { serverApiBase } from '@/lib/server-api';
 
 type PublicProfile = {
   displayName?: string;
@@ -10,11 +11,8 @@ type PublicProfile = {
 };
 
 async function getProfile(): Promise<PublicProfile | null> {
-  const apiBase =
-    process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001/api/v1';
-
   try {
-    const res = await fetch(`${apiBase}/profile`, {
+    const res = await fetch(`${serverApiBase()}/profile`, {
       next: { revalidate: 300 },
     });
     if (!res.ok) return null;

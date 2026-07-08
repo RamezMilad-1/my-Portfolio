@@ -23,7 +23,7 @@ import {
   useDeleteMedia,
   useUpdateMedia,
 } from '@/lib/api/media';
-import { normalizeGalleryItem, uploadsUrl } from '@/lib/utils';
+import { normalizeGalleryItem } from '@/lib/utils';
 import type { Project, TeamMember, Media } from '@/lib/types';
 
 const schema = z.object({
@@ -463,7 +463,7 @@ export function ProjectForm({ project }: Props) {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={uploadsUrl(item.url)}
+                src={item.url}
                 alt=""
                 className="aspect-video w-full object-cover"
               />
@@ -498,7 +498,7 @@ export function ProjectForm({ project }: Props) {
                 addGalleryUrl();
               }
             }}
-            placeholder="/uploads/images/screenshot.png  or  https://…"
+            placeholder="https://…"
           />
           <Button type="button" variant="outline" onClick={addGalleryUrl}>
             <Plus className="h-4 w-4" />
@@ -692,7 +692,7 @@ function MediaPicker({
               >
                 {m.kind === 'image' ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={uploadsUrl(m.url)} alt={m.caption || ''} className="h-full w-full object-cover" />
+                  <img src={m.url} alt={m.caption || ''} className="h-full w-full object-cover" />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-black/80 text-xs text-white">
                     VIDEO

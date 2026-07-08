@@ -14,7 +14,6 @@ import {
   staggerDelay,
 } from '../motion/tokens';
 import type { Certificate } from '@/lib/types';
-import { uploadsUrl } from '@/lib/utils';
 
 interface Props {
   certificate: Certificate;
@@ -23,7 +22,7 @@ interface Props {
 }
 
 export function CertificateCard({ certificate, index = 0, onClick }: Props) {
-  const img = certificate.imageUrl ? uploadsUrl(certificate.imageUrl) : null;
+  const img = certificate.imageUrl || null;
   const meta = [certificate.issuer, certificate.issuedAt].filter(Boolean).join(' · ');
   const [broken, setBroken] = useState(false);
   const showImage = !!img && !broken;

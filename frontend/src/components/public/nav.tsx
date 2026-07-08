@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { FileDown, Menu, X } from 'lucide-react';
 import { AnimatePresence, m } from 'framer-motion';
 import { useProfile } from '@/lib/api/profile';
-import { cn, uploadsUrl } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { GradientButton } from './gradient-button';
 import { SPRING, TRANSITION } from '../motion/tokens';
 
@@ -228,7 +228,7 @@ export function Nav() {
               className="hidden h-9 px-4 text-xs md:inline-flex"
             >
               <a
-                href={uploadsUrl(profile.resumeUrl)}
+                href={profile.resumeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 download

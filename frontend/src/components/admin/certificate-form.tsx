@@ -14,7 +14,6 @@ import {
   useUpdateCertificate,
 } from '@/lib/api/certificates';
 import { useUploadMedia } from '@/lib/api/media';
-import { uploadsUrl } from '@/lib/utils';
 import type { Certificate } from '@/lib/types';
 
 const schema = z.object({
@@ -135,7 +134,7 @@ export function CertificateForm({ certificate }: Props) {
         <div className="flex items-center gap-3">
           <Input
             {...register('imageUrl')}
-            placeholder="/uploads/images/..."
+            placeholder="https://…"
           />
           <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-[hsl(var(--border))] px-3 py-2 text-xs hover:bg-[hsl(var(--muted))]">
             Upload
@@ -155,7 +154,7 @@ export function CertificateForm({ certificate }: Props) {
           <div className="mt-3 overflow-hidden rounded-xl border border-[hsl(var(--border))]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={uploadsUrl(imageUrl)}
+              src={imageUrl}
               alt=""
               className="max-h-72 w-full object-contain"
             />

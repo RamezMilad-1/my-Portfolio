@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { serverApiBase } from '@/lib/server-api';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = (
@@ -13,9 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Best-effort project URLs — silently fall back if the backend isn't reachable
   // at build/request time so the sitemap is never broken.
   try {
-    const apiBase =
-      process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001/api/v1';
-    const res = await fetch(`${apiBase}/projects`, {
+    const res = await fetch(`${serverApiBase()}/projects`, {
       next: { revalidate: 300 },
     });
     if (res.ok) {

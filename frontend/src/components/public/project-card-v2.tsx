@@ -14,7 +14,6 @@ import {
   VIEWPORT,
   staggerDelay,
 } from '../motion/tokens';
-import { uploadsUrl } from '@/lib/utils';
 import type { Project } from '@/lib/types';
 
 interface Props {
@@ -29,11 +28,9 @@ export function ProjectCardV2({ project, index = 0 }: Props) {
   });
 
   const cover =
-    project.coverImageUrl
-      ? uploadsUrl(project.coverImageUrl)
-      : project.media?.find((m) => m.kind === 'image')?.url
-        ? uploadsUrl(project.media.find((m) => m.kind === 'image')!.url)
-        : null;
+    project.coverImageUrl ||
+    project.media?.find((m) => m.kind === 'image')?.url ||
+    null;
 
   // Fall back to the initials placeholder if the cover fails to load, instead
   // of leaving the browser's broken-image glyph (same pattern as the detail page).
@@ -96,11 +93,6 @@ export function ProjectCardV2({ project, index = 0 }: Props) {
         </div>
 
         <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
-          {project.isFeatured ? (
-            <span className="rounded-full bg-gradient-to-r from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white shadow-[0_4px_14px_-4px_hsl(var(--brand-violet)/0.6)]">
-              Featured
-            </span>
-          ) : null}
           {project.category ? (
             <div className="rounded-full border border-white/15 bg-[hsl(220_30%_8%/0.55)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[hsl(220_25%_92%)] backdrop-blur-md">
               {project.category}
@@ -146,7 +138,7 @@ export function ProjectCardV2({ project, index = 0 }: Props) {
                 className="group/link inline-flex items-center gap-1 rounded-full border border-white/15 bg-[hsl(220_30%_8%/0.55)] px-2.5 py-1 text-xs font-semibold backdrop-blur-md transition-colors duration-200 hover:border-white/30 hover:bg-[hsl(220_30%_14%/0.7)]"
               >
                 <span className="bg-gradient-to-r from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] bg-clip-text text-transparent">
-                  {project.liveLabel ?? 'Live Demo'}
+                  {project.liveLabel}
                 </span>
                 <ExternalLink className="h-3 w-3 text-[hsl(var(--brand-violet))] transition-transform duration-200 group-hover/link:-translate-y-0.5 group-hover/link:translate-x-0.5" />
               </a>
@@ -159,7 +151,7 @@ export function ProjectCardV2({ project, index = 0 }: Props) {
                 onClick={stopPropagation}
                 className="group/link inline-flex items-center gap-1 text-xs font-semibold text-[hsl(220_15%_70%)] transition-colors duration-200 hover:text-white"
               >
-                {project.sourceLabel ?? 'Source'}
+                {project.sourceLabel}
                 <Github className="h-3 w-3 transition-transform duration-200 group-hover/link:scale-110" />
               </a>
             ) : null}

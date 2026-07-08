@@ -5,7 +5,6 @@ import { AnimatePresence, m, useReducedMotion } from 'framer-motion';
 import { DURATION, EASE_PREMIUM } from '../motion/tokens';
 import { ChevronLeft, ChevronRight, ExternalLink, X } from 'lucide-react';
 import type { Certificate } from '@/lib/types';
-import { uploadsUrl } from '@/lib/utils';
 
 interface Props {
   certificates: Certificate[];
@@ -108,20 +107,16 @@ export function CertificateLightbox({
               </>
             ) : null}
 
-            <div className="relative bg-black">
-              {cert.imageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
+            {cert.imageUrl ? (
+              <div className="relative bg-black">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={uploadsUrl(cert.imageUrl)}
+                  src={cert.imageUrl}
                   alt={cert.title}
                   className="max-h-[70vh] w-full object-contain"
                 />
-              ) : (
-                <div className="flex h-[60vh] items-center justify-center text-white/30">
-                  No image
-                </div>
-              )}
-            </div>
+              </div>
+            ) : null}
 
             <div className="p-6">
               <h3 className="font-display text-2xl font-semibold tracking-tight">

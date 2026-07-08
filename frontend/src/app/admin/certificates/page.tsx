@@ -20,7 +20,6 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { uploadsUrl } from '@/lib/utils';
 import type { Certificate } from '@/lib/types';
 
 export default function AdminCertificatesPage() {
@@ -121,7 +120,7 @@ export default function AdminCertificatesPage() {
                       {c.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={uploadsUrl(c.imageUrl)}
+                          src={c.imageUrl}
                           alt=""
                           className="h-10 w-14 rounded-md object-cover"
                         />

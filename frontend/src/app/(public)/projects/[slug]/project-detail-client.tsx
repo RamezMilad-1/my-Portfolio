@@ -30,7 +30,7 @@ import {
   VIEWPORT,
   staggerDelay,
 } from '@/components/motion/tokens';
-import { normalizeGalleryItem, uploadsUrl } from '@/lib/utils';
+import { normalizeGalleryItem } from '@/lib/utils';
 
 type GallerySlide = { src: string; title: string };
 
@@ -97,19 +97,15 @@ export function ProjectDetailClient({ slug }: { slug: string }) {
   }
 
   const coverFromMedia = project.media?.find((m) => m.kind === 'image')?.url;
-  const cover = project.coverImageUrl
-    ? uploadsUrl(project.coverImageUrl)
-    : coverFromMedia
-      ? uploadsUrl(coverFromMedia)
-      : null;
+  const cover = project.coverImageUrl || coverFromMedia || null;
 
   const gallerySlides: GallerySlide[] = [
     ...(project.gallery ?? [])
       .map(normalizeGalleryItem)
-      .map((g) => ({ src: uploadsUrl(g.url), title: g.title })),
+      .map((g) => ({ src: g.url, title: g.title })),
     ...(project.media ?? [])
       .filter((m) => m && m.kind === 'image' && m.url)
-      .map((m) => ({ src: uploadsUrl(m.url), title: m.caption ?? '' })),
+      .map((m) => ({ src: m.url, title: m.caption ?? '' })),
   ].filter((s) => Boolean(s.src));
 
   const showGallery = gallerySlides.length > 0;
@@ -224,7 +220,7 @@ export function ProjectDetailClient({ slug }: { slug: string }) {
                     rel="noopener noreferrer"
                   >
                     <ExternalLink className="h-4 w-4" />
-                    {project.liveLabel || 'Live Demo'}
+                    {project.liveLabel}
                   </a>
                 </GradientButton>
               ) : null}
@@ -236,7 +232,7 @@ export function ProjectDetailClient({ slug }: { slug: string }) {
                     rel="noopener noreferrer"
                   >
                     <Github className="h-4 w-4" />
-                    {project.sourceLabel || 'Source'}
+                    {project.sourceLabel}
                   </a>
                 </GradientButton>
               ) : null}
@@ -445,41 +441,44 @@ export function ProjectDetailClient({ slug }: { slug: string }) {
                     </div>
 
                     {/* Caption bar — the slide's title on the left, position
-                        counter on the right. Same glass tier as the strip. */}
-                    {showGallery ? (
+                        counter on the right. Same glass tier as the strip.
+                        Titles come from the DB only — untitled slides show
+                        just the counter. */}
+                    {showGallery &&
+                    (currentSlide.title || gallerySlides.length > 1) ? (
                       <div className="flex items-center justify-between gap-3 border-t border-white/[0.08] bg-[hsl(232_28%_10%/0.45)] px-4 py-2.5 backdrop-blur-md">
                         <div className="flex min-w-0 items-center gap-2.5">
-                          <span
-                            aria-hidden
-                            className="h-3.5 w-[2px] flex-shrink-0 rounded-full bg-gradient-to-b from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] shadow-[0_0_8px_-1px_hsl(var(--brand-violet)/0.5)]"
-                          />
-                          <AnimatePresence mode="wait" initial={false}>
-                            <m.p
-                              key={safeIdx}
-                              initial={
-                                prefersReduced
-                                  ? { opacity: 0 }
-                                  : { opacity: 0, y: 6 }
-                              }
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={
-                                prefersReduced
-                                  ? { opacity: 0 }
-                                  : { opacity: 0, y: -6 }
-                              }
-                              transition={{
-                                duration: DURATION.fast,
-                                ease: EASE_PREMIUM,
-                              }}
-                              className={`text-[13px] font-medium leading-snug ${
-                                currentSlide.title
-                                  ? 'text-[hsl(220_25%_92%)]'
-                                  : 'italic text-[hsl(220_15%_55%)]'
-                              }`}
-                            >
-                              {currentSlide.title || `Screenshot ${safeIdx + 1}`}
-                            </m.p>
-                          </AnimatePresence>
+                          {currentSlide.title ? (
+                            <>
+                              <span
+                                aria-hidden
+                                className="h-3.5 w-[2px] flex-shrink-0 rounded-full bg-gradient-to-b from-[hsl(var(--brand-indigo))] to-[hsl(var(--brand-violet))] shadow-[0_0_8px_-1px_hsl(var(--brand-violet)/0.5)]"
+                              />
+                              <AnimatePresence mode="wait" initial={false}>
+                                <m.p
+                                  key={safeIdx}
+                                  initial={
+                                    prefersReduced
+                                      ? { opacity: 0 }
+                                      : { opacity: 0, y: 6 }
+                                  }
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={
+                                    prefersReduced
+                                      ? { opacity: 0 }
+                                      : { opacity: 0, y: -6 }
+                                  }
+                                  transition={{
+                                    duration: DURATION.fast,
+                                    ease: EASE_PREMIUM,
+                                  }}
+                                  className="text-[13px] font-medium leading-snug text-[hsl(220_25%_92%)]"
+                                >
+                                  {currentSlide.title}
+                                </m.p>
+                              </AnimatePresence>
+                            </>
+                          ) : null}
                         </div>
                         {gallerySlides.length > 1 ? (
                           <p className="flex-shrink-0 text-[11px] font-semibold tabular-nums tracking-[0.14em] text-[hsl(220_15%_58%)]">
@@ -540,7 +539,7 @@ export function ProjectDetailClient({ slug }: { slug: string }) {
                       rel="noopener noreferrer"
                     >
                       <ExternalLink className="h-4 w-4" />
-                      {project.liveLabel || 'Live Demo'}
+                      {project.liveLabel}
                     </a>
                   </GradientButton>
                 ) : null}
@@ -556,7 +555,7 @@ export function ProjectDetailClient({ slug }: { slug: string }) {
                       rel="noopener noreferrer"
                     >
                       <Github className="h-4 w-4" />
-                      {project.sourceLabel || 'Source'}
+                      {project.sourceLabel}
                     </a>
                   </GradientButton>
                 ) : null}

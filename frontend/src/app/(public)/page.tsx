@@ -8,7 +8,6 @@ import {
   Github,
   Linkedin,
   Mail,
-  MapPin,
   Send,
   Twitter,
 } from 'lucide-react';
@@ -38,7 +37,6 @@ import { GradientButton } from '@/components/public/gradient-button';
 import { ContactForm } from '@/components/public/contact-form';
 import { Reveal } from '@/components/motion/reveal';
 import { Skeleton } from '@/components/ui/skeleton';
-import { uploadsUrl } from '@/lib/utils';
 import { toast } from 'sonner';
 
 type RecruiterSignal = {
@@ -226,7 +224,7 @@ export default function HomePage() {
   const aboutDividerLabel = profile?.aboutDividerLabel?.trim() ?? '';
 
   const portraitName = profile?.displayName?.trim() ?? '';
-  const portraitSrc = profile?.avatarUrl ? uploadsUrl(profile.avatarUrl) : null;
+  const portraitSrc = profile?.avatarUrl || null;
   const portraitInitials = portraitName
     .split(' ')
     .slice(0, 2)
@@ -337,7 +335,7 @@ export default function HomePage() {
                           className="h-8 px-4 text-xs font-medium"
                         >
                           <a
-                            href={uploadsUrl(profile.resumeUrl)}
+                            href={profile.resumeUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             download
@@ -526,11 +524,7 @@ export default function HomePage() {
                       </div>
                     ))}
                   </div>
-                ) : sortedProjects.length === 0 ? (
-                  <EmptyState
-                    message="No projects yet — check back soon."
-                  />
-                ) : (
+                ) : sortedProjects.length === 0 ? null : (
                   <>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                       {visibleProjects.map((p, i) => (
@@ -666,11 +660,6 @@ export default function HomePage() {
                   />
                 </Reveal>
               ) : null}
-              {!profile?.email &&
-                !profile?.socials?.github &&
-                !profile?.socials?.linkedin && (
-                  <EmptyState message="Contact info coming soon." />
-                )}
             </div>
 
             <Reveal x={DISTANCE.lg} delay={STAGGER.loose}>
@@ -861,13 +850,3 @@ function ContactCard({
   );
 }
 
-function EmptyState({ message }: { message: string }) {
-  return (
-    <div className="ek-glass mx-auto max-w-md rounded-2xl p-8 text-center">
-      <MapPin className="mx-auto h-8 w-8 text-[hsl(var(--brand-indigo))]" />
-      <p className="mt-4 text-sm text-[hsl(var(--muted-foreground))]">
-        {message}
-      </p>
-    </div>
-  );
-}

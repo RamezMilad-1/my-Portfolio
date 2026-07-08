@@ -648,7 +648,7 @@ export default function AdminProfilePage() {
         <div className="space-y-1.5">
           <Label>Avatar</Label>
           <div className="flex items-center gap-3">
-            <Input {...form.register('avatarUrl')} placeholder="/uploads/images/..." />
+            <Input {...form.register('avatarUrl')} placeholder="https://…" />
             <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-[hsl(var(--border))] px-3 py-2 text-xs hover:bg-[hsl(var(--muted))]">
               Upload
               <input
@@ -667,7 +667,7 @@ export default function AdminProfilePage() {
         <div className="space-y-1.5">
           <Label>Resume (PDF or image)</Label>
           <div className="flex items-center gap-3">
-            <Input {...form.register('resumeUrl')} placeholder="/uploads/..." />
+            <Input {...form.register('resumeUrl')} placeholder="https://…" />
             <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-[hsl(var(--border))] px-3 py-2 text-xs hover:bg-[hsl(var(--muted))]">
               Upload
               <input

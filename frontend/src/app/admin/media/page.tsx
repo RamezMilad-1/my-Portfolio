@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Plus, Trash2, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMediaList, useUploadMedia, useDeleteMedia } from '@/lib/api/media';
-import { uploadsUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -91,7 +90,7 @@ export default function AdminMediaPage() {
             <div className="relative aspect-video overflow-hidden bg-[hsl(var(--muted))]">
               {m.kind === 'image' ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={uploadsUrl(m.url)} alt={m.caption || ''} className="h-full w-full object-cover" />
+                <img src={m.url} alt={m.caption || ''} className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-black/80 text-xs text-white">
                   VIDEO

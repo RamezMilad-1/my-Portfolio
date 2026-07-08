@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ProjectDetailClient } from './project-detail-client';
+import { serverApiBase } from '@/lib/server-api';
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -9,11 +10,9 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const base =
-    process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001/api/v1';
 
   try {
-    const res = await fetch(`${base}/projects/${encodeURIComponent(slug)}`, {
+    const res = await fetch(`${serverApiBase()}/projects/${encodeURIComponent(slug)}`, {
       next: { revalidate: 300 },
     });
 

@@ -1,25 +1,12 @@
 import type { NextConfig } from 'next';
 
-const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001/api/v1';
-let uploadsHost = 'localhost';
-let uploadsPort = '3001';
-let uploadsProtocol: 'http' | 'https' = 'http';
-try {
-  const u = new URL(apiBase);
-  uploadsHost = u.hostname;
-  uploadsPort = u.port || (u.protocol === 'https:' ? '443' : '80');
-  uploadsProtocol = u.protocol === 'https:' ? 'https' : 'http';
-} catch {
-  /* keep defaults */
-}
-
-// Origin that actually serves uploaded files (the backend). Uploads are
-// proxied through the Next server (see `rewrites` below) so they're same-origin
-// and can go through the image optimizer.
-const uploadsBase = (
-  process.env.NEXT_PUBLIC_UPLOADS_BASE ??
-  `${uploadsProtocol}://${uploadsHost}${uploadsPort ? `:${uploadsPort}` : ''}`
-).replace(/\/$/, '');
+// Backend origin for the production API proxy (e.g. https://xxx.onrender.com).
+// When set, `/api/v1/*` is proxied through the frontend origin so the auth
+// cookie is FIRST-PARTY: the browser stores it under the site's own domain,
+// the /admin middleware can read it, and Safari/Chrome third-party-cookie
+// blocking never applies. Unset in local dev — the frontend talks to
+// localhost:3001 directly (same-site, so cookies already work).
+const backendOrigin = process.env.BACKEND_ORIGIN?.replace(/\/+$/, '');
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -28,27 +15,19 @@ const nextConfig: NextConfig = {
     root: process.cwd(),
   },
   async rewrites() {
-    // Serve backend uploads from the frontend origin so `next/image` can
-    // optimize them (the optimizer rejects cross-origin localhost URLs).
+    if (!backendOrigin) return [];
     return [
       {
-        source: '/uploads/:path*',
-        destination: `${uploadsBase}/uploads/:path*`,
+        source: '/api/v1/:path*',
+        destination: `${backendOrigin}/api/v1/:path*`,
       },
     ];
   },
   images: {
     remotePatterns: [
-      { protocol: 'http', hostname: 'localhost' },
       { protocol: 'https', hostname: 'res.cloudinary.com' },
       { protocol: 'https', hostname: 'cdn.simpleicons.org' },
       { protocol: 'https', hostname: 'cdn.jsdelivr.net' },
-      {
-        protocol: uploadsProtocol,
-        hostname: uploadsHost,
-        port: uploadsPort,
-        pathname: '/uploads/**',
-      },
     ],
   },
 };

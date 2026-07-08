@@ -2,8 +2,6 @@ import { Injectable, InternalServerErrorException, NotFoundException } from '@ne
 import { InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
 import { Model, Types } from 'mongoose';
-import { unlink } from 'fs/promises';
-import { join, resolve } from 'path';
 import { randomUUID } from 'crypto';
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import { Media, MediaDocument } from './media.schema';
@@ -91,35 +89,14 @@ export class MediaService {
   async remove(id: string) {
     const doc = await this.model.findById(id).exec();
     if (!doc) throw new NotFoundException('Media not found');
-    if (doc.storagePath.startsWith(`${CLOUDINARY_FOLDER}/`)) {
-      try {
-        await cloudinary.uploader.destroy(doc.storagePath, {
-          resource_type: doc.kind === 'video' ? 'video' : 'image',
-        });
-      } catch {
-        /* asset may already be gone on Cloudinary — fine */
-      }
-    } else {
-      // Legacy doc from the local-disk era.
-      try {
-        await unlink(resolve(doc.storagePath));
-      } catch {
-        /* file may already be missing — fine */
-      }
+    try {
+      await cloudinary.uploader.destroy(doc.storagePath, {
+        resource_type: doc.kind === 'video' ? 'video' : 'image',
+      });
+    } catch {
+      /* asset may already be gone on Cloudinary — fine */
     }
     await this.model.findByIdAndDelete(id).exec();
     return { ok: true };
-  }
-
-  uploadsDir() {
-    return resolve(this.cfg.get<string>('UPLOADS_DIR', './uploads'));
-  }
-
-  imagesDir() {
-    return join(this.uploadsDir(), 'images');
-  }
-
-  videosDir() {
-    return join(this.uploadsDir(), 'videos');
   }
 }

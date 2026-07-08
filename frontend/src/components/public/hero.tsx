@@ -14,7 +14,6 @@ import { StatusBadge } from './status-badge';
 import { GradientButton } from './gradient-button';
 import { IconCloud } from '@/components/magicui/icon-cloud';
 import type { Profile } from '@/lib/types';
-import { uploadsUrl } from '@/lib/utils';
 import { DISTANCE, STAGGER, TRANSITION } from '../motion/tokens';
 import { usePausedOffscreen } from '../motion/use-paused-offscreen';
 
@@ -198,7 +197,7 @@ export function Hero({ profile }: Props) {
                 className="hero-cta font-medium"
               >
                 <a
-                  href={uploadsUrl(profile.resumeUrl)}
+                  href={profile.resumeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   download

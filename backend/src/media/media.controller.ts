@@ -16,7 +16,6 @@ import { memoryStorage } from 'multer';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { MediaService } from './media.service';
 import { CreateMediaDto, UpdateMediaDto } from './dto/media.dto';
-import { ConfigService } from '@nestjs/config';
 
 const ALLOWED_MIME = [
   'image/png',
@@ -31,10 +30,7 @@ const ALLOWED_MIME = [
 
 @Controller('media')
 export class MediaController {
-  constructor(
-    private readonly service: MediaService,
-    private readonly cfg: ConfigService,
-  ) {}
+  constructor(private readonly service: MediaService) {}
 
   @UseGuards(JwtAuthGuard)
   @Get()
