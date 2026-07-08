@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
 import { AdminsModule } from './admins/admins.module';
 import { ProfileModule } from './profile/profile.module';
@@ -26,6 +27,7 @@ import { MessagesModule } from './messages/messages.module';
         uri: cfg.get<string>('MONGO_URI', 'mongodb://localhost:27017/ramez_portfolio'),
       }),
     }),
+    HealthModule,
     AuthModule,
     AdminsModule,
     ProfileModule,

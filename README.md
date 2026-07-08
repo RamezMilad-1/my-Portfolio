@@ -16,7 +16,7 @@ my-Portfolio/
 └── backend/    NestJS API
 ```
 
-Backend modules: `auth`, `admins`, `profile`, `projects`, `media`, `team`, `certificates`, `timeline`, `tech`, `messages`.
+Backend modules: `auth`, `admins`, `profile`, `projects`, `media`, `team`, `certificates`, `timeline`, `tech`, `messages`, `health`.
 
 ## Local development
 
@@ -93,6 +93,15 @@ The API is **proxied through the frontend origin** in production (`/api/v1/*` �
   ```
 
 Because content lives in Atlas and media on Cloudinary, deploys are stateless: nothing on the server's disk needs to survive a redeploy.
+
+### Keeping the free tier awake
+
+Render's free tier puts the API to sleep after 15 minutes without traffic, and waking it takes about a minute — so the first visitor would stare at a loading screen. The fix:
+
+- `GET /api/v1/health` returns `{ ok: true }` instantly, without touching the database, and skips the rate limiter.
+- A free cron service (e.g. [cron-job.org](https://cron-job.org)) pings that URL **every 10 minutes**, so the API never goes idle long enough to sleep.
+
+Render's free plan includes 750 instance-hours per month — enough for exactly **one** always-on service. That's why only the backend lives on Render and the frontend lives on Vercel (which doesn't sleep).
 
 ### Post-deploy checks
 
