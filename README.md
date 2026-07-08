@@ -1,5 +1,7 @@
 # Ramez Milad — Portfolio
 
+**Live site:** [my-portfolio-orpin-ten-70.vercel.app](https://my-portfolio-orpin-ten-70.vercel.app)
+
 A personal portfolio with a built-in admin CMS. All site content — profile, projects, certificates, timeline, tech stack — lives in MongoDB Atlas and is managed through the admin UI. Images and videos are stored on Cloudinary. Each showcased project lives in its own GitHub repo and is linked out by URL; the portfolio doesn't host them.
 
 ## Stack
@@ -7,6 +9,7 @@ A personal portfolio with a built-in admin CMS. All site content — profile, pr
 - **Frontend** — Next.js 16 (App Router) · React 19 · Tailwind 4 · TanStack Query · Axios · Framer Motion · Radix UI
 - **Backend** — NestJS 11 · Mongoose · MongoDB Atlas · JWT-in-cookie auth
 - **Media** — Cloudinary (images and videos are uploaded straight from the admin; the database stores their Cloudinary URLs)
+- **Hosting** — Vercel (frontend) · Render (API) · MongoDB Atlas (data) · Cloudinary (media) — all on free tiers
 
 ## Layout
 
@@ -66,17 +69,26 @@ The public site renders only what's in the database — sections and labels with
 
 ## Deployment
 
+Current production setup:
+
+| Piece | Where | URL |
+|---|---|---|
+| Frontend | Vercel (root directory `frontend`, Next.js preset) | https://my-portfolio-orpin-ten-70.vercel.app |
+| Backend API | Render | https://my-portfolio-api-bj3x.onrender.com |
+| Database | MongoDB Atlas | — |
+| Media | Cloudinary | — |
+
 The API is **proxied through the frontend origin** in production (`/api/v1/*` → backend, see `rewrites` in `frontend/next.config.ts`). The auth cookie is therefore first-party on the site's own domain: the `/admin` middleware can read it, and Safari/Chrome third-party-cookie blocking never applies. Don't point `NEXT_PUBLIC_API_BASE` at the backend host directly — a cross-domain cookie can't guard `/admin`.
 
 - **Frontend → Vercel.** Env vars:
 
   ```
-  NEXT_PUBLIC_API_BASE=/api/v1                        # same-origin, goes through the proxy
-  BACKEND_ORIGIN=https://your-backend.onrender.com    # proxy target + server-side fetches
-  NEXT_PUBLIC_SITE_URL=https://your-portfolio-domain.com
+  NEXT_PUBLIC_API_BASE=/api/v1                                        # same-origin, goes through the proxy
+  BACKEND_ORIGIN=https://my-portfolio-api-bj3x.onrender.com           # proxy target + server-side fetches
+  NEXT_PUBLIC_SITE_URL=https://my-portfolio-orpin-ten-70.vercel.app   # sitemap, robots.txt, link previews
   ```
 
-- **Backend → Render** (or Railway/Fly). Build: `npm install && npm run build`. Start: `npm run start:prod`. Env vars:
+- **Backend → Render.** Build: `npm install && npm run build`. Start: `npm run start:prod`. Env vars:
 
   ```
   PORT=                      # usually set by the host automatically
@@ -86,7 +98,7 @@ The API is **proxied through the frontend origin** in production (`/api/v1/*` �
   AUTH_REGISTER_ENABLED=false
   COOKIE_NAME=ramez_session
   COOKIE_SECURE=true
-  CORS_ORIGIN=https://your-portfolio-domain.com
+  CORS_ORIGIN=https://my-portfolio-orpin-ten-70.vercel.app
   CLOUDINARY_CLOUD_NAME=…
   CLOUDINARY_API_KEY=…
   CLOUDINARY_API_SECRET=…
@@ -99,7 +111,7 @@ Because content lives in Atlas and media on Cloudinary, deploys are stateless: n
 Render's free tier puts the API to sleep after 15 minutes without traffic, and waking it takes about a minute — so the first visitor would stare at a loading screen. The fix:
 
 - `GET /api/v1/health` returns `{ ok: true }` instantly, without touching the database, and skips the rate limiter.
-- A free cron service (e.g. [cron-job.org](https://cron-job.org)) pings that URL **every 10 minutes**, so the API never goes idle long enough to sleep.
+- A [cron-job.org](https://cron-job.org) job (free) pings `https://my-portfolio-api-bj3x.onrender.com/api/v1/health` **every 10 minutes**, so the API never goes idle long enough to sleep. It also emails on failure, doubling as an uptime monitor.
 
 Render's free plan includes 750 instance-hours per month — enough for exactly **one** always-on service. That's why only the backend lives on Render and the frontend lives on Vercel (which doesn't sleep).
 
@@ -109,4 +121,5 @@ Render's free plan includes 750 instance-hours per month — enough for exactly 
 - `/login` → admin dashboard loads
 - Backend logs show **no JWT_SECRET warning** at startup
 - Several wrong logins in quick succession → HTTP 429
-- `curl -I https://your-backend.../api/v1/projects` → response includes `x-frame-options`, `referrer-policy`, etc.
+- `curl -I https://my-portfolio-api-bj3x.onrender.com/api/v1/projects` → response includes `x-frame-options`, `referrer-policy`, etc.
+- `curl https://my-portfolio-api-bj3x.onrender.com/api/v1/health` → `{"ok":true}`

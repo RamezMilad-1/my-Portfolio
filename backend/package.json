@@ -1,7 +1,7 @@
 {
   "name": "ramez-portfolio-backend",
-  "version": "0.1.0",
-  "description": "NestJS API for Ramez Milad's portfolio",
+  "version": "1.0.0",
+  "description": "NestJS API for Ramez Milad's portfolio — MongoDB Atlas + Cloudinary, deployed on Render",
   "private": true,
   "license": "UNLICENSED",
   "engines": {

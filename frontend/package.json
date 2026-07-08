@@ -1,6 +1,7 @@
 {
   "name": "ramez-portfolio-frontend",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "Next.js frontend for Ramez Milad's portfolio — public site + admin CMS, deployed on Vercel",
   "private": true,
   "type": "module",
   "engines": {
