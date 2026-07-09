@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
 import { Model, Types } from 'mongoose';
 import { randomUUID } from 'crypto';
+import { extname } from 'path';
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import { Media, MediaDocument } from './media.schema';
 
@@ -28,10 +29,19 @@ export class MediaService {
   }
 
   async create(file: Express.Multer.File, projectId?: string, caption?: string) {
-    const isImage = file.mimetype.startsWith('image/');
-    const kind: 'image' | 'video' = isImage ? 'image' : 'video';
+    // Images and videos map straight to their Cloudinary resource_type;
+    // everything else (PDFs, etc.) is stored as 'raw' so it downloads as-is.
+    const kind: 'image' | 'video' | 'raw' = file.mimetype.startsWith('image/')
+      ? 'image'
+      : file.mimetype.startsWith('video/')
+        ? 'video'
+        : 'raw';
 
-    const uploaded = await this.uploadToCloudinary(file.buffer, kind);
+    const uploaded = await this.uploadToCloudinary(
+      file.buffer,
+      kind,
+      file.originalname,
+    );
 
     const created = await this.model.create({
       kind,
@@ -49,13 +59,20 @@ export class MediaService {
 
   private uploadToCloudinary(
     buffer: Buffer,
-    kind: 'image' | 'video',
+    kind: 'image' | 'video' | 'raw',
+    originalName = '',
   ): Promise<UploadApiResponse> {
+    // Raw assets (e.g. PDFs) keep their extension in the public_id so the
+    // delivered URL ends in `.pdf` and downloads with a sensible filename.
+    // Cloudinary derives the extension for image/video assets itself.
+    const ext = kind === 'raw' ? extname(originalName) : '';
+    const publicId = `${randomUUID()}${ext}`;
+
     return new Promise((res, rej) => {
       const stream = cloudinary.uploader.upload_stream(
         {
           folder: CLOUDINARY_FOLDER,
-          public_id: randomUUID(),
+          public_id: publicId,
           resource_type: kind,
           overwrite: false,
         },
@@ -91,7 +108,8 @@ export class MediaService {
     if (!doc) throw new NotFoundException('Media not found');
     try {
       await cloudinary.uploader.destroy(doc.storagePath, {
-        resource_type: doc.kind === 'video' ? 'video' : 'image',
+        resource_type:
+          doc.kind === 'video' ? 'video' : doc.kind === 'raw' ? 'raw' : 'image',
       });
     } catch {
       /* asset may already be gone on Cloudinary — fine */

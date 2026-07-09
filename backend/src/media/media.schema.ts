@@ -8,8 +8,8 @@ export class Media {
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Project' })
   projectId?: Types.ObjectId;
 
-  @Prop({ enum: ['image', 'video'], required: true })
-  kind: 'image' | 'video';
+  @Prop({ enum: ['image', 'video', 'raw'], required: true })
+  kind: 'image' | 'video' | 'raw';
 
   @Prop({ required: true }) storagePath: string;
   @Prop({ required: true }) url: string;

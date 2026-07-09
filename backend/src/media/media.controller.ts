@@ -26,6 +26,7 @@ const ALLOWED_MIME = [
   'video/mp4',
   'video/webm',
   'video/quicktime',
+  'application/pdf',
 ];
 
 @Controller('media')
