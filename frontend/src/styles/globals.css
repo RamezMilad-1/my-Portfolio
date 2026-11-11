@@ -796,9 +796,11 @@
 .lifeline-progress {
   transform: scaleY(var(--lifeline-progress, 1));
   transform-origin: top;
+  will-change: transform;
 }
 .lifeline-head {
-  transform: translateY(calc(var(--lifeline-progress, 1) * 100%));
+  transform: translate3d(0, calc(var(--lifeline-progress, 1) * 100%), 0);
+  will-change: transform, opacity;
   opacity: min(
     1,
     calc(var(--lifeline-progress, 1) * 25),

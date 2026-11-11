@@ -9,11 +9,20 @@ import { useEffect, useRef } from 'react';
 const START = 0.85;
 const END = 0.2;
 
+/** The head glides after the scroll on a soft, overdamped spring (no bounce). */
+const STIFFNESS = 60;
+const DAMPING = 20;
+const MASS = 0.8;
+/** Closer than this (and slower), the spring is at rest and the animation loop sleeps. */
+const REST = 0.0005;
+
 /**
- * The timeline's rail: it draws itself and carries a glowing head as the visitor scrolls. Progress
- * goes to `--lifeline-progress` and globals.css turns it into transforms, so React never
- * re-renders. Works in every browser; with reduced motion (or before JavaScript) the rail is
- * simply drawn in full.
+ * The timeline's rail: it draws itself and carries a glowing head as the visitor scrolls. The
+ * drawn length eases towards the scroll position on a spring, so it glides instead of stepping
+ * with each scroll event (which lag a frame behind the browser's own scrolling, most visibly
+ * on phones). Each frame only reads `scrollY` — the rail's geometry is measured when the page
+ * changes size, never during scrolling — and writes `--lifeline-progress`, which globals.css
+ * turns into transforms. With reduced motion (or before JavaScript) the rail is drawn in full.
  */
 export function LifelineRail() {
   const railRef = useRef<HTMLDivElement>(null);
@@ -22,37 +31,68 @@ export function LifelineRail() {
     const rail = railRef.current;
     if (!rail || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      const { top, height } = rail.getBoundingClientRect();
-      const viewport = window.innerHeight;
-      const travelled = viewport * START - top;
-      const distance = height + viewport * (START - END);
-      const progress = Math.min(1, Math.max(0, travelled / distance));
-      rail.style.setProperty('--lifeline-progress', progress.toFixed(4));
+    let railTop = 0;
+    let railHeight = 0;
+    let viewport = 0;
+    const measure = () => {
+      const rect = rail.getBoundingClientRect();
+      railTop = rect.top + window.scrollY;
+      railHeight = rect.height;
+      viewport = document.documentElement.clientHeight;
     };
-    const schedule = () => {
-      if (!frame) frame = requestAnimationFrame(update);
+    const target = () => {
+      const travelled = window.scrollY + viewport * START - railTop;
+      const distance = railHeight + viewport * (START - END);
+      return Math.min(1, Math.max(0, travelled / distance));
     };
 
-    // Follow the scroll only while the timeline is on screen; on leaving, settle at 0 or 1.
-    const visibility = new IntersectionObserver(([entry]) => {
-      if (entry?.isIntersecting) {
-        window.addEventListener('scroll', schedule, { passive: true });
-        window.addEventListener('resize', schedule);
+    let position = 0;
+    let velocity = 0;
+    let frame = 0;
+    let lastTime = 0;
+    const render = () => rail.style.setProperty('--lifeline-progress', position.toFixed(4));
+
+    const step = (now: number) => {
+      // Capped so a backgrounded tab doesn't come back with one giant step.
+      const dt = Math.min((now - lastTime) / 1000, 1 / 30);
+      lastTime = now;
+      const goal = target();
+      velocity += ((-STIFFNESS * (position - goal) - DAMPING * velocity) / MASS) * dt;
+      position += velocity * dt;
+      if (Math.abs(goal - position) < REST && Math.abs(velocity) < REST) {
+        position = goal;
+        velocity = 0;
+        frame = 0;
       } else {
-        window.removeEventListener('scroll', schedule);
-        window.removeEventListener('resize', schedule);
+        frame = requestAnimationFrame(step);
       }
-      schedule();
-    });
-    visibility.observe(rail);
+      render();
+    };
+    const wake = () => {
+      if (frame || Math.abs(target() - position) < REST) return;
+      lastTime = performance.now();
+      frame = requestAnimationFrame(step);
+    };
+    const remeasure = () => {
+      measure();
+      wake();
+    };
+
+    // Start where the page already is (e.g. reloaded halfway down), without gliding in.
+    measure();
+    position = target();
+    render();
+
+    // Content above the timeline can change its position (images, "View all projects").
+    const resize = new ResizeObserver(remeasure);
+    resize.observe(document.body);
+    window.addEventListener('scroll', wake, { passive: true });
+    window.addEventListener('resize', remeasure);
 
     return () => {
-      visibility.disconnect();
-      window.removeEventListener('scroll', schedule);
-      window.removeEventListener('resize', schedule);
+      resize.disconnect();
+      window.removeEventListener('scroll', wake);
+      window.removeEventListener('resize', remeasure);
       cancelAnimationFrame(frame);
       rail.style.removeProperty('--lifeline-progress');
     };
