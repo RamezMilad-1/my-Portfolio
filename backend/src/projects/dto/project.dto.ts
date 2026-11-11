@@ -1,68 +1,108 @@
+import { PartialType } from '@nestjs/mapped-types';
+import { Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
   IsArray,
   IsBoolean,
-  IsEnum,
+  IsIn,
   IsInt,
+  IsMongoId,
+  IsNotEmpty,
+  IsNotIn,
   IsOptional,
   IsString,
   Matches,
+  MaxLength,
+  Min,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import { PartialType } from '@nestjs/mapped-types';
+import { OptionalHttpUrl, OptionalStringList, OptionalText, Trim } from '../../common/validators';
+import { PROJECT_STATUSES, type ProjectStatus } from '../project.schema';
+
+export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/** `GET /projects/all` is the admin list, so no project may use that slug. */
+const RESERVED_SLUGS = ['all'];
 
 export class TeamLinkDto {
-  @IsString() memberId: string;
-}
-
-export class GalleryItemDto {
-  @IsString() url: string;
-  @IsOptional() @IsString() title?: string;
+  @IsMongoId()
+  memberId: string;
 }
 
 export class CreateProjectDto {
+  @Trim()
   @IsString()
-  @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
-    message: 'slug must be lowercase letters, digits, and dashes only',
-  })
+  @MaxLength(80)
+  @Matches(SLUG_PATTERN, { message: 'slug must be lowercase letters, digits and single dashes' })
+  @IsNotIn(RESERVED_SLUGS, { message: 'that slug is reserved — pick another one' })
   slug: string;
 
-  @IsString() name: string;
+  @Trim()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(120)
+  name: string;
 
-  @IsOptional() @IsString() tagline?: string;
-  @IsOptional() @IsString() problem?: string;
-  @IsOptional() @IsString() description?: string;
-  @IsOptional() @IsString() architecture?: string;
-  @IsOptional() @IsString() outcome?: string;
-  @IsOptional() @IsArray() @IsString({ each: true }) tech?: string[];
-  @IsOptional() @IsArray() @IsString({ each: true }) features?: string[];
-  @IsOptional() @IsString() githubUrl?: string;
-  @IsOptional() @IsString() liveUrl?: string;
-  @IsOptional() @IsString() role?: string;
-  @IsOptional() @IsString() coverImageUrl?: string;
-  @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => TeamLinkDto)
+  @OptionalText(300) tagline?: string;
+  @OptionalText(2000) problem?: string;
+  @OptionalText(20000) description?: string;
+  @OptionalText(20000) architecture?: string;
+  @OptionalText(2000) outcome?: string;
+  @OptionalText(120) role?: string;
+  @OptionalText(60) category?: string;
+  @OptionalText(40) liveLabel?: string;
+  @OptionalText(40) sourceLabel?: string;
+
+  @OptionalHttpUrl() githubUrl?: string;
+  @OptionalHttpUrl() liveUrl?: string;
+  @OptionalHttpUrl() coverImageUrl?: string;
+
+  @OptionalStringList(50, 60) tech?: string[];
+  @OptionalStringList(50, 300) features?: string[];
+  @OptionalStringList(50, 300) highlights?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(50)
+  @ValidateNested({ each: true })
+  @Type(() => TeamLinkDto)
   team?: TeamLinkDto[];
-  @IsOptional() @IsArray() @IsString({ each: true }) media?: string[];
-  @IsOptional() @IsBoolean() isFeatured?: boolean;
-  @IsOptional() @IsEnum(['draft', 'published']) status?: 'draft' | 'published';
-  @IsOptional() @IsInt() position?: number;
 
-  @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => GalleryItemDto)
-  gallery?: GalleryItemDto[];
-  @IsOptional() @IsArray() @IsString({ each: true }) highlights?: string[];
-  @IsOptional() @IsString() liveLabel?: string;
-  @IsOptional() @IsString() sourceLabel?: string;
-  @IsOptional() @IsString() category?: string;
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(100)
+  @IsMongoId({ each: true })
+  media?: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  isFeatured?: boolean;
+
+  @IsOptional()
+  @IsIn(PROJECT_STATUSES)
+  status?: ProjectStatus;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  position?: number;
 }
 
 export class UpdateProjectDto extends PartialType(CreateProjectDto) {}
 
 export class ReorderItemDto {
-  @IsString() id: string;
-  @IsInt() position: number;
+  @IsMongoId()
+  id: string;
+
+  @IsInt()
+  @Min(0)
+  position: number;
 }
 
 export class ReorderProjectsDto {
-  @IsArray() @ValidateNested({ each: true }) @Type(() => ReorderItemDto)
+  @IsArray()
+  @ArrayMaxSize(500)
+  @ValidateNested({ each: true })
+  @Type(() => ReorderItemDto)
   items: ReorderItemDto[];
 }

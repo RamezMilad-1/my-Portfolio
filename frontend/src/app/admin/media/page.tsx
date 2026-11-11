@@ -1,130 +1,135 @@
 'use client';
 
+import { Check, Copy, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { Plus, Trash2, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { useMediaList, useUploadMedia, useDeleteMedia } from '@/lib/api/media';
+import { MediaThumb } from '@/components/admin/media-thumb';
+import { PageHeader } from '@/components/admin/page-header';
+import { UploadButton } from '@/components/admin/upload-button';
 import { Button } from '@/components/ui/button';
-import { EmptyState } from '@/components/ui/empty-state';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
+import { formatBytes } from '@/lib/admin/format';
+import { useDeleteMedia, useMediaLibrary, useProjects } from '@/lib/admin/queries';
+import { ACCEPT } from '@/lib/admin/upload';
+import { errorMessage } from '@/lib/api/client';
 import type { Media } from '@/lib/types';
 
-export default function AdminMediaPage() {
-  const { data: media } = useMediaList();
-  const upload = useUploadMedia();
-  const del = useDeleteMedia();
-  const [pendingDelete, setPendingDelete] = useState<Media | null>(null);
+const KIND_LABELS = { image: 'Image', video: 'Video', raw: 'PDF' } as const;
 
-  const onUpload = async (file: File) => {
+function CopyUrlButton({ url }: { url: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
     try {
-      await upload.mutateAsync({ file });
-      toast.success('Uploaded');
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
     } catch {
-      toast.error('Upload failed');
+      toast.error('Could not copy the link');
     }
   };
+  return (
+    <Button type="button" variant="ghost" size="icon-sm" onClick={copy} aria-label="Copy link">
+      {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+    </Button>
+  );
+}
+
+export default function AdminMediaPage() {
+  const { data: media, isLoading } = useMediaLibrary();
+  const { data: projects } = useProjects();
+  const remove = useDeleteMedia();
+  const [pendingDelete, setPendingDelete] = useState<Media | null>(null);
+  const projectNames = new Map(projects?.map((project) => [project._id, project.name]));
 
   const onDelete = async () => {
     if (!pendingDelete) return;
     try {
-      await del.mutateAsync(pendingDelete._id);
+      await remove.mutateAsync(pendingDelete._id);
       toast.success('Deleted');
       setPendingDelete(null);
-    } catch {
-      toast.error('Could not delete');
+    } catch (error) {
+      // 409 explains where the file is still used.
+      toast.error(errorMessage(error, 'Could not delete'));
+      setPendingDelete(null);
     }
   };
 
+  const upload = <UploadButton accept={ACCEPT.any} multiple label="Upload files" />;
+
   return (
     <div>
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-sm text-[hsl(var(--muted-foreground))]">Admin</p>
-          <h1 className="font-display text-3xl font-semibold tracking-tight">Media library</h1>
-        </div>
-        <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-[hsl(var(--accent))] px-4 py-2 text-sm font-medium text-[hsl(var(--accent-foreground))] hover:opacity-90">
-          <Plus className="h-4 w-4" /> Upload
-          <input
-            type="file"
-            accept="image/*,video/*"
-            className="hidden"
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (file) await onUpload(file);
-              e.target.value = '';
-            }}
-          />
-        </label>
-      </div>
+      <PageHeader
+        title="Media library"
+        description="Images, videos and PDFs stored on Cloudinary. Attach them to projects, your profile or certificates."
+        action={upload}
+      />
 
-      {(media ?? []).length === 0 ? (
+      {isLoading ? (
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {Array.from({ length: 10 }, (_, index) => (
+            <Skeleton key={index} className="aspect-[4/3] rounded-lg" />
+          ))}
+        </div>
+      ) : (media ?? []).length === 0 ? (
         <EmptyState
           className="mt-8"
           icon={ImageIcon}
           title="Your media library is empty"
-          description="Upload screenshots and short videos of your projects, your avatar, and your resume here. Files become available everywhere — project galleries, profile, etc."
-          action={
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-[hsl(var(--accent))] px-4 py-2 text-sm font-medium text-[hsl(var(--accent-foreground))] hover:opacity-90">
-              <Plus className="h-4 w-4" /> Upload your first file
-              <input
-                type="file"
-                accept="image/*,video/*"
-                className="hidden"
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (file) await onUpload(file);
-                  e.target.value = '';
-                }}
-              />
-            </label>
-          }
+          description="Upload project screenshots, short videos, your photo and your CV."
+          action={upload}
         />
-      ) : null}
-
-      <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-        {(media ?? []).map((m) => (
-          <div
-            key={m._id}
-            className="group relative overflow-hidden rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))]"
-          >
-            <div className="relative aspect-video overflow-hidden bg-[hsl(var(--muted))]">
-              {m.kind === 'image' ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={m.url} alt={m.caption || ''} className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-black/80 text-xs text-white">
-                  VIDEO
+      ) : (
+        <ul className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {media?.map((item) => (
+            <li key={item._id} className="overflow-hidden rounded-lg border border-border bg-card">
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open the file"
+              >
+                <MediaThumb
+                  kind={item.kind}
+                  url={item.url}
+                  alt={item.caption}
+                  className="aspect-video w-full"
+                />
+              </a>
+              <div className="space-y-1 p-2">
+                <p className="truncate text-xs font-medium" title={item.originalName}>
+                  {item.originalName || item.caption || 'Untitled'}
+                </p>
+                <p className="truncate text-[10px] text-muted-foreground">
+                  {KIND_LABELS[item.kind]} · {formatBytes(item.sizeBytes)}
+                  {item.projectId && projectNames.get(item.projectId)
+                    ? ` · ${projectNames.get(item.projectId)}`
+                    : ''}
+                </p>
+                <div className="flex justify-end gap-1">
+                  <CopyUrlButton url={item.url} />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => setPendingDelete(item)}
+                    aria-label={`Delete ${item.originalName || 'file'}`}
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                  </Button>
                 </div>
-              )}
-            </div>
-            <div className="p-2">
-              <p className="truncate text-xs">{m.originalName || m.caption || m.url}</p>
-              <p className="text-[10px] text-[hsl(var(--muted-foreground))]">
-                {(m.sizeBytes ? `${Math.round(m.sizeBytes / 1024)} KB` : '—') + ' · ' + m.kind}
-              </p>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setPendingDelete(m)}
-              className="absolute right-1 top-1 hidden bg-black/70 text-white hover:bg-black/90 group-hover:flex"
-              aria-label="Delete media"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        ))}
-      </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
 
       <ConfirmDialog
-        open={!!pendingDelete}
+        open={pendingDelete !== null}
         onOpenChange={(open) => !open && setPendingDelete(null)}
-        title="Delete this media file?"
-        description={
-          pendingDelete?.originalName
-            ? `"${pendingDelete.originalName}" will be permanently removed from your library and from any project gallery using it.`
-            : 'This file will be permanently removed from your library.'
-        }
+        title="Delete this file?"
+        description={`“${pendingDelete?.originalName || 'This file'}” is removed from Cloudinary for good. Files still shown somewhere on the site can't be deleted until you remove them there.`}
         confirmLabel="Delete"
         destructive
         onConfirm={onDelete}

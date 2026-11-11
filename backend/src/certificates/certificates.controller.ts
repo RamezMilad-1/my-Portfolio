@@ -3,54 +3,50 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Put,
-  UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ParseObjectIdPipe } from '../common/parse-object-id.pipe';
+import { Public } from '../common/public.decorator';
 import { CertificatesService } from './certificates.service';
-import {
-  CreateCertificateDto,
-  UpdateCertificateDto,
-} from './dto/certificate.dto';
+import { CreateCertificateDto, UpdateCertificateDto } from './dto/certificate.dto';
 
 @Controller('certificates')
 export class CertificatesController {
-  constructor(private readonly service: CertificatesService) {}
+  constructor(private readonly certificates: CertificatesService) {}
 
+  @Public()
   @Get()
-  list() {
-    return this.service.listPublic();
+  listPublished() {
+    return this.certificates.listPublished();
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('all')
   listAll() {
-    return this.service.listAll();
+    return this.certificates.listAll();
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get(':id')
-  getById(@Param('id') id: string) {
-    return this.service.getById(id);
+  getById(@Param('id', ParseObjectIdPipe) id: string) {
+    return this.certificates.getById(id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() dto: CreateCertificateDto) {
-    return this.service.create(dto);
+    return this.certificates.create(dto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Put(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateCertificateDto) {
-    return this.service.update(id, dto);
+  update(@Param('id', ParseObjectIdPipe) id: string, @Body() dto: UpdateCertificateDto) {
+    return this.certificates.update(id, dto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.service.remove(id);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id', ParseObjectIdPipe) id: string) {
+    return this.certificates.remove(id);
   }
 }

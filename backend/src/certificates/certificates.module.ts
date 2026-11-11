@@ -1,17 +1,14 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Certificate, CertificateSchema } from './certificate.schema';
-import { CertificatesService } from './certificates.service';
 import { CertificatesController } from './certificates.controller';
+import { CertificatesService } from './certificates.service';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: Certificate.name, schema: CertificateSchema },
-    ]),
-  ],
-  providers: [CertificatesService],
+  imports: [MongooseModule.forFeature([{ name: Certificate.name, schema: CertificateSchema }])],
   controllers: [CertificatesController],
-  exports: [CertificatesService, MongooseModule],
+  providers: [CertificatesService],
+  /** Used by Media to refuse deleting certificate images. */
+  exports: [CertificatesService],
 })
 export class CertificatesModule {}

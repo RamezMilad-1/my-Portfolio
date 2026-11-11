@@ -1,13 +1,9 @@
-import {
-  ConflictException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AdminsService } from '../admins/admins.service';
-
-const BCRYPT_ROUNDS = 12;
+import { DUMMY_PASSWORD_HASH } from './auth.constants';
+import type { AuthenticatedAdmin, SessionPayload } from './auth.types';
 
 @Injectable()
 export class AuthService {
@@ -16,39 +12,25 @@ export class AuthService {
     private readonly jwt: JwtService,
   ) {}
 
-  async login(email: string, password: string) {
+  /**
+   * Unknown email, wrong password and non-admin account all cost one bcrypt comparison and
+   * return the same error, so the response never reveals which emails have accounts.
+   */
+  async login(
+    email: string,
+    password: string,
+  ): Promise<{ token: string; admin: AuthenticatedAdmin }> {
     const account = await this.admins.findByEmail(email);
-    if (!account) throw new UnauthorizedException('Invalid credentials');
-    const ok = await bcrypt.compare(password, account.passwordHash);
-    if (!ok) throw new UnauthorizedException('Invalid credentials');
-    // Only admins can hold a session. Self-registered accounts stay 'user'
-    // until promoted directly in the database; the error is intentionally
-    // identical so responses don't reveal which emails exist or their role.
-    if (account.role !== 'admin')
-      throw new UnauthorizedException('Invalid credentials');
-    const token = await this.jwt.signAsync({
-      sub: account._id.toString(),
-      email: account.email,
-    });
-    return {
-      token,
-      admin: { id: account._id.toString(), email: account.email },
-    };
-  }
-
-  async register(email: string, password: string) {
-    const existing = await this.admins.findByEmail(email);
-    if (existing) throw new ConflictException('Email already registered');
-    const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
-    try {
-      await this.admins.create({ email, passwordHash, role: 'user' });
-    } catch (err: unknown) {
-      // Unique index race — same outcome as the pre-check above.
-      if ((err as { code?: number }).code === 11000) {
-        throw new ConflictException('Email already registered');
-      }
-      throw err;
+    const passwordMatches = await bcrypt.compare(
+      password,
+      account?.passwordHash ?? DUMMY_PASSWORD_HASH,
+    );
+    if (!account || !passwordMatches || account.role !== 'admin') {
+      throw new UnauthorizedException('Invalid email or password');
     }
-    return { ok: true };
+
+    const admin: AuthenticatedAdmin = { id: account._id.toString(), email: account.email };
+    const payload: SessionPayload = { sub: admin.id, email: admin.email };
+    return { token: await this.jwt.signAsync(payload), admin };
   }
 }

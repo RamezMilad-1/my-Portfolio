@@ -1,12 +1,32 @@
-import { IsBoolean, IsInt, IsOptional, IsString } from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
+import {
+  IsBoolean,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+} from 'class-validator';
+import { OptionalText, Trim } from '../../common/validators';
 
 export class CreateTechItemDto {
-  @IsString() name: string;
+  @Trim()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(60)
+  name: string;
 
-  @IsOptional() @IsString() category?: string;
-  @IsOptional() @IsInt() position?: number;
-  @IsOptional() @IsBoolean() isPublished?: boolean;
+  @OptionalText(60) category?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  position?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isPublished?: boolean;
 }
 
 export class UpdateTechItemDto extends PartialType(CreateTechItemDto) {}

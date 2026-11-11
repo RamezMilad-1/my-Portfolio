@@ -1,39 +1,26 @@
 import type { MetadataRoute } from 'next';
-import { serverApiBase } from '@/lib/server-api';
+import { getProfile, getProjects } from '@/lib/api/content';
+import { SITE_URL } from '@/lib/site';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = (
-    process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
-  ).replace(/\/$/, '');
+  const [profile, projects] = await Promise.all([getProfile(), getProjects()]);
+  const updated = [profile.updatedAt, ...projects.map((project) => project.updatedAt)]
+    .filter((date): date is string => Boolean(date))
+    .sort()
+    .at(-1);
 
-  const now = new Date();
-  const staticEntries: MetadataRoute.Sitemap = [
-    { url: `${base}/`, lastModified: now, changeFrequency: 'weekly', priority: 1 },
+  return [
+    {
+      url: `${SITE_URL}/`,
+      lastModified: updated ? new Date(updated) : undefined,
+      changeFrequency: 'weekly',
+      priority: 1,
+    },
+    ...projects.map((project) => ({
+      url: `${SITE_URL}/projects/${project.slug}`,
+      lastModified: new Date(project.updatedAt),
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+    })),
   ];
-
-  // Best-effort project URLs — silently fall back if the backend isn't reachable
-  // at build/request time so the sitemap is never broken.
-  try {
-    const res = await fetch(`${serverApiBase()}/projects`, {
-      next: { revalidate: 300 },
-    });
-    if (res.ok) {
-      const projects = (await res.json()) as Array<{
-        slug: string;
-        updatedAt?: string;
-      }>;
-      for (const p of projects) {
-        staticEntries.push({
-          url: `${base}/projects/${p.slug}`,
-          lastModified: p.updatedAt ? new Date(p.updatedAt) : now,
-          changeFrequency: 'monthly',
-          priority: 0.7,
-        });
-      }
-    }
-  } catch {
-    // ignore
-  }
-
-  return staticEntries;
 }

@@ -1,54 +1,49 @@
-'use client';
+import type { CSSProperties, ElementType, ReactNode } from 'react';
+import { DISTANCE } from './tokens';
 
-import { m } from 'framer-motion';
-import { useScrollReveal } from './use-scroll-reveal';
-import { DURATION, EASE_PREMIUM, VIEWPORT } from './tokens';
-
-interface Props {
-  /** Horizontal entry offset (negative = from the left). Use DISTANCE tokens. */
+interface RevealProps {
+  as?: ElementType;
+  /** Horizontal entry offset in px (negative = from the left). */
   x?: number;
-  /** Vertical entry offset (positive = from below). Use DISTANCE tokens. */
+  /** Vertical entry offset in px (positive = from below). */
   y?: number;
-  /** Stagger delay in seconds (cap with staggerDelay for lists). */
+  /** Starting scale, for elements that grow in. */
+  scale?: number;
+  /** Delay in seconds — use `staggerDelay()` for lists. */
   delay?: number;
-  /** Root margin for the in-view trigger; use a VIEWPORT token. */
-  margin?: string;
-  /** Reveal duration; defaults to the card/block duration. */
+  /** Duration in seconds. */
   duration?: number;
   className?: string;
-  children: React.ReactNode;
+  style?: CSSProperties;
+  children?: ReactNode;
 }
 
 /**
- * Thin wrapper over `useScrollReveal` (once-on-first-view) for adding an
- * additive entrance animation around any block without changing its resting
- * layout. Pulls duration/ease from the motion tokens so it always reads as a
- * peer of every other reveal on the site.
+ * Settles into place the first time it scrolls into view. Plain markup with CSS variables: the
+ * shared observer in `ScrollEffects` flips it to revealed, and globals.css animates the change.
+ * Wrap cards rather than putting this on elements that have their own hover transforms.
  */
 export function Reveal({
+  as: Component = 'div',
   x = 0,
-  y = 0,
-  delay = 0,
-  margin = VIEWPORT.card,
-  duration = DURATION.slow,
+  y = DISTANCE.md,
+  scale,
+  delay,
+  duration,
   className,
+  style,
   children,
-}: Props) {
-  const { ref, initial, animate } = useScrollReveal<HTMLDivElement>({
-    x,
-    y,
-    margin,
-  });
+}: RevealProps) {
+  const vars: Record<string, string> = {};
+  if (x !== 0) vars['--reveal-x'] = `${x}px`;
+  if (y !== DISTANCE.md) vars['--reveal-y'] = `${y}px`;
+  if (scale !== undefined) vars['--reveal-scale'] = String(scale);
+  if (delay) vars['--reveal-delay'] = `${delay}s`;
+  if (duration) vars['--reveal-duration'] = `${duration}s`;
 
   return (
-    <m.div
-      ref={ref}
-      initial={initial}
-      animate={animate}
-      transition={{ duration, ease: EASE_PREMIUM, delay }}
-      className={className}
-    >
+    <Component data-reveal="" className={className} style={{ ...vars, ...style }}>
       {children}
-    </m.div>
+    </Component>
   );
 }

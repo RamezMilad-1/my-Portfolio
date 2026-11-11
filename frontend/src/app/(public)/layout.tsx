@@ -1,63 +1,78 @@
-import { Nav } from '@/components/public/nav';
-import { Footer } from '@/components/public/footer';
-import { AnimatedBackground } from '@/components/public/animated-background';
-import { PageTransition } from '@/components/motion/page-transition';
-import { serverApiBase } from '@/lib/server-api';
+import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
+import { AnimatedBackground } from '@/components/layout/animated-background';
+import { SiteFooter } from '@/components/layout/site-footer';
+import { SiteHeader } from '@/components/layout/site-header';
+import { MotionProvider } from '@/components/motion/motion-provider';
+import { ScrollEffects } from '@/components/motion/scroll-effects';
+import { getProfile } from '@/lib/api/content';
+import { SITE_URL } from '@/lib/site';
+import type { Profile } from '@/lib/types';
 
-type PublicProfile = {
-  displayName?: string;
-  headline?: string;
-  socials?: Record<string, string>;
-};
-
-async function getProfile(): Promise<PublicProfile | null> {
-  try {
-    const res = await fetch(`${serverApiBase()}/profile`, {
-      next: { revalidate: 300 },
-    });
-    if (!res.ok) return null;
-    return (await res.json()) as PublicProfile;
-  } catch {
-    return null;
-  }
+/** Who the site is about, in a phrase: "Full-Stack Developer — CS student · SE major". */
+function profileSummary(profile: Profile): string | undefined {
+  const role = profile.headlines.find((line) => line.trim())?.trim();
+  return (
+    [role, profile.headline.trim()].filter(Boolean).join(' — ') || profile.aboutLede || undefined
+  );
 }
 
-export default async function PublicLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export async function generateMetadata(): Promise<Metadata> {
   const profile = await getProfile();
-  const siteUrl = (
-    process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
-  ).replace(/\/$/, '');
-  // Structured data is only emitted when the profile actually exists in the
-  // DB — no hardcoded identity fallbacks.
-  const personJsonLd = profile?.displayName
-    ? {
-        '@context': 'https://schema.org',
-        '@type': 'Person',
-        name: profile.displayName,
-        ...(profile.headline ? { jobTitle: profile.headline } : {}),
-        url: siteUrl,
-        sameAs: Object.values(profile.socials ?? {}).filter(Boolean),
-      }
-    : null;
+  const name = profile.displayName.trim();
+  const title = name ? `${name} — Portfolio` : 'Portfolio';
+  const description = profileSummary(profile);
+  return {
+    title: { default: title, template: name ? `%s · ${name}` : '%s' },
+    description,
+    openGraph: {
+      type: 'website',
+      siteName: name || undefined,
+      title,
+      description,
+      url: SITE_URL,
+      images: ['/og.png'],
+    },
+    twitter: { card: 'summary_large_image', title, description, images: ['/og.png'] },
+  };
+}
+
+/** schema.org Person, so search engines can show the profile; only from real profile data. */
+function personJsonLd(profile: Profile): string | null {
+  if (!profile.displayName) return null;
+  const person = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: profile.displayName,
+    jobTitle: profile.headlines.find(Boolean) || profile.headline || undefined,
+    url: SITE_URL,
+    image: profile.avatarUrl || undefined,
+    sameAs: Object.values(profile.socials).filter(Boolean),
+  };
+  // `<` is escaped so profile text can never close the surrounding <script> tag.
+  return JSON.stringify(person).replace(/</g, '\\u003c');
+}
+
+export default async function PublicLayout({ children }: { children: ReactNode }) {
+  const profile = await getProfile();
+  const jsonLd = personJsonLd(profile);
 
   return (
-    <>
-      {personJsonLd ? (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
-        />
+    <MotionProvider>
+      {jsonLd ? (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
       ) : null}
       <AnimatedBackground />
-      <Nav />
-      <main id="main-content" className="relative">
-        <PageTransition>{children}</PageTransition>
+      <SiteHeader
+        displayName={profile.displayName.trim()}
+        logoInitial={profile.logoInitial.trim()}
+        resumeUrl={profile.resumeUrl}
+      />
+      <main id="main-content" className="relative overflow-x-clip">
+        {children}
       </main>
-      <Footer />
-    </>
+      <SiteFooter profile={profile} />
+      <ScrollEffects />
+    </MotionProvider>
   );
 }

@@ -3,39 +3,39 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Put,
-  UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { TeamService } from './team.service';
+import { ParseObjectIdPipe } from '../common/parse-object-id.pipe';
 import { CreateTeamMemberDto, UpdateTeamMemberDto } from './dto/team-member.dto';
+import { TeamService } from './team.service';
 
+/** Admin-only roster. The public site gets collaborators through each project. */
 @Controller('team')
 export class TeamController {
-  constructor(private readonly service: TeamService) {}
+  constructor(private readonly team: TeamService) {}
 
   @Get()
   list() {
-    return this.service.list();
+    return this.team.list();
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() dto: CreateTeamMemberDto) {
-    return this.service.create(dto);
+    return this.team.create(dto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Put(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateTeamMemberDto) {
-    return this.service.update(id, dto);
+  update(@Param('id', ParseObjectIdPipe) id: string, @Body() dto: UpdateTeamMemberDto) {
+    return this.team.update(id, dto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.service.remove(id);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id', ParseObjectIdPipe) id: string) {
+    return this.team.remove(id);
   }
 }

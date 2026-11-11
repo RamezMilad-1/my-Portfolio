@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
 
-export type AdminDocument = HydratedDocument<Admin>;
+export const ADMIN_ROLES = ['user', 'admin'] as const;
+export type AdminRole = (typeof ADMIN_ROLES)[number];
 
 @Schema({ timestamps: true })
 export class Admin {
@@ -11,11 +11,12 @@ export class Admin {
   @Prop({ required: true })
   passwordHash: string;
 
-  // Accounts self-registered via /auth/register are plain users and cannot
-  // sign in; promotion to 'admin' happens directly in the database
-  // (Compass/Atlas) — never through the API.
-  @Prop({ default: 'user', enum: ['user', 'admin'] })
-  role: 'user' | 'admin';
+  /**
+   * Only `admin` accounts can sign in. Admins are created with `npm run create-admin`;
+   * `user` remains valid for accounts created by the old self-registration page.
+   */
+  @Prop({ default: 'user', enum: ADMIN_ROLES })
+  role: AdminRole;
 }
 
 export const AdminSchema = SchemaFactory.createForClass(Admin);

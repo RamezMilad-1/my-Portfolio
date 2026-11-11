@@ -1,120 +1,94 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { ConfigService } from '@nestjs/config';
-import { Model, Types } from 'mongoose';
-import { randomUUID } from 'crypto';
-import { extname } from 'path';
-import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
-import { Media, MediaDocument } from './media.schema';
+import { Model } from 'mongoose';
+import { CertificatesService } from '../certificates/certificates.service';
+import { ProfileService } from '../profile/profile.service';
+import { ProjectsService } from '../projects/projects.service';
+import { schemaFields } from '../common/schema-fields';
+import { CloudinaryService, type UploadTicket } from './cloudinary.service';
+import type { CreateMediaDto, CreateUploadTicketDto, UpdateMediaDto } from './dto/media.dto';
+import { type MediaKind, UPLOAD_TYPES } from './media.constants';
+import { Media, MediaSchema } from './media.schema';
 
-/** Cloudinary folder that holds every portfolio upload. */
-const CLOUDINARY_FOLDER = 'portfolio';
+const MEDIA_FIELDS = schemaFields(MediaSchema);
 
 @Injectable()
 export class MediaService {
   constructor(
-    @InjectModel(Media.name) private model: Model<MediaDocument>,
-    private cfg: ConfigService,
-  ) {
-    cloudinary.config({
-      cloud_name: this.cfg.get<string>('CLOUDINARY_CLOUD_NAME'),
-      api_key: this.cfg.get<string>('CLOUDINARY_API_KEY'),
-      api_secret: this.cfg.get<string>('CLOUDINARY_API_SECRET'),
-      secure: true,
-    });
-  }
+    @InjectModel(Media.name) private readonly model: Model<Media>,
+    private readonly cloudinary: CloudinaryService,
+    private readonly projects: ProjectsService,
+    private readonly profile: ProfileService,
+    private readonly certificates: CertificatesService,
+  ) {}
 
   list() {
-    return this.model.find().sort({ createdAt: -1 }).lean().exec();
+    return this.model.find().select(MEDIA_FIELDS).sort({ createdAt: -1 }).lean().exec();
   }
 
-  async create(file: Express.Multer.File, projectId?: string, caption?: string) {
-    // Images and videos map straight to their Cloudinary resource_type;
-    // everything else (PDFs, etc.) is stored as 'raw' so it downloads as-is.
-    const kind: 'image' | 'video' | 'raw' = file.mimetype.startsWith('image/')
-      ? 'image'
-      : file.mimetype.startsWith('video/')
-        ? 'video'
-        : 'raw';
+  createUploadTicket({
+    mimeType,
+    size,
+  }: CreateUploadTicketDto): UploadTicket & { kind: MediaKind } {
+    const type = UPLOAD_TYPES[mimeType];
+    if (size > type.maxBytes) {
+      throw new BadRequestException(`File is too large (max ${type.maxBytes / 1024 / 1024} MB)`);
+    }
+    return { ...this.cloudinary.createUploadTicket(type.kind, type.extension), kind: type.kind };
+  }
 
-    const uploaded = await this.uploadToCloudinary(
-      file.buffer,
-      kind,
-      file.originalname,
-    );
-
-    const created = await this.model.create({
-      kind,
-      // public_id doubles as the storage handle — used by remove() to delete
-      // the asset from Cloudinary, the same way local paths were unlinked.
-      storagePath: uploaded.public_id,
-      url: uploaded.secure_url,
-      caption: caption ?? '',
-      sizeBytes: file.size,
-      originalName: file.originalname,
-      projectId: projectId ? new Types.ObjectId(projectId) : undefined,
+  async create(dto: CreateMediaDto) {
+    const asset = await this.cloudinary.getAsset(dto.publicId, dto.kind);
+    const media = await this.model.create({
+      kind: dto.kind,
+      storagePath: dto.publicId,
+      url: asset.url,
+      sizeBytes: asset.bytes,
+      originalName: dto.originalName,
+      caption: dto.caption ?? '',
+      projectId: dto.projectId,
     });
-    return created;
+    return media.toObject();
   }
 
-  private uploadToCloudinary(
-    buffer: Buffer,
-    kind: 'image' | 'video' | 'raw',
-    originalName = '',
-  ): Promise<UploadApiResponse> {
-    // Raw assets (e.g. PDFs) keep their extension in the public_id so the
-    // delivered URL ends in `.pdf` and downloads with a sensible filename.
-    // Cloudinary derives the extension for image/video assets itself.
-    const ext = kind === 'raw' ? extname(originalName) : '';
-    const publicId = `${randomUUID()}${ext}`;
-
-    return new Promise((res, rej) => {
-      const stream = cloudinary.uploader.upload_stream(
-        {
-          folder: CLOUDINARY_FOLDER,
-          public_id: publicId,
-          resource_type: kind,
-          overwrite: false,
-        },
-        (err, result) => {
-          if (err || !result) {
-            return rej(
-              new InternalServerErrorException(
-                `Cloudinary upload failed: ${err?.message ?? 'no result'}`,
-              ),
-            );
-          }
-          res(result);
-        },
-      );
-      stream.end(buffer);
-    });
-  }
-
-  async update(id: string, dto: { caption?: string; projectId?: string }) {
-    const set: Record<string, unknown> = {};
-    if (dto.caption !== undefined) set.caption = dto.caption;
-    if (dto.projectId) set.projectId = new Types.ObjectId(dto.projectId);
-    const updated = await this.model
-      .findByIdAndUpdate(id, { $set: set }, { new: true })
+  async update(id: string, dto: UpdateMediaDto) {
+    const media = await this.model
+      .findByIdAndUpdate(
+        id,
+        { $set: dto },
+        { new: true, runValidators: true, projection: MEDIA_FIELDS },
+      )
       .lean()
       .exec();
-    if (!updated) throw new NotFoundException('Media not found');
-    return updated;
+    if (!media) throw new NotFoundException('Media not found');
+    return media;
   }
 
-  async remove(id: string) {
-    const doc = await this.model.findById(id).exec();
-    if (!doc) throw new NotFoundException('Media not found');
-    try {
-      await cloudinary.uploader.destroy(doc.storagePath, {
-        resource_type:
-          doc.kind === 'video' ? 'video' : doc.kind === 'raw' ? 'raw' : 'image',
-      });
-    } catch {
-      /* asset may already be gone on Cloudinary — fine */
+  /**
+   * Refuses to delete a file that is still shown somewhere, instead of leaving broken images
+   * behind; the message names every place that still uses it.
+   */
+  async remove(id: string): Promise<void> {
+    const media = await this.model.findById(id).lean().exec();
+    if (!media) throw new NotFoundException('Media not found');
+
+    const usedBy = (
+      await Promise.all([
+        this.projects.findMediaUsage(media._id.toString(), media.url),
+        this.profile.findMediaUsage(media.url),
+        this.certificates.findMediaUsage(media.url),
+      ])
+    ).flat();
+    if (usedBy.length > 0) {
+      throw new ConflictException(`Still used by ${usedBy.join(', ')} — remove it there first.`);
     }
-    await this.model.findByIdAndDelete(id).exec();
-    return { ok: true };
+
+    await this.cloudinary.destroy(media.storagePath, media.kind);
+    await this.model.deleteOne({ _id: media._id }).exec();
   }
 }

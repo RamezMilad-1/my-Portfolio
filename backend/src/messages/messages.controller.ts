@@ -1,26 +1,46 @@
-import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { CreateMessageDto } from './dto/message.dto';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import { minutes, Throttle } from '@nestjs/throttler';
+import { ParseObjectIdPipe } from '../common/parse-object-id.pipe';
+import { Public } from '../common/public.decorator';
+import { CreateMessageDto, UpdateMessageDto } from './dto/message.dto';
 import { MessagesService } from './messages.service';
 
 @Controller('messages')
 export class MessagesController {
-  constructor(private readonly service: MessagesService) {}
+  constructor(private readonly messages: MessagesService) {}
 
+  /** The public contact form: 5 messages per 10 minutes per visitor. */
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: minutes(10) } })
   @Post()
+  @HttpCode(HttpStatus.NO_CONTENT)
   create(@Body() dto: CreateMessageDto) {
-    return this.service.create(dto);
+    return this.messages.create(dto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get()
   list() {
-    return this.service.listAll();
+    return this.messages.list();
   }
 
-  @UseGuards(JwtAuthGuard)
+  @Patch(':id')
+  update(@Param('id', ParseObjectIdPipe) id: string, @Body() dto: UpdateMessageDto) {
+    return this.messages.update(id, dto);
+  }
+
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.service.remove(id);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id', ParseObjectIdPipe) id: string) {
+    return this.messages.remove(id);
   }
 }

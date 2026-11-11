@@ -3,54 +3,50 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Put,
-  UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ParseObjectIdPipe } from '../common/parse-object-id.pipe';
+import { Public } from '../common/public.decorator';
+import { CreateTimelineEntryDto, UpdateTimelineEntryDto } from './dto/timeline.dto';
 import { TimelineService } from './timeline.service';
-import {
-  CreateTimelineEntryDto,
-  UpdateTimelineEntryDto,
-} from './dto/timeline.dto';
 
 @Controller('timeline')
 export class TimelineController {
-  constructor(private readonly service: TimelineService) {}
+  constructor(private readonly timeline: TimelineService) {}
 
+  @Public()
   @Get()
-  list() {
-    return this.service.listPublic();
+  listPublished() {
+    return this.timeline.listPublished();
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('all')
   listAll() {
-    return this.service.listAll();
+    return this.timeline.listAll();
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get(':id')
-  getById(@Param('id') id: string) {
-    return this.service.getById(id);
+  getById(@Param('id', ParseObjectIdPipe) id: string) {
+    return this.timeline.getById(id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() dto: CreateTimelineEntryDto) {
-    return this.service.create(dto);
+    return this.timeline.create(dto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Put(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateTimelineEntryDto) {
-    return this.service.update(id, dto);
+  update(@Param('id', ParseObjectIdPipe) id: string, @Body() dto: UpdateTimelineEntryDto) {
+    return this.timeline.update(id, dto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.service.remove(id);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id', ParseObjectIdPipe) id: string) {
+    return this.timeline.remove(id);
   }
 }

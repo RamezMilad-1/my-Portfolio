@@ -1,17 +1,45 @@
-import { IsBoolean, IsInt, IsOptional, IsString } from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
+import {
+  IsBoolean,
+  IsIn,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+} from 'class-validator';
+import { OptionalText, Trim } from '../../common/validators';
+import { TIMELINE_TYPES, type TimelineType } from '../timeline.schema';
 
 export class CreateTimelineEntryDto {
-  @IsString() year: string;
-  @IsString() body: string;
+  @Trim()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(40)
+  year: string;
 
-  @IsOptional() @IsString() topic?: string;
-  @IsOptional() @IsString() type?: string;
-  @IsOptional() @IsString() organization?: string;
-  @IsOptional() @IsInt() position?: number;
-  @IsOptional() @IsBoolean() isPublished?: boolean;
+  @Trim()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(2000)
+  body: string;
+
+  @OptionalText(120) topic?: string;
+  @OptionalText(120) organization?: string;
+
+  @IsOptional()
+  @IsIn(TIMELINE_TYPES)
+  type?: TimelineType;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  position?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isPublished?: boolean;
 }
 
-export class UpdateTimelineEntryDto extends PartialType(
-  CreateTimelineEntryDto,
-) {}
+export class UpdateTimelineEntryDto extends PartialType(CreateTimelineEntryDto) {}

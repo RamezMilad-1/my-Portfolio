@@ -1,37 +1,44 @@
 'use client';
 
+import { FolderKanban, Image as ImageIcon, Mail, Plus, Users } from 'lucide-react';
 import Link from 'next/link';
-import { useProjectsAll } from '@/lib/api/projects';
-import { useMediaList } from '@/lib/api/media';
-import { useTeam } from '@/lib/api/team';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageHeader } from '@/components/admin/page-header';
 import { Button } from '@/components/ui/button';
-import { Plus, FolderKanban, Image as ImageIcon, Users } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useMediaLibrary, useMessages, useProjects, useTeam } from '@/lib/admin/queries';
 
 export default function AdminDashboardPage() {
-  const { data: projects } = useProjectsAll();
-  const { data: media } = useMediaList();
+  const { data: projects } = useProjects();
+  const { data: media } = useMediaLibrary();
   const { data: team } = useTeam();
+  const { data: messages } = useMessages();
 
   const stats = [
     {
       label: 'Projects',
-      value: projects?.length ?? '—',
-      sub: `${projects?.filter((p) => p.status === 'published').length ?? 0} published`,
+      value: projects?.length,
+      detail: `${projects?.filter((project) => project.status === 'published').length ?? 0} published`,
       href: '/admin/projects',
       icon: FolderKanban,
     },
     {
+      label: 'Messages',
+      value: messages?.length,
+      detail: `${messages?.filter((message) => !message.read).length ?? 0} unread`,
+      href: '/admin/messages',
+      icon: Mail,
+    },
+    {
       label: 'Media',
-      value: media?.length ?? '—',
-      sub: `${media?.filter((m) => m.kind === 'image').length ?? 0} images`,
+      value: media?.length,
+      detail: `${media?.filter((item) => item.kind === 'image').length ?? 0} images`,
       href: '/admin/media',
       icon: ImageIcon,
     },
     {
       label: 'Team',
-      value: team?.length ?? '—',
-      sub: 'reusable across projects',
+      value: team?.length,
+      detail: 'reusable across projects',
       href: '/admin/team',
       icon: Users,
     },
@@ -39,56 +46,50 @@ export default function AdminDashboardPage() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-sm text-[hsl(var(--muted-foreground))]">Admin</p>
-          <h1 className="font-display text-3xl font-semibold tracking-tight">Dashboard</h1>
-        </div>
-        <Button asChild>
-          <Link href="/admin/projects/new">
-            <Plus className="h-4 w-4" /> New project
-          </Link>
-        </Button>
-      </div>
-
-      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {stats.map((s) => {
-          const Icon = s.icon;
-          return (
-            <Link key={s.label} href={s.href}>
-              <Card className="transition-colors hover:border-[hsl(var(--accent))]/50">
-                <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-[hsl(var(--muted-foreground))]">
-                    {s.label}
-                  </CardTitle>
-                  <Icon className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
-                </CardHeader>
-                <CardContent>
-                  <p className="font-display text-3xl font-semibold">{s.value}</p>
-                  <p className="text-xs text-[hsl(var(--muted-foreground))]">{s.sub}</p>
-                </CardContent>
-              </Card>
+      <PageHeader
+        title="Dashboard"
+        action={
+          <Button asChild>
+            <Link href="/admin/projects/new">
+              <Plus className="h-4 w-4" /> New project
             </Link>
-          );
-        })}
+          </Button>
+        }
+      />
+
+      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {stats.map(({ label, value, detail, href, icon: Icon }) => (
+          <Link
+            key={label}
+            href={href}
+            className="rounded-2xl focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Card className="transition-colors hover:border-accent/50">
+              <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
+                <Icon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="font-display text-3xl font-semibold">{value ?? '—'}</p>
+                <p className="text-xs text-muted-foreground">{detail}</p>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
       </div>
 
-      <div className="mt-10">
-        <h2 className="font-display text-xl font-semibold">Quick links</h2>
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Button asChild variant="outline" className="justify-start">
-            <Link href="/admin/projects">Edit projects</Link>
+      <h2 className="mt-10 font-display text-xl font-semibold">Quick links</h2>
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {[
+          ['/admin/projects', 'Edit projects'],
+          ['/admin/profile', 'Edit your profile'],
+          ['/admin/media', 'Upload media'],
+          ['/admin/team', 'Manage the team roster'],
+        ].map(([href, label]) => (
+          <Button key={href} asChild variant="outline" className="justify-start">
+            <Link href={href}>{label}</Link>
           </Button>
-          <Button asChild variant="outline" className="justify-start">
-            <Link href="/admin/profile">Edit personal profile</Link>
-          </Button>
-          <Button asChild variant="outline" className="justify-start">
-            <Link href="/admin/media">Upload media</Link>
-          </Button>
-          <Button asChild variant="outline" className="justify-start">
-            <Link href="/admin/team">Manage team roster</Link>
-          </Button>
-        </div>
+        ))}
       </div>
     </div>
   );

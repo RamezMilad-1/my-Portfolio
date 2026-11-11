@@ -1,6 +1,8 @@
 'use client';
 
+import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import { Button } from './button';
 import {
   Dialog,
   DialogContent,
@@ -9,14 +11,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from './dialog';
-import { Button } from './button';
-import { Loader2 } from 'lucide-react';
 
 /**
- * Drop-in replacement for window.confirm — same shape (yes/no), but rendered
- * with the design system. Supports a `destructive` flag that styles the
- * primary action red, and an async `onConfirm` so the caller can await
- * network work (e.g. delete) and the dialog stays open with a spinner.
+ * Yes/no confirmation in the design system. `onConfirm` may be async: the dialog stays open
+ * with a spinner until it settles.
  */
 export function ConfirmDialog({
   open,
@@ -31,7 +29,7 @@ export function ConfirmDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
-  description?: string;
+  description: string;
   confirmLabel?: string;
   cancelLabel?: string;
   destructive?: boolean;
@@ -39,7 +37,7 @@ export function ConfirmDialog({
 }) {
   const [pending, setPending] = useState(false);
 
-  const handleConfirm = async () => {
+  const confirm = async () => {
     setPending(true);
     try {
       await onConfirm();
@@ -53,19 +51,15 @@ export function ConfirmDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          {description ? <DialogDescription>{description}</DialogDescription> : null}
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={pending}
-          >
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={pending}>
             {cancelLabel}
           </Button>
           <Button
             variant={destructive ? 'destructive' : 'default'}
-            onClick={handleConfirm}
+            onClick={confirm}
             disabled={pending}
           >
             {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}

@@ -1,20 +1,12 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import {
-  TimelineEntry,
-  TimelineEntrySchema,
-} from './timeline.schema';
-import { TimelineService } from './timeline.service';
 import { TimelineController } from './timeline.controller';
+import { TimelineEntry, TimelineEntrySchema } from './timeline.schema';
+import { TimelineService } from './timeline.service';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: TimelineEntry.name, schema: TimelineEntrySchema },
-    ]),
-  ],
-  providers: [TimelineService],
+  imports: [MongooseModule.forFeature([{ name: TimelineEntry.name, schema: TimelineEntrySchema }])],
   controllers: [TimelineController],
-  exports: [TimelineService, MongooseModule],
+  providers: [TimelineService],
 })
 export class TimelineModule {}

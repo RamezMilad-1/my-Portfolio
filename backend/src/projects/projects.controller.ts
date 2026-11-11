@@ -3,66 +3,63 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Put,
-  UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ParseObjectIdPipe } from '../common/parse-object-id.pipe';
+import { Public } from '../common/public.decorator';
+import { CreateProjectDto, ReorderProjectsDto, UpdateProjectDto } from './dto/project.dto';
 import { ProjectsService } from './projects.service';
-import {
-  CreateProjectDto,
-  ReorderProjectsDto,
-  UpdateProjectDto,
-} from './dto/project.dto';
 
 @Controller('projects')
 export class ProjectsController {
-  constructor(private readonly service: ProjectsService) {}
+  constructor(private readonly projects: ProjectsService) {}
 
+  @Public()
   @Get()
-  list() {
-    return this.service.listPublic();
+  listPublished() {
+    return this.projects.listPublished();
   }
 
-  @UseGuards(JwtAuthGuard)
+  /** Admin list, drafts included. Declared before `:slug` so it isn't read as a slug. */
   @Get('all')
   listAll() {
-    return this.service.listAll();
+    return this.projects.listAll();
   }
 
-  @UseGuards(JwtAuthGuard)
   @Put('reorder')
+  @HttpCode(HttpStatus.NO_CONTENT)
   reorder(@Body() dto: ReorderProjectsDto) {
-    return this.service.reorder(dto);
+    return this.projects.reorder(dto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('id/:id')
-  getById(@Param('id') id: string) {
-    return this.service.getById(id);
+  getById(@Param('id', ParseObjectIdPipe) id: string) {
+    return this.projects.getById(id);
   }
 
+  @Public()
   @Get(':slug')
   getBySlug(@Param('slug') slug: string) {
-    return this.service.getBySlug(slug);
+    return this.projects.getPublishedBySlug(slug);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() dto: CreateProjectDto) {
-    return this.service.create(dto);
+    return this.projects.create(dto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Put(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateProjectDto) {
-    return this.service.update(id, dto);
+  update(@Param('id', ParseObjectIdPipe) id: string, @Body() dto: UpdateProjectDto) {
+    return this.projects.update(id, dto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.service.remove(id);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id', ParseObjectIdPipe) id: string) {
+    return this.projects.remove(id);
   }
 }

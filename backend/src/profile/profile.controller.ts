@@ -1,20 +1,20 @@
-import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { ProfileService } from './profile.service';
+import { Body, Controller, Get, Put } from '@nestjs/common';
+import { Public } from '../common/public.decorator';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ProfileService } from './profile.service';
 
 @Controller('profile')
 export class ProfileController {
-  constructor(private readonly service: ProfileService) {}
+  constructor(private readonly profile: ProfileService) {}
 
+  @Public()
   @Get()
   get() {
-    return this.service.get();
+    return this.profile.get();
   }
 
-  @UseGuards(JwtAuthGuard)
   @Put()
   update(@Body() dto: UpdateProfileDto) {
-    return this.service.update(dto);
+    return this.profile.update(dto);
   }
 }

@@ -1,7 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Schema as MongooseSchema, Types } from 'mongoose';
+import { Schema as MongooseSchema, Types } from 'mongoose';
 
-export type ProjectDocument = HydratedDocument<Project>;
+export const PROJECT_STATUSES = ['draft', 'published'] as const;
+export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
 
 @Schema({ _id: false })
 export class ProjectTeamLink {
@@ -48,28 +49,26 @@ export class Project {
   @Prop({ default: '' })
   role: string;
 
+  /** Card and detail-page cover. Falls back to the first image in `media`. */
   @Prop({ default: '' })
   coverImageUrl: string;
 
   @Prop({ type: [ProjectTeamLinkSchema], default: [] })
   team: ProjectTeamLink[];
 
+  /** Ordered gallery; each item's caption lives on its Media document. */
   @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Media' }], default: [] })
   media: Types.ObjectId[];
 
+  /** Featured projects are listed first on the public site. */
   @Prop({ default: false })
   isFeatured: boolean;
 
-  @Prop({ enum: ['draft', 'published'], default: 'published' })
-  status: 'draft' | 'published';
+  @Prop({ enum: PROJECT_STATUSES, default: 'published' })
+  status: ProjectStatus;
 
   @Prop({ default: 0 })
   position: number;
-
-  // Mixed so legacy documents that stored plain URL strings keep loading;
-  // new writes always store { url, title } objects (shape enforced in the DTO).
-  @Prop({ type: [MongooseSchema.Types.Mixed], default: [] })
-  gallery: Array<string | { url: string; title?: string }>;
 
   @Prop({ type: [String], default: [] })
   highlights: string[];

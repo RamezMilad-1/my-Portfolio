@@ -3,51 +3,50 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Put,
-  UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { TechService } from './tech.service';
+import { ParseObjectIdPipe } from '../common/parse-object-id.pipe';
+import { Public } from '../common/public.decorator';
 import { CreateTechItemDto, UpdateTechItemDto } from './dto/tech.dto';
+import { TechService } from './tech.service';
 
 @Controller('tech')
 export class TechController {
-  constructor(private readonly service: TechService) {}
+  constructor(private readonly tech: TechService) {}
 
+  @Public()
   @Get()
-  list() {
-    return this.service.listPublic();
+  listPublished() {
+    return this.tech.listPublished();
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('all')
   listAll() {
-    return this.service.listAll();
+    return this.tech.listAll();
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get(':id')
-  getById(@Param('id') id: string) {
-    return this.service.getById(id);
+  getById(@Param('id', ParseObjectIdPipe) id: string) {
+    return this.tech.getById(id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() dto: CreateTechItemDto) {
-    return this.service.create(dto);
+    return this.tech.create(dto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Put(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateTechItemDto) {
-    return this.service.update(id, dto);
+  update(@Param('id', ParseObjectIdPipe) id: string, @Body() dto: UpdateTechItemDto) {
+    return this.tech.update(id, dto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.service.remove(id);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id', ParseObjectIdPipe) id: string) {
+    return this.tech.remove(id);
   }
 }

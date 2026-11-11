@@ -1,20 +1,20 @@
 'use client';
 
-import { LazyMotion, domMax } from 'framer-motion';
+import { LazyMotion, MotionConfig } from 'framer-motion';
 import type { ReactNode } from 'react';
 
+const loadFeatures = () => import('./motion-features').then((module) => module.default);
+
 /**
- * App-wide LazyMotion boundary. Every animated component uses the slim `m.*`
- * factories, so the initial bundle ships only framer-motion's core; the
- * feature set loads once here. `domMax` (not `domAnimation`) because the nav
- * and portfolio tabs use `layoutId` pills, which need layout projection.
- * `strict` turns any accidental full `motion.*` import into a loud dev error
- * instead of a silent bundle regression.
+ * Framer Motion's animation features load in a separate chunk after the page is interactive;
+ * the `m.*` components render immediately in their resting state. `reducedMotion="user"` honours
+ * the OS setting inside Framer itself, so the rendered markup never depends on it (branching on
+ * it during render is what made hydration fail for visitors who prefer reduced motion).
  */
 export function MotionProvider({ children }: { children: ReactNode }) {
   return (
-    <LazyMotion features={domMax} strict>
-      {children}
+    <LazyMotion features={loadFeatures} strict>
+      <MotionConfig reducedMotion="user">{children}</MotionConfig>
     </LazyMotion>
   );
 }

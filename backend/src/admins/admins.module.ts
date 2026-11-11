@@ -6,6 +6,6 @@ import { AdminsService } from './admins.service';
 @Module({
   imports: [MongooseModule.forFeature([{ name: Admin.name, schema: AdminSchema }])],
   providers: [AdminsService],
-  exports: [AdminsService, MongooseModule],
+  exports: [AdminsService],
 })
 export class AdminsModule {}

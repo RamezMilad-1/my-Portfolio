@@ -1,73 +1,41 @@
 @import 'tailwindcss';
 
-@theme {
-  --font-sans:
-    'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
-    Roboto, sans-serif;
-  --font-display:
-    'Geist Display', 'Inter Display', 'Inter', ui-sans-serif, system-ui, sans-serif;
+/* Design tokens. Colors are HSL channel triplets in :root, exposed to Tailwind as real colors so
+   utilities like `text-muted-foreground` or `bg-brand-violet/15` work. */
+@theme inline {
+  --font-sans: var(--font-stack);
+  --font-display: var(--font-stack);
 
-  /* light */
-  --color-background: 0 0% 100%;
-  --color-foreground: 222 47% 8%;
-  --color-muted: 220 14% 96%;
-  --color-muted-foreground: 220 9% 46%;
-  --color-border: 220 13% 91%;
-  --color-input: 220 13% 91%;
-  --color-ring: 222 47% 11%;
-  --color-card: 0 0% 100%;
-  --color-card-foreground: 222 47% 8%;
-
-  /* accent */
-  --color-accent: 18 95% 60%;
-  --color-accent-foreground: 0 0% 100%;
-  --color-accent-secondary: 280 80% 60%;
-  --color-accent-tertiary: 200 95% 60%;
-
-  /* brand palette (used by hero / cards / buttons / status badge) */
-  --color-brand-indigo: 244 84% 67%;
-  --color-brand-violet: 275 84% 67%;
-  --color-brand-violet-soft: 275 65% 75%;
-  --color-brand-emerald: 152 76% 44%;
-  --color-brand-emerald-foreground: 152 70% 92%;
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-brand-indigo: hsl(var(--brand-indigo));
+  --color-brand-violet: hsl(var(--brand-violet));
+  --color-brand-violet-soft: hsl(var(--brand-violet-soft));
+  --color-brand-emerald: hsl(var(--brand-emerald));
+  --color-brand-emerald-foreground: hsl(var(--brand-emerald-foreground));
 }
 
 @layer base {
   :root {
-    /* Motion language — mirrors components/motion/tokens.ts. Every CSS
-       transition/keyframe should reference these instead of re-typing the
-       curve, so JS-driven and CSS-driven motion stay in lockstep. */
+    color-scheme: dark;
+
+    /* `--font-geist` is defined on <html> by next/font (app/layout.tsx). */
+    --font-stack:
+      var(--font-geist), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+    /* Motion language — mirrors components/motion/tokens.ts. */
     --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
-    --dur-instant: 150ms;
     --dur-fast: 200ms;
-    --dur-base: 350ms;
-    --dur-moderate: 500ms;
 
-    --background: 0 0% 100%;
-    --foreground: 222 47% 8%;
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 222 47% 11%;
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 8%;
-
-    --accent: 18 95% 60%;
-    --accent-foreground: 0 0% 100%;
-    --accent-secondary: 280 80% 60%;
-    --accent-tertiary: 200 95% 60%;
-
-    --brand-indigo: 244 84% 60%;
-    --brand-violet: 275 84% 62%;
-    --brand-violet-soft: 275 65% 70%;
-    --brand-emerald: 152 76% 40%;
-    --brand-emerald-foreground: 152 70% 18%;
-
-    color-scheme: light;
-  }
-
-  .dark {
     --background: 224 71% 4%;
     --foreground: 210 40% 98%;
     --muted: 217 33% 11%;
@@ -88,8 +56,6 @@
     --brand-violet-soft: 275 70% 78%;
     --brand-emerald: 152 72% 52%;
     --brand-emerald-foreground: 152 80% 92%;
-
-    color-scheme: dark;
   }
 
   html {
@@ -102,13 +68,9 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: var(--font-sans);
+    font-family: var(--font-stack);
     min-height: 100dvh;
     overflow-x: hidden;
-    /* overflow-x: hidden makes body the scroll container. Framer-motion's
-       useScroll measures offsets relative to this container; without
-       position: relative it warns and offsets can drift. */
-    position: relative;
   }
 
   ::selection {
@@ -116,27 +78,16 @@
     color: hsl(220 40% 8%);
   }
 
-  /* Unified focus ring — only shows for keyboard users, not mouse clicks. */
+  /* One focus ring for keyboard users; mouse clicks don't show it. */
   :focus {
     outline: none;
   }
   :focus-visible {
-    outline: 2px solid hsl(var(--accent));
-    outline-offset: 2px;
+    outline: 2px solid hsl(var(--brand-violet));
+    outline-offset: 3px;
     border-radius: 4px;
   }
-  /* Don't double-ring inside button/input components that already
-     style their own focus state via Tailwind classes. */
-  button:focus-visible,
-  a:focus-visible,
-  [role='button']:focus-visible,
-  input:focus-visible,
-  textarea:focus-visible,
-  select:focus-visible {
-    outline-offset: 3px;
-  }
 
-  /* prettier scrollbars */
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -154,8 +105,10 @@
 }
 
 @layer utilities {
-  /* multi-stop gradient text */
-  .gradient-text {
+  /* ── Text ─────────────────────────────────────────────────────────────── */
+
+  /* Admin / auth accent gradient (warm palette). */
+  .text-accent-gradient {
     background: linear-gradient(
       120deg,
       hsl(var(--accent)) 0%,
@@ -169,18 +122,101 @@
     animation: gradient-shift 12s ease-in-out infinite;
   }
 
-  @keyframes gradient-shift {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
+  /* Animated brand gradient used by headings. */
+  .text-shimmer {
+    background: linear-gradient(
+      120deg,
+      hsl(var(--brand-indigo)) 0%,
+      hsl(var(--brand-violet)) 45%,
+      hsl(var(--brand-violet-soft)) 70%,
+      hsl(var(--brand-indigo)) 100%
+    );
+    background-size: 220% 220%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gradient-shift 10s ease-in-out infinite;
+    text-shadow: 0 0 60px hsl(var(--brand-violet) / 0.25);
   }
 
-
-  /* glass surface */
-  .glass {
-    background-color: hsl(var(--background) / 0.65);
-    backdrop-filter: saturate(180%) blur(14px);
-    -webkit-backdrop-filter: saturate(180%) blur(14px);
+  .text-brand-gradient {
+    background: linear-gradient(120deg, hsl(var(--brand-indigo)), hsl(var(--brand-violet)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
+
+  /* Hero headline. */
+  .hero-title {
+    position: relative;
+    background-image: linear-gradient(
+      110deg,
+      hsl(258 70% 78%) 0%,
+      hsl(274 66% 74%) 30%,
+      hsl(286 72% 86%) 46%,
+      hsl(266 72% 80%) 56%,
+      hsl(280 62% 75%) 70%,
+      hsl(258 70% 78%) 100%
+    );
+    background-size: 260% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: hero-shine 22s ease-in-out infinite;
+    filter: drop-shadow(0 1px 0 hsl(0 0% 100% / 0.08))
+      drop-shadow(0 6px 22px hsl(270 48% 42% / 0.14));
+  }
+
+  /* Markdown inside project write-ups. */
+  .prose-soft p {
+    color: hsl(var(--muted-foreground));
+    line-height: 1.75;
+  }
+  .prose-soft strong {
+    color: hsl(var(--foreground));
+  }
+  .prose-soft a {
+    color: hsl(var(--accent));
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .prose-soft code {
+    background: hsl(var(--muted));
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+  .prose-soft h1,
+  .prose-soft h2,
+  .prose-soft h3 {
+    color: hsl(var(--foreground));
+    font-family: var(--font-stack);
+    letter-spacing: -0.02em;
+  }
+  .prose-soft h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+  }
+  .prose-soft h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+  .prose-soft ul {
+    padding-left: 1.5rem;
+  }
+  .prose-soft ul li {
+    margin: 0.4rem 0;
+    color: hsl(var(--muted-foreground));
+  }
+  .prose-soft ul li::marker {
+    color: hsl(var(--accent));
+  }
+
+  /* ── Surfaces ─────────────────────────────────────────────────────────── */
 
   .glass-strong {
     background-color: hsl(var(--background) / 0.85);
@@ -188,12 +224,6 @@
     -webkit-backdrop-filter: saturate(180%) blur(20px);
   }
 
-  /* layered ring shadow */
-  .ring-soft {
-    box-shadow: 0 0 0 1px hsl(var(--border)), 0 1px 2px hsl(0 0% 0% / 0.04);
-  }
-
-  /* premium-feeling lift */
   .ring-lift {
     box-shadow:
       0 0 0 1px hsl(var(--border)),
@@ -201,7 +231,7 @@
       0 12px 28px -12px hsl(var(--accent) / 0.18);
   }
 
-  /* subtle grain — gives depth to flat backgrounds */
+  /* Subtle grain over flat backgrounds (auth and 404 pages). */
   .noise::before {
     content: '';
     position: absolute;
@@ -212,7 +242,7 @@
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
   }
 
-  /* aurora — animated multi-radial mesh background */
+  /* Drifting multi-radial mesh behind the auth and 404 pages. */
   .aurora {
     position: relative;
     isolation: isolate;
@@ -231,158 +261,74 @@
     pointer-events: none;
   }
 
-  @keyframes aurora-drift {
-    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-    33%      { transform: translate3d(2%, -1%, 0) scale(1.04); }
-    66%      { transform: translate3d(-1%, 2%, 0) scale(0.98); }
-  }
-
-  /* fading edges (used on horizontal scroll / marquee) */
-  .mask-edges-x {
-    -webkit-mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
-            mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
-  }
-
-  /* underline that reveals on hover */
-  .link-underline {
-    background-image: linear-gradient(currentColor, currentColor);
-    background-size: 0% 1px;
-    background-position: 0 100%;
-    background-repeat: no-repeat;
-    transition: background-size 280ms ease;
-  }
-  .link-underline:hover {
-    background-size: 100% 1px;
-  }
-
-  /* prose text colors that respect theme */
-  .prose-soft p { color: hsl(var(--muted-foreground)); line-height: 1.75; }
-  .prose-soft strong { color: hsl(var(--foreground)); }
-  .prose-soft a { color: hsl(var(--accent)); text-decoration: underline; text-underline-offset: 3px; }
-  .prose-soft code {
-    background: hsl(var(--muted));
-    padding: 1px 6px;
-    border-radius: 4px;
-    font-size: 0.9em;
-  }
-  .prose-soft h1, .prose-soft h2, .prose-soft h3 {
-    color: hsl(var(--foreground));
-    font-family: var(--font-display);
-    letter-spacing: -0.02em;
-  }
-  .prose-soft h2 { font-size: 1.5rem; margin-top: 2rem; margin-bottom: 0.75rem; font-weight: 600; }
-  .prose-soft h3 { font-size: 1.2rem; margin-top: 1.5rem; margin-bottom: 0.5rem; font-weight: 600; }
-  .prose-soft ul { padding-left: 1.5rem; }
-  .prose-soft ul li { margin: 0.4rem 0; color: hsl(var(--muted-foreground)); }
-  .prose-soft ul li::marker { color: hsl(var(--accent)); }
-}
-
-@layer utilities {
   /*
-   * Card system — light, calm, premium glass on a dark navy base.
-   * Reads as "translucent slate" with a soft white edge, not as a saturated
-   * violet block. Accent hue is cool indigo (244°), not pink-violet (275°),
-   * so the glow stays elegant instead of magenta.
+   * Glass card on the dark navy base. No backdrop-filter on purpose: these cards sit in normal
+   * flow over the fixed background, where a blur has nothing visible to blur but costs a
+   * re-rasterization on every scroll frame.
    */
-  .ek-glass {
+  .glass-card {
     position: relative;
     background-color: hsl(232 28% 15% / 0.62);
     background-image:
-      linear-gradient(180deg, hsl(0 0% 100% / 0.05) 0%, hsl(0 0% 100% / 0.015) 55%, transparent 100%),
+      linear-gradient(
+        180deg,
+        hsl(0 0% 100% / 0.05) 0%,
+        hsl(0 0% 100% / 0.015) 55%,
+        transparent 100%
+      ),
       radial-gradient(120% 80% at 0% 0%, hsl(0 0% 100% / 0.05), transparent 55%),
-      radial-gradient(110% 80% at 50% 115%, hsl(var(--brand-indigo) / 0.10), transparent 65%);
-    border: 1px solid hsl(0 0% 100% / 0.10);
-    /* No backdrop-filter here on purpose. These cards sit in normal flow
-       over the fixed page background, so scrolling forced the GPU to
-       re-blur every card's backdrop on every frame — the single biggest
-       scroll cost on the page. At a 62%-opaque dark fill over a near-
-       uniform dark background, the blur had no visible source material;
-       the frosted look comes from the fill + gradients + inner highlight.
-       (The nav, mobile menu, and lightbox keep their blur: they overlap
-       real scrolling content, where it's actually visible.) */
+      radial-gradient(110% 80% at 50% 115%, hsl(var(--brand-indigo) / 0.1), transparent 65%);
+    border: 1px solid hsl(0 0% 100% / 0.1);
     box-shadow:
-      inset 0 1px 0 hsl(0 0% 100% / 0.10),
+      inset 0 1px 0 hsl(0 0% 100% / 0.1),
       inset 0 -1px 0 hsl(var(--brand-indigo) / 0.08),
       0 2px 4px hsl(220 40% 2% / 0.45),
       0 10px 24px -10px hsl(220 40% 2% / 0.55),
       0 22px 50px -22px hsl(220 40% 2% / 0.65);
   }
 
-  /* Accent underline used inside cards (under label text).
-     Sits as a thin pill that animates from cool slate to violet on
-     parent-group hover. Width also expands a touch. */
-  .ek-underline {
-    display: block;
-    height: 3px;
-    width: 34px;
-    border-radius: 9999px;
-    background: linear-gradient(
-      90deg,
-      hsl(var(--brand-indigo) / 0.70),
-      hsl(var(--brand-violet) / 0.55)
-    );
-    box-shadow: 0 0 8px -2px hsl(var(--brand-violet) / 0.35);
-    transition:
-      width 320ms var(--ease-premium),
-      background 320ms var(--ease-premium),
-      box-shadow 320ms var(--ease-premium);
+  /* Soft whitish sheen along the top edge of a card. */
+  .card-sheen {
+    position: relative;
   }
-  .group:hover .ek-underline {
-    width: 52px;
+  .card-sheen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
     background: linear-gradient(
-      90deg,
-      hsl(var(--brand-indigo)),
-      hsl(var(--brand-violet))
+      180deg,
+      hsl(0 0% 100% / 0.1) 0%,
+      hsl(0 0% 100% / 0.02) 14%,
+      transparent 28%
     );
-    box-shadow: 0 0 14px -2px hsl(var(--brand-violet) / 0.65);
+    pointer-events: none;
+    opacity: 0.85;
   }
 
-  /* Hover lift — soft dark depth + subtle indigo rim. No pink glow.
-     Note: background-color change still applies on :hover (instant);
-     omitted from the transition list to drop a paint property per frame. */
-  .ek-glow {
+  /* Hover lift: soft depth and an indigo rim. */
+  .glow-hover {
     transition:
       box-shadow 360ms var(--ease-premium),
       border-color 360ms var(--ease-premium),
       transform 360ms var(--ease-premium);
   }
-  .ek-glow:hover {
+  .glow-hover:hover {
     border-color: hsl(0 0% 100% / 0.18);
     background-color: hsl(220 28% 22% / 0.62);
     box-shadow:
       inset 0 1px 0 hsl(0 0% 100% / 0.16),
       0 0 0 1px hsl(var(--brand-indigo) / 0.18),
-      0 24px 50px -22px hsl(220 40% 4% / 0.70),
-      0 0 36px -12px hsl(var(--brand-indigo) / 0.30);
+      0 24px 50px -22px hsl(220 40% 4% / 0.7),
+      0 0 36px -12px hsl(var(--brand-indigo) / 0.3);
   }
 
-  /* Card top highlight — a soft whitish sheen, not violet */
-  .ek-card-sheen {
-    position: relative;
-  }
-  .ek-card-sheen::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background:
-      linear-gradient(
-        180deg,
-        hsl(0 0% 100% / 0.10) 0%,
-        hsl(0 0% 100% / 0.02) 14%,
-        transparent 28%
-      );
-    pointer-events: none;
-    opacity: 0.85;
-  }
-
-  /* Conic ring used on featured cards / metric tiles on hover.
-     Restrained: cool indigo with a single soft violet stop. */
-  .ek-ring-conic {
+  /* Conic ring that fades in around a card on hover. */
+  .ring-conic {
     position: relative;
     isolation: isolate;
   }
-  .ek-ring-conic::before {
+  .ring-conic::before {
     content: '';
     position: absolute;
     inset: -1px;
@@ -390,193 +336,33 @@
     padding: 1px;
     background: conic-gradient(
       from 140deg,
-      hsl(0 0% 100% / 0.0),
+      hsl(0 0% 100% / 0),
       hsl(0 0% 100% / 0.18) 18%,
       hsl(var(--brand-indigo) / 0.45) 38%,
-      hsl(var(--brand-violet) / 0.30) 52%,
+      hsl(var(--brand-violet) / 0.3) 52%,
       hsl(var(--brand-indigo) / 0.35) 66%,
       hsl(0 0% 100% / 0.12) 82%,
-      hsl(0 0% 100% / 0.0)
+      hsl(0 0% 100% / 0)
     );
     -webkit-mask:
       linear-gradient(#000 0 0) content-box,
       linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
-            mask-composite: exclude;
+    mask-composite: exclude;
     opacity: 0;
     transition: opacity 420ms var(--ease-premium);
     pointer-events: none;
     z-index: 1;
   }
-  .ek-ring-conic:hover::before {
+  .ring-conic:hover::before {
     opacity: 0.85;
   }
 
-  /* Soft moving highlight that sweeps across card surfaces. */
-  .ek-card-shine {
-    position: relative;
-    overflow: hidden;
-  }
-  .ek-card-shine::before {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    border-radius: inherit;
-    background: linear-gradient(
-      115deg,
-      transparent 35%,
-      hsl(0 0% 100% / 0.08) 50%,
-      transparent 65%
-    );
-    transform: translateX(-100%);
-    transition: transform 900ms var(--ease-premium);
-    pointer-events: none;
-    z-index: 0;
-  }
-  .ek-card-shine:hover::before {
-    transform: translateX(100%);
-  }
-
-  /* Light, neutral tag used inside cards (project tech chips, etc.) */
-  .ek-tag {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 9999px;
-    border: 1px solid hsl(var(--brand-indigo) / 0.35);
-    background:
-      linear-gradient(
-        135deg,
-        hsl(var(--brand-indigo) / 0.18),
-        hsl(var(--brand-violet) / 0.14)
-      );
-    padding: 0.15rem 0.6rem;
-    font-size: 0.625rem;
-    font-weight: 600;
-    color: hsl(220 30% 94%);
-    box-shadow:
-      inset 0 1px 0 hsl(0 0% 100% / 0.10),
-      0 1px 4px -1px hsl(var(--brand-indigo) / 0.25);
-    transition:
-      background 220ms var(--ease-premium),
-      border-color 220ms var(--ease-premium),
-      color 220ms var(--ease-premium),
-      box-shadow 220ms var(--ease-premium);
-  }
-  .ek-tag:hover {
-    border-color: hsl(var(--brand-indigo) / 0.60);
-    background:
-      linear-gradient(
-        135deg,
-        hsl(var(--brand-indigo) / 0.28),
-        hsl(var(--brand-violet) / 0.22)
-      );
-    color: hsl(0 0% 100%);
-    box-shadow:
-      inset 0 1px 0 hsl(0 0% 100% / 0.14),
-      0 2px 8px -2px hsl(var(--brand-violet) / 0.45);
-  }
-
-  /* Muted variant for the "+N" overflow chip */
-  .ek-tag-muted {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 9999px;
-    border: 1px solid hsl(0 0% 100% / 0.08);
-    background: hsl(0 0% 100% / 0.025);
-    padding: 0.1rem 0.55rem;
-    font-size: 0.625rem;
-    font-weight: 600;
-    color: hsl(220 15% 65%);
-  }
-
-  /* Neutral icon container used in stat / contact cards.
-     Reads as "frosted slate" with a faint indigo wash, not as a violet block. */
-  .ek-icon-tile {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0.75rem;
-    border: 1px solid hsl(0 0% 100% / 0.12);
-    background:
-      linear-gradient(180deg, hsl(0 0% 100% / 0.10), hsl(0 0% 100% / 0.02)),
-      hsl(220 28% 24% / 0.65);
-    color: hsl(220 30% 92%);
-    box-shadow:
-      inset 0 1px 0 hsl(0 0% 100% / 0.16),
-      0 6px 16px -10px hsl(220 40% 4% / 0.65);
-    transition:
-      transform 280ms var(--ease-premium),
-      border-color 280ms var(--ease-premium),
-      box-shadow 280ms var(--ease-premium);
-  }
-  .group:hover .ek-icon-tile {
-    transform: scale(1.04);
-    border-color: hsl(var(--brand-indigo) / 0.40);
-    box-shadow:
-      inset 0 1px 0 hsl(0 0% 100% / 0.22),
-      0 10px 24px -10px hsl(220 40% 4% / 0.70),
-      0 0 0 1px hsl(var(--brand-indigo) / 0.22);
-  }
-
-  /* Animated brand gradient text */
-  .ek-gradient-text {
-    background: linear-gradient(
-      120deg,
-      hsl(var(--brand-indigo)) 0%,
-      hsl(var(--brand-violet)) 45%,
-      hsl(var(--brand-violet-soft)) 70%,
-      hsl(var(--brand-indigo)) 100%
-    );
-    background-size: 220% 220%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: gradient-shift 10s ease-in-out infinite;
-    text-shadow: 0 0 60px hsl(var(--brand-violet) / 0.25);
-  }
-
-  /* Hero headline — premium variant with subtle shine */
-  .ek-hero-title {
-    position: relative;
-    background: linear-gradient(
-      110deg,
-      hsl(258 70% 78%) 0%,
-      hsl(274 66% 74%) 32%,
-      hsl(266 72% 82%) 50%,
-      hsl(280 62% 75%) 68%,
-      hsl(258 70% 78%) 100%
-    );
-    background-size: 260% 100%;
-    -webkit-background-clip: text;
-            background-clip: text;
-    color: transparent;
-    animation: hero-shine 22s ease-in-out infinite;
-    filter: drop-shadow(0 6px 22px hsl(270 48% 42% / 0.16));
-  }
-  @keyframes hero-shine {
-    0%   { background-position: 0% 50%; }
-    50%  { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-
-  /* Static brand gradient text (no animation) */
-  .ek-gradient-text-static {
-    background: linear-gradient(
-      120deg,
-      hsl(var(--brand-indigo)),
-      hsl(var(--brand-violet))
-    );
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  /* Gradient border ring (for outline gradient button) */
-  .ek-border-gradient {
+  /* Gradient hairline border (outline gradient button). */
+  .border-gradient {
     position: relative;
   }
-  .ek-border-gradient::before {
+  .border-gradient::before {
     content: '';
     position: absolute;
     inset: 0;
@@ -591,16 +377,113 @@
       linear-gradient(#000 0 0) content-box,
       linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
-            mask-composite: exclude;
+    mask-composite: exclude;
     pointer-events: none;
   }
 
-  .ek-grid {
-    display: none;
+  /* Accent pill under card labels; widens on parent hover. */
+  .accent-underline {
+    display: block;
+    height: 3px;
+    width: 34px;
+    border-radius: 9999px;
+    background: linear-gradient(
+      90deg,
+      hsl(var(--brand-indigo) / 0.7),
+      hsl(var(--brand-violet) / 0.55)
+    );
+    box-shadow: 0 0 8px -2px hsl(var(--brand-violet) / 0.35);
+    transition:
+      width 320ms var(--ease-premium),
+      background 320ms var(--ease-premium),
+      box-shadow 320ms var(--ease-premium);
+  }
+  .group:hover .accent-underline {
+    width: 52px;
+    background: linear-gradient(90deg, hsl(var(--brand-indigo)), hsl(var(--brand-violet)));
+    box-shadow: 0 0 14px -2px hsl(var(--brand-violet) / 0.65);
   }
 
-  /* Gradient button: primary (filled) */
-  .gb-primary {
+  /* Tech chips on cards. */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    border: 1px solid hsl(var(--brand-indigo) / 0.35);
+    background: linear-gradient(
+      135deg,
+      hsl(var(--brand-indigo) / 0.18),
+      hsl(var(--brand-violet) / 0.14)
+    );
+    padding: 0.15rem 0.6rem;
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: hsl(220 30% 94%);
+    box-shadow:
+      inset 0 1px 0 hsl(0 0% 100% / 0.1),
+      0 1px 4px -1px hsl(var(--brand-indigo) / 0.25);
+    transition:
+      background 220ms var(--ease-premium),
+      border-color 220ms var(--ease-premium),
+      color 220ms var(--ease-premium),
+      box-shadow 220ms var(--ease-premium);
+  }
+  .tag:hover {
+    border-color: hsl(var(--brand-indigo) / 0.6);
+    background: linear-gradient(
+      135deg,
+      hsl(var(--brand-indigo) / 0.28),
+      hsl(var(--brand-violet) / 0.22)
+    );
+    color: hsl(0 0% 100%);
+    box-shadow:
+      inset 0 1px 0 hsl(0 0% 100% / 0.14),
+      0 2px 8px -2px hsl(var(--brand-violet) / 0.45);
+  }
+
+  .tag-muted {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    border: 1px solid hsl(0 0% 100% / 0.08);
+    background: hsl(0 0% 100% / 0.025);
+    padding: 0.1rem 0.55rem;
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: hsl(220 15% 65%);
+  }
+
+  /* Icon container in contact cards. */
+  .icon-tile {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    border: 1px solid hsl(0 0% 100% / 0.12);
+    background:
+      linear-gradient(180deg, hsl(0 0% 100% / 0.1), hsl(0 0% 100% / 0.02)), hsl(220 28% 24% / 0.65);
+    color: hsl(220 30% 92%);
+    box-shadow:
+      inset 0 1px 0 hsl(0 0% 100% / 0.16),
+      0 6px 16px -10px hsl(220 40% 4% / 0.65);
+    transition:
+      transform 280ms var(--ease-premium),
+      border-color 280ms var(--ease-premium),
+      box-shadow 280ms var(--ease-premium);
+  }
+  .group:hover .icon-tile {
+    transform: scale(1.04);
+    border-color: hsl(var(--brand-indigo) / 0.4);
+    box-shadow:
+      inset 0 1px 0 hsl(0 0% 100% / 0.22),
+      0 10px 24px -10px hsl(220 40% 4% / 0.7),
+      0 0 0 1px hsl(var(--brand-indigo) / 0.22);
+  }
+
+  /* ── Gradient buttons ─────────────────────────────────────────────────── */
+
+  .gradient-button-primary {
     background-image: linear-gradient(
       135deg,
       hsl(var(--brand-indigo)) 0%,
@@ -611,7 +494,7 @@
     background-position: 0% 50%;
     box-shadow:
       0 12px 32px -12px hsl(var(--brand-violet) / 0.65),
-      0 4px 14px -6px hsl(var(--brand-indigo) / 0.50),
+      0 4px 14px -6px hsl(var(--brand-indigo) / 0.5),
       inset 0 1px 0 hsl(0 0% 100% / 0.18),
       inset 0 -1px 0 hsl(0 0% 0% / 0.25);
     transition:
@@ -619,23 +502,19 @@
       box-shadow 320ms var(--ease-premium),
       transform 220ms var(--ease-premium);
   }
-  .gb-primary:hover {
+  .gradient-button-primary:hover {
     background-position: 100% 50%;
     box-shadow:
       0 22px 44px -12px hsl(var(--brand-violet) / 0.85),
-      0 10px 22px -8px hsl(var(--brand-indigo) / 0.60),
+      0 10px 22px -8px hsl(var(--brand-indigo) / 0.6),
       inset 0 1px 0 hsl(0 0% 100% / 0.22),
-      inset 0 -1px 0 hsl(0 0% 0% / 0.30);
+      inset 0 -1px 0 hsl(0 0% 0% / 0.3);
   }
-  .gb-primary:active {
+  .gradient-button-primary:active {
     transform: translateY(0) scale(0.97);
-    box-shadow:
-      0 8px 18px -8px hsl(var(--brand-violet) / 0.55),
-      inset 0 1px 0 hsl(0 0% 100% / 0.16),
-      inset 0 -1px 0 hsl(0 0% 0% / 0.30);
   }
-  /* Sheen sweep on hover */
-  .gb-primary::before {
+  /* Sheen sweep on hover. */
+  .gradient-button-primary::before {
     content: '';
     position: absolute;
     inset: 0;
@@ -652,11 +531,40 @@
     mix-blend-mode: overlay;
     z-index: 0;
   }
-  .gb-primary:hover::before {
+  .gradient-button-primary:hover::before {
     transform: translateX(120%);
   }
 
-  .hero-cta.gb-primary {
+  .gradient-button-outline {
+    background-color: hsl(var(--background) / 0.45);
+    backdrop-filter: saturate(160%) blur(12px);
+    -webkit-backdrop-filter: saturate(160%) blur(12px);
+    box-shadow:
+      inset 0 1px 0 hsl(var(--brand-violet-soft) / 0.1),
+      0 10px 28px -18px hsl(var(--brand-violet) / 0.45);
+    transition:
+      background-color 280ms var(--ease-premium),
+      box-shadow 320ms var(--ease-premium),
+      transform 220ms var(--ease-premium);
+  }
+  .gradient-button-outline:hover {
+    background-color: hsl(var(--brand-violet-soft) / 0.12);
+    box-shadow:
+      inset 0 1px 0 hsl(var(--brand-violet-soft) / 0.18),
+      0 18px 36px -18px hsl(var(--brand-violet) / 0.7);
+  }
+  .gradient-button-outline:active {
+    transform: translateY(0) scale(0.97);
+  }
+  /* Keep labels and icons above the sheen layer. */
+  .gradient-button-primary > *,
+  .gradient-button-outline > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Calmer variants inside the hero. */
+  .hero-cta.gradient-button-primary {
     background-image: linear-gradient(
       135deg,
       hsl(246 78% 68%) 0%,
@@ -669,27 +577,26 @@
       inset 0 1px 0 hsl(0 0% 100% / 0.22),
       inset 0 -1px 0 hsl(0 0% 0% / 0.18);
   }
-  .hero-cta.gb-primary:hover {
+  .hero-cta.gradient-button-primary:hover {
     box-shadow:
       0 14px 30px -18px hsl(var(--brand-violet) / 0.56),
-      0 1px 0 hsl(0 0% 100% / 0.10),
+      0 1px 0 hsl(0 0% 100% / 0.1),
       inset 0 1px 0 hsl(0 0% 100% / 0.26),
-      inset 0 -1px 0 hsl(0 0% 0% / 0.20);
+      inset 0 -1px 0 hsl(0 0% 0% / 0.2);
   }
-  .hero-cta.gb-outline {
-    background-color: hsl(220 24% 15% / 0.50);
+  .hero-cta.gradient-button-outline {
+    background-color: hsl(220 24% 15% / 0.5);
     box-shadow:
-      inset 0 1px 0 hsl(0 0% 100% / 0.10),
+      inset 0 1px 0 hsl(0 0% 100% / 0.1),
       0 10px 22px -20px hsl(var(--brand-violet) / 0.34);
   }
-  .hero-cta.gb-outline:hover {
+  .hero-cta.gradient-button-outline:hover {
     background-color: hsl(220 24% 18% / 0.58);
     box-shadow:
       inset 0 1px 0 hsl(0 0% 100% / 0.14),
       0 14px 28px -22px hsl(var(--brand-violet) / 0.42);
   }
-
-  .hero-social-link.ek-glass {
+  .hero-social-link.glass-card {
     border-color: hsl(0 0% 100% / 0.11);
     background:
       linear-gradient(180deg, hsl(0 0% 100% / 0.06), hsl(0 0% 100% / 0.018)),
@@ -698,165 +605,208 @@
       inset 0 1px 0 hsl(0 0% 100% / 0.09),
       0 8px 20px -18px hsl(var(--brand-indigo) / 0.36);
   }
-  .hero-social-link.ek-glass:hover {
+  .hero-social-link.glass-card:hover {
     border-color: hsl(0 0% 100% / 0.16);
     box-shadow:
       inset 0 1px 0 hsl(0 0% 100% / 0.12),
       0 12px 24px -20px hsl(var(--brand-indigo) / 0.42);
   }
-  /* Keep label + icons above the sheen layer */
-  .gb-primary > *,
-  .gb-outline > * {
-    position: relative;
-    z-index: 1;
-  }
 
-  /* Gradient button: outline (transparent w/ gradient border via ek-border-gradient) */
-  .gb-outline {
-    background-color: hsl(var(--background) / 0.45);
-    backdrop-filter: saturate(160%) blur(12px);
-    -webkit-backdrop-filter: saturate(160%) blur(12px);
-    box-shadow:
-      inset 0 1px 0 hsl(var(--brand-violet-soft) / 0.10),
-      0 10px 28px -18px hsl(var(--brand-violet) / 0.45);
-    transition:
-      background-color 280ms var(--ease-premium),
-      box-shadow 320ms var(--ease-premium),
-      transform 220ms var(--ease-premium);
-  }
-  .gb-outline:hover {
-    background-color: hsl(var(--brand-violet-soft) / 0.12);
-    box-shadow:
-      inset 0 1px 0 hsl(var(--brand-violet-soft) / 0.18),
-      0 18px 36px -18px hsl(var(--brand-violet) / 0.70);
-  }
-  .gb-outline:active {
-    transform: translateY(0) scale(0.97);
-  }
+  /* ── Motion ───────────────────────────────────────────────────────────── */
 
-  /* Hero / About tech pills — premium glassy badge */
-  .ek-pill {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    padding: 0.32rem 0.78rem;
-    border-radius: 0.5rem;
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-    color: hsl(var(--foreground) / 0.92);
-    background:
-      linear-gradient(180deg, hsl(var(--brand-violet-soft) / 0.10), hsl(var(--brand-indigo) / 0.06)),
-      hsl(var(--card) / 0.55);
-    border: 1px solid hsl(var(--brand-violet-soft) / 0.30);
-    /* backdrop-filter removed — see the .ek-glass note: in-flow chips over
-       the fixed background paid a per-frame re-blur during scroll for no
-       visible effect. */
-    box-shadow:
-      inset 0 1px 0 hsl(var(--brand-violet-soft) / 0.18),
-      0 4px 14px -8px hsl(var(--brand-violet) / 0.35);
-    transition:
-      transform 260ms var(--ease-premium),
-      box-shadow 260ms var(--ease-premium),
-      border-color 260ms var(--ease-premium),
-      color 260ms var(--ease-premium);
-  }
-  .ek-pill::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: radial-gradient(
-      120% 80% at 50% -30%,
-      hsl(var(--brand-violet-soft) / 0.35),
-      transparent 65%
-    );
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 260ms var(--ease-premium);
-  }
-  .ek-pill:hover {
-    transform: translateY(-1px);
-    border-color: hsl(var(--brand-violet-soft) / 0.55);
-    color: hsl(var(--foreground));
-    box-shadow:
-      inset 0 1px 0 hsl(var(--brand-violet-soft) / 0.28),
-      0 14px 28px -14px hsl(var(--brand-violet) / 0.55);
-  }
-  .ek-pill:hover::before {
-    opacity: 1;
-  }
-
-  /* Slow pulsing glow used by the animated background orbs.
-     Opacity-only: scaling a 120–220px blurred element forces the browser
-     to re-rasterize the blur on every frame, which is the single most
-     expensive thing those orbs were doing. The visual difference between
-     opacity-only and opacity+scale at these sizes is imperceptible. */
-  @keyframes pulse-glow {
-    0%, 100% { opacity: 0.55; }
-    50%      { opacity: 0.9;  }
-  }
+  /* Background orbs: opacity-only pulses (scaling a large blur re-rasterizes it every frame). */
   .animate-pulse-glow {
-    animation: pulse-glow 8s ease-in-out infinite;
-    animation-fill-mode: both;
-  }
-
-  @keyframes pulse-glow-subtle {
-    0%, 100% { opacity: 0.32; }
-    50%      { opacity: 0.48; }
+    animation: pulse-glow 8s ease-in-out infinite both;
   }
   .animate-pulse-glow-subtle {
-    animation: pulse-glow-subtle 10s ease-in-out infinite;
-    animation-fill-mode: both;
+    animation: pulse-glow-subtle 10s ease-in-out infinite both;
   }
 
-  /* Dialog entrance (admin). The component previously referenced
-     tailwindcss-animate utilities that were never installed, so dialogs
-     popped in with zero animation. Opacity/transform only; the global
-     reduced-motion block below flattens these to 0.01ms. */
-  @keyframes ek-dialog-overlay-in {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-  }
-  .ek-dialog-overlay[data-state='open'] {
-    animation: ek-dialog-overlay-in var(--dur-fast) var(--ease-premium) both;
-  }
-  @keyframes ek-dialog-content-in {
-    from { opacity: 0; transform: translate(-50%, -50%) scale(0.97); }
-    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  }
-  .ek-dialog-content[data-state='open'] {
-    animation: ek-dialog-content-in var(--dur-fast) var(--ease-premium) both;
-  }
-
-  /* TechGrid icon bob — compositor-only translate-y. Each item gets its
-     own duration / delay via inline style so the grid drifts independently
-     instead of bobbing in sync. Cheaper than a per-item framer-motion
-     infinite loop because the work happens entirely on the compositor
-     thread. */
-  @keyframes ek-bob {
-    0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(var(--bob, -4px)); }
-  }
-  .ek-bob {
-    animation: ek-bob var(--bob-duration, 5s) ease-in-out infinite;
-    animation-delay: var(--bob-delay, 0s);
+  /* Tech-grid icon bob — compositor-only; each icon sets its own timing via custom properties. */
+  .bob {
+    animation: bob var(--bob-duration, 5s) ease-in-out var(--bob-delay, 0s) infinite;
     will-change: transform;
   }
 
+  /* Entrance animations that run on first paint, before JavaScript loads. */
+  .enter-up {
+    animation: enter-up var(--enter-duration, 0.6s) var(--ease-premium) var(--enter-delay, 0s) both;
+  }
+  .enter-left {
+    animation: enter-left var(--enter-duration, 0.6s) var(--ease-premium) var(--enter-delay, 0s)
+      both;
+  }
+  .enter-fade {
+    animation: enter-fade var(--enter-duration, 0.8s) var(--ease-premium) var(--enter-delay, 0s)
+      both;
+  }
+
+  /* Admin dialogs. */
+  .dialog-overlay[data-state='open'] {
+    animation: enter-fade var(--dur-fast) var(--ease-premium) both;
+  }
+  .dialog-content[data-state='open'] {
+    animation: dialog-in var(--dur-fast) var(--ease-premium) both;
+  }
 }
 
-/* While the user is actively scrolling (class managed by
-   components/motion/scroll-paint-pause.tsx), hold the gradient-text shimmers
-   still. These animate background-position under background-clip: text, so
-   every frame re-rasterizes the glyphs on the main thread — on the
-   viewport-wide project-detail headline that alone can blow the frame
-   budget. The loops run 10–22s, so a 150ms hold is imperceptible, and a
-   paused headline scrolls as an already-painted composited texture. */
-html.is-scrolling .gradient-text,
-html.is-scrolling .ek-gradient-text,
-html.is-scrolling .ek-hero-title {
+/*
+ * Scroll reveal: `[data-reveal]` elements settle into place once they scroll into view
+ * (components/motion/scroll-effects.tsx sets `data-revealed`). Content is only hidden when
+ * JavaScript runs and the visitor allows motion — never for crawlers or no-JS visitors.
+ */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  [data-reveal] {
+    transition:
+      opacity var(--reveal-duration, 0.6s) var(--ease-premium) var(--reveal-delay, 0s),
+      transform var(--reveal-duration, 0.6s) var(--ease-premium) var(--reveal-delay, 0s);
+  }
+  [data-reveal]:not([data-revealed]) {
+    opacity: 0;
+    transform: translate3d(var(--reveal-x, 0), var(--reveal-y, 16px), 0)
+      scale(var(--reveal-scale, 1));
+  }
+  /* Hairline dividers draw outwards from the centre instead. */
+  .reveal-scale-x[data-reveal]:not([data-revealed]) {
+    transform: scaleX(0);
+  }
+}
+
+/* Lifeline rail that draws itself while the timeline scrolls through the viewport. Browsers
+   without scroll-driven animations simply show the full rail. */
+.lifeline {
+  view-timeline: --lifeline block;
+  view-timeline-inset: 20% 15%;
+}
+.lifeline-head {
+  opacity: 0;
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .lifeline-progress {
+      transform-origin: top;
+      animation: lifeline-grow linear both;
+      animation-timeline: --lifeline;
+    }
+    .lifeline-head {
+      animation: lifeline-head linear both;
+      animation-timeline: --lifeline;
+    }
+  }
+}
+
+/* While the visitor scrolls, hold the text shimmers still: they repaint glyphs every frame. */
+html.is-scrolling .text-accent-gradient,
+html.is-scrolling .text-shimmer,
+html.is-scrolling .hero-title {
   animation-play-state: paused;
+}
+
+@keyframes gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+@keyframes hero-shine {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+@keyframes aurora-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(2%, -1%, 0) scale(1.04);
+  }
+  66% {
+    transform: translate3d(-1%, 2%, 0) scale(0.98);
+  }
+}
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+@keyframes pulse-glow-subtle {
+  0%,
+  100% {
+    opacity: 0.32;
+  }
+  50% {
+    opacity: 0.48;
+  }
+}
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(var(--bob, -4px));
+  }
+}
+@keyframes enter-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, var(--enter-y, 12px), 0);
+  }
+}
+@keyframes enter-left {
+  from {
+    opacity: 0;
+    transform: translate3d(-16px, 0, 0);
+  }
+}
+@keyframes enter-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+@keyframes lifeline-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes lifeline-head {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  4%,
+  96% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
