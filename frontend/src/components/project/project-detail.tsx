@@ -1,10 +1,10 @@
 import { ArrowLeft, Check, ExternalLink, Github, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { entranceSequence } from '@/components/motion/entrance';
 import { Reveal } from '@/components/motion/reveal';
-import { DISTANCE, STAGGER, staggerDelay } from '@/components/motion/tokens';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { SectionHeading } from '@/components/ui/section-heading';
 import type { Project } from '@/lib/types';
@@ -15,12 +15,12 @@ import { TeamGrid } from './team-grid';
 
 function CaseStudyCard({ label, body, wide }: { label: string; body: string; wide?: boolean }) {
   return (
-    <div className={`glass-card rounded-xl p-4 ${wide ? 'sm:col-span-2' : ''}`}>
+    <Reveal variant="land" className={`glass-card rounded-xl p-4 ${wide ? 'sm:col-span-2' : ''}`}>
       <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-violet-soft">
         {label}
       </p>
       <p className="mt-2.5 whitespace-pre-line text-sm leading-relaxed text-foreground">{body}</p>
-    </div>
+    </Reveal>
   );
 }
 
@@ -31,8 +31,7 @@ function BulletList({ items, icon }: { items: string[]; icon: 'sparkles' | 'chec
         <Reveal
           as="li"
           key={`${text}-${index}`}
-          y={DISTANCE.sm}
-          delay={staggerDelay(index, STAGGER.base)}
+          y={16}
           className="glass-card flex items-start gap-3 rounded-xl p-3.5"
         >
           {icon === 'sparkles' ? (
@@ -107,9 +106,12 @@ export function ProjectDetail({ project }: { project: Project }) {
     sections.push({
       title,
       content: (
-        <div className="prose-soft mt-5 max-w-none text-sm md:text-base">
+        <Reveal
+          variant="group"
+          className="reveal-stagger prose-soft mt-5 max-w-none text-sm md:text-base"
+        >
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdown}</ReactMarkdown>
-        </div>
+        </Reveal>
       ),
     });
   }
@@ -136,19 +138,23 @@ export function ProjectDetail({ project }: { project: Project }) {
     });
   }
 
+  // Page-load sequence for the header; everything below plays as it scrolls into view.
+  const delay = entranceSequence(0.05, 0.08);
+
   return (
     <article className="pt-20">
       <section className="relative px-4 pb-10 pt-8 sm:px-6 md:pb-14 md:pt-12">
         <div className="mx-auto max-w-5xl">
           <Link
             href="/#portfolio"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-brand-indigo"
+            style={delay()}
+            className="enter-focus inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-brand-indigo"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> All projects
           </Link>
 
           <div className="mt-6">
-            <div className="flex items-center gap-3">
+            <div className="enter-slide flex items-center gap-3" style={delay()}>
               <span
                 aria-hidden
                 className="h-[2px] w-10 rounded-full bg-gradient-to-r from-brand-indigo to-brand-violet shadow-[0_0_10px_-2px_hsl(var(--brand-violet)/0.55)]"
@@ -158,14 +164,22 @@ export function ProjectDetail({ project }: { project: Project }) {
               </span>
             </div>
 
-            <h1 className="mt-3 font-display text-[clamp(2rem,5vw,3.5rem)] font-bold leading-[1.05] tracking-tight">
+            <h1
+              className="enter-sharpen mt-3 font-display text-[clamp(2rem,5vw,3.5rem)] font-bold leading-[1.05] tracking-tight"
+              style={delay({
+                '--reveal-y': '24px',
+                '--reveal-blur': '14px',
+                '--enter-duration': '1.2s',
+              })}
+            >
               <span className="text-shimmer">{project.name}</span>
             </h1>
 
-            <div className="relative mt-4 flex items-center gap-2">
+            <div className="enter-focus relative mt-4 flex items-center gap-2" style={delay()}>
               <span
                 aria-hidden
-                className="h-[3px] w-40 rounded-full bg-gradient-to-r from-brand-indigo via-brand-violet to-transparent shadow-[0_0_14px_-2px_hsl(var(--brand-violet)/0.55)]"
+                style={delay()}
+                className="enter-draw h-[3px] w-40 rounded-full bg-gradient-to-r from-brand-indigo via-brand-violet to-transparent shadow-[0_0_14px_-2px_hsl(var(--brand-violet)/0.55)]"
               />
               <span
                 aria-hidden
@@ -179,13 +193,19 @@ export function ProjectDetail({ project }: { project: Project }) {
             </div>
 
             {project.tagline ? (
-              <p className="mt-4 max-w-3xl text-base leading-relaxed text-muted-foreground md:text-lg">
+              <p
+                className="enter-sharpen mt-4 max-w-3xl text-base leading-relaxed text-muted-foreground md:text-lg"
+                style={delay()}
+              >
                 {project.tagline}
               </p>
             ) : null}
 
             {project.tech.length > 0 ? (
-              <ul className="mt-5 flex flex-wrap gap-1.5">
+              <ul
+                className="enter-stagger mt-5 flex flex-wrap gap-1.5"
+                style={delay({ '--stagger-name': 'reveal-pop' })}
+              >
                 {project.tech.map((tech) => (
                   <li
                     key={tech}
@@ -197,7 +217,10 @@ export function ProjectDetail({ project }: { project: Project }) {
               </ul>
             ) : null}
 
-            <div className="mt-6 flex flex-wrap items-center gap-3">
+            <div
+              className="enter-stagger mt-6 flex flex-wrap items-center gap-3"
+              style={delay({ '--reveal-y': '16px' })}
+            >
               <ProjectLinks project={project} />
             </div>
           </div>
@@ -219,7 +242,10 @@ export function ProjectDetail({ project }: { project: Project }) {
             ))}
           </div>
 
-          <aside className="order-1 lg:order-2 lg:col-span-4">
+          <aside
+            className="enter-sharpen order-1 lg:order-2 lg:col-span-4"
+            style={{ '--enter-delay': '0.3s', '--reveal-y': '24px' } as CSSProperties}
+          >
             <StickyRail className="space-y-5">
               <ProjectGallery name={project.name} slides={slides} cover={cover} />
 
@@ -267,7 +293,10 @@ export function ProjectDetail({ project }: { project: Project }) {
       </div>
 
       <section className="mx-auto max-w-5xl px-4 pb-16 sm:px-6">
-        <div className="glass-card flex flex-col items-start gap-4 rounded-2xl p-6 sm:flex-row sm:items-center sm:justify-between sm:p-7">
+        <Reveal
+          variant="land"
+          className="glass-card flex flex-col items-start gap-4 rounded-2xl p-6 sm:flex-row sm:items-center sm:justify-between sm:p-7"
+        >
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-violet-soft">
               Keep exploring
@@ -281,7 +310,7 @@ export function ProjectDetail({ project }: { project: Project }) {
               Back to portfolio <ArrowLeft className="h-4 w-4 rotate-180" />
             </Link>
           </GradientButton>
-        </div>
+        </Reveal>
       </section>
     </article>
   );

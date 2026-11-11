@@ -1,3 +1,4 @@
+import { Reveal } from '@/components/motion/reveal';
 import { SectionHeading } from '@/components/ui/section-heading';
 import type { Certificate, Profile, TimelineEntry } from '@/lib/types';
 import { CertificateGallery } from './certificate-gallery';
@@ -24,12 +25,19 @@ export function ExperienceSection({ profile, timeline, certificates }: Experienc
 
         {certificates.length > 0 ? (
           <div className="mt-16">
-            <h3 className="font-display text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(220_15%_68%)]">
+            <Reveal
+              as="h3"
+              variant="focus"
+              y={8}
+              className="font-display text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(220_15%_68%)]"
+            >
               Certifications
-            </h3>
-            <span
+            </Reveal>
+            <Reveal
+              as="span"
+              variant="draw"
               aria-hidden
-              className="mt-3 block h-px w-12 bg-gradient-to-r from-brand-violet-soft/70 via-brand-violet-soft/35 to-transparent"
+              className="mt-3 block h-px w-12 origin-left bg-gradient-to-r from-brand-violet-soft/70 via-brand-violet-soft/35 to-transparent"
             />
             <CertificateGallery certificates={certificates} />
           </div>

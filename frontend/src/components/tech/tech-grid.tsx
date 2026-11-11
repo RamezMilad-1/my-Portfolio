@@ -1,6 +1,5 @@
 import type { CSSProperties } from 'react';
 import { Reveal } from '@/components/motion/reveal';
-import { DURATION, STAGGER, staggerDelay } from '@/components/motion/tokens';
 import { techLogoSources } from './tech-logos';
 import { TechIcon } from './tech-icon';
 
@@ -31,16 +30,20 @@ export function TechGrid({ items }: { items: TechGridItem[] }) {
     <div className="space-y-8">
       {groups.map(([category, list]) => (
         <div key={category} className="space-y-4">
-          <p className="font-display text-[11.5px] font-semibold uppercase tracking-[0.24em] text-[hsl(220_22%_76%)]">
+          <Reveal
+            as="p"
+            variant="focus"
+            y={8}
+            className="font-display text-[11.5px] font-semibold uppercase tracking-[0.24em] text-[hsl(220_22%_76%)]"
+          >
             {category}
-          </p>
+          </Reveal>
           <ul className="grid grid-cols-4 gap-x-2 gap-y-5 sm:grid-cols-5 sm:gap-x-3 sm:gap-y-6 md:grid-cols-6 lg:grid-cols-7">
             {list.map((item, index) => (
               <Reveal
                 as="li"
                 key={item.name}
-                duration={DURATION.moderate}
-                delay={staggerDelay(index, STAGGER.tight)}
+                variant="pop"
                 className="group flex cursor-default flex-col items-center gap-1.5 py-2"
               >
                 {/* Each icon bobs on its own timing; pure CSS, compositor-only. */}

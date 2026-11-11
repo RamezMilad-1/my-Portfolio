@@ -34,6 +34,10 @@
 
     /* Motion language — mirrors components/motion/tokens.ts. */
     --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+    /* Entrances: a long, soft landing. */
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    /* Small things (icons, dots) settle with a slight overshoot. */
+    --ease-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
     --dur-fast: 200ms;
 
     --background: 224 71% 4%;
@@ -628,19 +632,6 @@
     will-change: transform;
   }
 
-  /* Entrance animations that run on first paint, before JavaScript loads. */
-  .enter-up {
-    animation: enter-up var(--enter-duration, 0.6s) var(--ease-premium) var(--enter-delay, 0s) both;
-  }
-  .enter-left {
-    animation: enter-left var(--enter-duration, 0.6s) var(--ease-premium) var(--enter-delay, 0s)
-      both;
-  }
-  .enter-fade {
-    animation: enter-fade var(--enter-duration, 0.8s) var(--ease-premium) var(--enter-delay, 0s)
-      both;
-  }
-
   /* Admin dialogs. */
   .dialog-overlay[data-state='open'] {
     animation: enter-fade var(--dur-fast) var(--ease-premium) both;
@@ -651,48 +642,168 @@
 }
 
 /*
- * Scroll reveal: `[data-reveal]` elements settle into place once they scroll into view
- * (components/motion/scroll-effects.tsx sets `data-revealed`). Content is only hidden when
- * JavaScript runs and the visitor allows motion — never for crawlers or no-JS visitors.
+ * Motion: things come into focus.
+ *
+ * Every entrance is a one-shot animation with `backwards` fill: once it ends the element is back
+ * to its own styles, with no transform, filter or stacking context left behind. Visitors who ask
+ * for reduced motion get none of it, and content is never hidden from crawlers or no-JS visitors.
  */
-@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
-  [data-reveal] {
-    transition:
-      opacity var(--reveal-duration, 0.6s) var(--ease-premium) var(--reveal-delay, 0s),
-      transform var(--reveal-duration, 0.6s) var(--ease-premium) var(--reveal-delay, 0s);
+
+/* Page-load sequences (hero, project header): pure CSS, so they play before JavaScript loads.
+   Each element gets its place in the sequence through `--enter-delay`. */
+@media (prefers-reduced-motion: no-preference) {
+  .enter-rise,
+  .enter-focus,
+  .enter-sharpen,
+  .enter-slide,
+  .enter-zoom,
+  .enter-draw {
+    animation: reveal-rise var(--enter-duration, 0.9s) var(--ease-out-expo) var(--enter-delay, 0s)
+      backwards;
   }
-  [data-reveal]:not([data-revealed]) {
-    opacity: 0;
-    transform: translate3d(var(--reveal-x, 0), var(--reveal-y, 16px), 0)
-      scale(var(--reveal-scale, 1));
+  .enter-focus {
+    animation-name: reveal-focus;
+    animation-duration: var(--enter-duration, 1s);
   }
-  /* Hairline dividers draw outwards from the centre instead. */
-  .reveal-scale-x[data-reveal]:not([data-revealed]) {
-    transform: scaleX(0);
+  /* The page's main text is on screen from the first frame, soft and out of focus, and sharpens
+     like a camera pulling focus — it never waits invisible, so it counts as painted at once. */
+  .enter-sharpen {
+    animation-name: reveal-sharpen;
+    animation-duration: var(--enter-duration, 1s);
+  }
+  .enter-slide {
+    --reveal-x: -24px;
+    --reveal-y: 0px;
+    animation-name: reveal-focus;
+  }
+  .enter-zoom {
+    animation-name: reveal-zoom;
+    animation-duration: var(--enter-duration, 1.4s);
+  }
+  .enter-draw {
+    animation-name: reveal-draw;
+    transform-origin: left;
+  }
+  /* Children follow one another; the container picks the animation with `--stagger-name`. */
+  .enter-stagger > * {
+    animation: var(--stagger-name, reveal-rise) 0.8s var(--ease-out-expo) backwards;
+    animation-delay: calc(var(--enter-delay, 0s) + var(--i, 0) * 70ms);
   }
 }
 
-/* Lifeline rail that draws itself while the timeline scrolls through the viewport. Browsers
-   without scroll-driven animations simply show the full rail. */
-.lifeline {
-  view-timeline: --lifeline block;
-  view-timeline-inset: 20% 15%;
+/* Scroll reveal: `[data-reveal]` elements play their entrance the first time they scroll into
+   view. ScrollEffects sets `data-revealed`, plus `--reveal-stagger` when several elements arrive
+   together, so a batch plays in reading order (row by row, left to right) at any screen width. */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  [data-reveal]:not([data-revealed]) {
+    opacity: 0;
+  }
+  [data-reveal][data-revealed] {
+    animation: reveal-rise 0.9s var(--ease-out-expo) backwards;
+    animation-delay: calc(var(--reveal-delay, 0s) + var(--reveal-stagger, 0s));
+  }
+  /* Text sharpens from a soft blur as it rises. */
+  [data-reveal='focus'][data-revealed] {
+    animation-name: reveal-focus;
+    animation-duration: 1s;
+  }
+  /* Cards land: they tip forward onto the page from slightly below. */
+  [data-reveal='land'][data-revealed] {
+    animation-name: reveal-land;
+    animation-duration: 1.1s;
+    transform-origin: 50% 100%;
+  }
+  /* Icons and dots pop with a small overshoot. */
+  [data-reveal='pop'][data-revealed] {
+    animation-name: reveal-pop;
+    animation-duration: 0.7s;
+    animation-timing-function: var(--ease-overshoot);
+  }
+  /* Titles and the portrait are uncovered by a widening window (`--reveal-clip`). */
+  [data-reveal='unveil'][data-revealed] {
+    animation-name: reveal-unveil;
+    animation-duration: 1.1s;
+  }
+  [data-reveal='draw'][data-revealed] {
+    animation-name: reveal-draw;
+    animation-duration: 1s;
+  }
+  /* A group only triggers its children (see `.reveal-stagger`). */
+  [data-reveal='group'][data-revealed] {
+    animation: none;
+  }
+
+  /* Children of `.reveal-stagger` come into focus one after another once their reveal plays:
+     facts, paragraphs, capability statements. */
+  [data-revealed].reveal-stagger > *,
+  [data-revealed] .reveal-stagger > * {
+    --reveal-x: 0px;
+    --reveal-y: 12px;
+    --reveal-blur: 6px;
+    animation: reveal-focus 0.9s var(--ease-out-expo) backwards;
+    animation-delay: calc(
+      var(--reveal-delay, 0s) + var(--reveal-stagger, 0s) + 0.12s + var(--i, 0) * 70ms
+    );
+  }
+
+  /* The hairlines beside a kicker extend outwards from its text. */
+  [data-revealed] .reveal-line-start,
+  [data-revealed] .reveal-line-end {
+    animation: reveal-draw 1s var(--ease-out-expo) backwards;
+    animation-delay: calc(var(--reveal-delay, 0s) + var(--reveal-stagger, 0s) + 0.1s);
+  }
+  .reveal-line-start {
+    transform-origin: right;
+  }
+  .reveal-line-end {
+    transform-origin: left;
+  }
+
+  /* While the portrait is uncovered, its photo settles from a slight zoom. */
+  [data-reveal='unveil'][data-revealed] img {
+    animation: reveal-settle 1.6s var(--ease-out-expo) backwards;
+    animation-delay: calc(var(--reveal-delay, 0s) + var(--reveal-stagger, 0s));
+  }
+}
+
+/* Position in a staggered group (shared by `.enter-stagger` and `.reveal-stagger`). */
+:is(.enter-stagger, .reveal-stagger) > :nth-child(2) {
+  --i: 1;
+}
+:is(.enter-stagger, .reveal-stagger) > :nth-child(3) {
+  --i: 2;
+}
+:is(.enter-stagger, .reveal-stagger) > :nth-child(4) {
+  --i: 3;
+}
+:is(.enter-stagger, .reveal-stagger) > :nth-child(5) {
+  --i: 4;
+}
+:is(.enter-stagger, .reveal-stagger) > :nth-child(6) {
+  --i: 5;
+}
+:is(.enter-stagger, .reveal-stagger) > :nth-child(7) {
+  --i: 6;
+}
+:is(.enter-stagger, .reveal-stagger) > :nth-child(n + 8) {
+  --i: 7;
+}
+
+/* Lifeline rail that draws itself while the timeline scrolls through the viewport, carrying a
+   glowing head (components/home/lifeline-rail.tsx sets `--lifeline-progress`, 0–1). Until it
+   does — no JavaScript, reduced motion — the progress defaults to 1: the rail is drawn in full
+   and the head is hidden. The head fades in and out over the first and last 4%. */
+.lifeline-progress {
+  transform: scaleY(var(--lifeline-progress, 1));
+  transform-origin: top;
 }
 .lifeline-head {
-  opacity: 0;
-}
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .lifeline-progress {
-      transform-origin: top;
-      animation: lifeline-grow linear both;
-      animation-timeline: --lifeline;
-    }
-    .lifeline-head {
-      animation: lifeline-head linear both;
-      animation-timeline: --lifeline;
-    }
-  }
+  transform: translateY(calc(var(--lifeline-progress, 1) * 100%));
+  opacity: min(
+    1,
+    calc(var(--lifeline-progress, 1) * 25),
+    calc((1 - var(--lifeline-progress, 1)) * 25)
+  );
 }
 
 /* While the visitor scrolls, hold the text shimmers still: they repaint glyphs every frame. */
@@ -759,16 +870,69 @@ html.is-scrolling .hero-title {
     transform: translateY(var(--bob, -4px));
   }
 }
-@keyframes enter-up {
+/* Entrance keyframes: each states only where it starts, and ends on the element's own styles.
+   Offsets come from `--reveal-x` / `--reveal-y` / `--reveal-blur` / `--reveal-clip`. */
+@keyframes reveal-rise {
   from {
     opacity: 0;
-    transform: translate3d(0, var(--enter-y, 12px), 0);
+    transform: translate3d(var(--reveal-x, 0px), var(--reveal-y, 28px), 0);
   }
 }
-@keyframes enter-left {
+@keyframes reveal-focus {
   from {
     opacity: 0;
-    transform: translate3d(-16px, 0, 0);
+    transform: translate3d(var(--reveal-x, 0px), var(--reveal-y, 18px), 0);
+    filter: blur(var(--reveal-blur, 10px));
+  }
+}
+@keyframes reveal-sharpen {
+  from {
+    opacity: 0.35;
+    transform: translate3d(0, var(--reveal-y, 12px), 0);
+    filter: blur(var(--reveal-blur, 12px));
+  }
+}
+@keyframes reveal-land {
+  from {
+    opacity: 0;
+    transform: perspective(1200px) translate3d(var(--reveal-x, 0px), 48px, 0) rotateX(14deg)
+      scale(0.96);
+  }
+}
+@keyframes reveal-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}
+@keyframes reveal-zoom {
+  from {
+    opacity: 0;
+    transform: scale(0.82);
+    filter: blur(12px);
+  }
+}
+@keyframes reveal-unveil {
+  from {
+    opacity: 0;
+    clip-path: var(--reveal-clip, inset(0 50% 0 50%));
+    transform: translate3d(0, 10px, 0);
+    filter: blur(6px);
+  }
+  to {
+    /* Wider than the element, so glows and descenders are never cut off. */
+    clip-path: inset(-40%);
+  }
+}
+@keyframes reveal-draw {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+}
+@keyframes reveal-settle {
+  from {
+    transform: scale(1.12);
   }
 }
 @keyframes enter-fade {
@@ -784,28 +948,6 @@ html.is-scrolling .hero-title {
   to {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
-  }
-}
-@keyframes lifeline-grow {
-  from {
-    transform: scaleY(0);
-  }
-  to {
-    transform: scaleY(1);
-  }
-}
-@keyframes lifeline-head {
-  0% {
-    transform: translateY(0);
-    opacity: 0;
-  }
-  4%,
-  96% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(100%);
-    opacity: 0;
   }
 }
 

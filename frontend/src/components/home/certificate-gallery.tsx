@@ -3,7 +3,6 @@
 import { Award, ExternalLink, Maximize2 } from 'lucide-react';
 import { useState } from 'react';
 import { Reveal } from '@/components/motion/reveal';
-import { DISTANCE, DURATION, STAGGER, staggerDelay } from '@/components/motion/tokens';
 import { CloudImage } from '@/components/ui/cloud-image';
 import { Lightbox, LightboxArrow, LightboxClose } from '@/components/ui/lightbox';
 import { cloudinaryImage } from '@/lib/cloudinary';
@@ -123,12 +122,7 @@ export function CertificateGallery({ certificates }: { certificates: Certificate
     <>
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {certificates.map((certificate, i) => (
-          <Reveal
-            key={certificate._id}
-            y={DISTANCE.md}
-            duration={DURATION.moderate}
-            delay={staggerDelay(i, STAGGER.tight)}
-          >
+          <Reveal key={certificate._id} variant="land">
             <CertificateCard certificate={certificate} onOpen={() => setIndex(i)} />
           </Reveal>
         ))}

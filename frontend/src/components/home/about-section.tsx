@@ -1,7 +1,6 @@
 import { FileDown } from 'lucide-react';
 import { SocialLinks } from '@/components/layout/social-links';
 import { Reveal } from '@/components/motion/reveal';
-import { DISTANCE, STAGGER } from '@/components/motion/tokens';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { SectionHeading } from '@/components/ui/section-heading';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -89,7 +88,10 @@ export function AboutSection({ profile }: { profile: Profile }) {
 
         {/* Recruiter card: name, role, status and scannable facts. */}
         {hasIdentityRow || facts.length > 0 || hasSocials ? (
-          <Reveal className="glass-card card-sheen relative mt-14 overflow-hidden rounded-2xl p-4 sm:p-5">
+          <Reveal
+            variant="land"
+            className="glass-card card-sheen relative mt-14 overflow-hidden rounded-2xl p-4 sm:p-5"
+          >
             <div
               aria-hidden
               className="pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-brand-violet/60 to-transparent"
@@ -127,7 +129,7 @@ export function AboutSection({ profile }: { profile: Profile }) {
             {facts.length > 0 ? (
               <>
                 <Divider />
-                <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+                <dl className="reveal-stagger grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
                   {facts.map((fact) => (
                     <div key={fact.label}>
                       <dt className="text-[9.5px] font-semibold uppercase tracking-[0.22em] text-[hsl(220_15%_62%)]">
@@ -163,7 +165,7 @@ export function AboutSection({ profile }: { profile: Profile }) {
         {/* Prose and portrait. */}
         {lede || bio.length > 0 || showPortrait ? (
           <div className="mt-14 grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
-            <Reveal x={-DISTANCE.lg} y={0} className="lg:col-span-8">
+            <Reveal variant="group" className="reveal-stagger lg:col-span-8">
               {lede ? (
                 <p className="font-display text-xl font-semibold leading-[1.22] tracking-tight text-foreground md:text-[22px]">
                   {lede}
@@ -179,7 +181,7 @@ export function AboutSection({ profile }: { profile: Profile }) {
               ))}
             </Reveal>
             {showPortrait ? (
-              <Reveal x={DISTANCE.lg} y={0} delay={STAGGER.loose} className="lg:col-span-4">
+              <Reveal variant="unveil" from="bottom" className="lg:col-span-4">
                 <Portrait
                   src={profile.avatarUrl}
                   alt={name || 'Portrait'}
@@ -191,17 +193,22 @@ export function AboutSection({ profile }: { profile: Profile }) {
         ) : null}
 
         {dividerLabel ? (
-          <div aria-hidden className="mt-5 flex items-center justify-center gap-4">
-            <span className="h-px w-20 bg-gradient-to-r from-transparent to-brand-violet/70" />
+          <Reveal
+            variant="focus"
+            y={8}
+            aria-hidden
+            className="mt-5 flex items-center justify-center gap-4"
+          >
+            <span className="reveal-line-start h-px w-20 bg-gradient-to-r from-transparent to-brand-violet/70" />
             <p className="font-display text-[10.5px] font-semibold uppercase tracking-[0.34em] text-[hsl(220_20%_74%)]">
               {dividerLabel}
             </p>
-            <span className="h-px w-20 bg-gradient-to-r from-brand-violet/70 to-transparent" />
-          </div>
+            <span className="reveal-line-end h-px w-20 bg-gradient-to-r from-brand-violet/70 to-transparent" />
+          </Reveal>
         ) : null}
 
         {capabilities.length > 0 ? (
-          <Reveal y={DISTANCE.lg} className="mt-6">
+          <Reveal className="mt-6">
             <div className="relative overflow-hidden rounded-3xl bg-white/[0.03] p-7 ring-1 ring-inset ring-white/[0.06] sm:p-10">
               <span
                 aria-hidden
@@ -211,7 +218,7 @@ export function AboutSection({ profile }: { profile: Profile }) {
                 aria-hidden
                 className="pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.15] to-transparent"
               />
-              <dl className="relative grid grid-cols-1 gap-x-12 gap-y-7 sm:grid-cols-2 sm:gap-y-9">
+              <dl className="reveal-stagger relative grid grid-cols-1 gap-x-12 gap-y-7 sm:grid-cols-2 sm:gap-y-9">
                 {capabilities.map((capability, index) => (
                   <div key={`${capability.label}-${index}`}>
                     <dt className="font-display text-[15px] font-semibold tracking-tight text-[hsl(220_30%_96%)] md:text-base">

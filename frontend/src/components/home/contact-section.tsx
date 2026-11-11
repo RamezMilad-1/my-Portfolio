@@ -1,7 +1,6 @@
 import { Github, Linkedin, Mail, Send, Twitter } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Reveal } from '@/components/motion/reveal';
-import { DISTANCE, STAGGER, staggerDelay } from '@/components/motion/tokens';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { SectionHeading } from '@/components/ui/section-heading';
 import type { Profile } from '@/lib/types';
@@ -92,7 +91,8 @@ export function ContactSection({ profile }: { profile: Profile }) {
     });
   }
   // Cards alternate a slight vertical drift as they slide in.
-  const drift = [DISTANCE.sm, 0, -DISTANCE.sm, 0];
+  // The cards glide in from the left on slightly different paths.
+  const drift = [10, 0, -10, 0];
 
   return (
     <section id="contact" className="relative scroll-mt-20 px-4 py-16 sm:px-6 md:py-24">
@@ -106,30 +106,25 @@ export function ContactSection({ profile }: { profile: Profile }) {
         <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(20rem,1fr)]">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-1">
             {cards.map(({ key, ...card }, index) => (
-              <Reveal
-                key={key}
-                x={-DISTANCE.lg}
-                y={drift[index % drift.length]}
-                delay={staggerDelay(index, STAGGER.loose)}
-              >
+              <Reveal key={key} x={-40} y={drift[index % drift.length]}>
                 <ContactCard {...card} />
               </Reveal>
             ))}
           </div>
-          <Reveal x={DISTANCE.lg} y={0} delay={STAGGER.loose}>
+          <Reveal variant="land">
             <ContactForm />
           </Reveal>
         </div>
 
         {profile.email && profile.contactCTALabel.trim() ? (
-          <div className="mt-10 flex justify-center">
+          <Reveal variant="pop" className="mt-10 flex justify-center">
             <GradientButton asChild>
               <a href={`mailto:${profile.email}`}>
                 <Send className="h-4 w-4" />
                 {profile.contactCTALabel.trim()}
               </a>
             </GradientButton>
-          </div>
+          </Reveal>
         ) : null}
       </div>
     </section>

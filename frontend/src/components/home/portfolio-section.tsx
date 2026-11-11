@@ -1,5 +1,4 @@
 import { Reveal } from '@/components/motion/reveal';
-import { DISTANCE, STAGGER, staggerDelay } from '@/components/motion/tokens';
 import { ProjectCard } from '@/components/project/project-card';
 import { TechGrid, type TechGridItem } from '@/components/tech/tech-grid';
 import { SectionHeading } from '@/components/ui/section-heading';
@@ -44,12 +43,8 @@ export function PortfolioSection({ profile, projects, tech }: PortfolioSectionPr
                   moreLabel={`View all ${projects.length} projects`}
                   className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
                 >
-                  {projects.map((project, index) => (
-                    <Reveal
-                      key={project._id}
-                      y={DISTANCE.lg}
-                      delay={staggerDelay(index % INITIAL_PROJECTS, STAGGER.loose)}
-                    >
+                  {projects.map((project) => (
+                    <Reveal key={project._id} variant="land">
                       <ProjectCard project={project} />
                     </Reveal>
                   ))}

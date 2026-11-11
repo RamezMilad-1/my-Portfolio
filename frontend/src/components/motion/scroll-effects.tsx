@@ -7,9 +7,40 @@ const REVEAL_SELECTOR = '[data-reveal]:not([data-revealed])';
 const SHIMMER_SELECTOR = '.text-shimmer, .hero-title';
 const SCROLL_IDLE_MS = 150;
 
+/** Elements whose tops are this close (px) count as one row when sequencing a batch. */
+const ROW_TOLERANCE = 24;
+/** A batch's sequence: at most this gap between neighbours, and this long from first to last. */
+const STAGGER_STEP_MS = 90;
+const STAGGER_SPAN_MS = 800;
+
+/**
+ * Starts the entrances of everything that just scrolled into view, in reading order: row by row,
+ * left to right. Three cards play as a measured cascade, thirty icons as a quick wave.
+ */
+function revealInOrder(entries: IntersectionObserverEntry[], observer: IntersectionObserver) {
+  const arriving = entries
+    .filter((entry) => entry.isIntersecting)
+    .sort((a, b) => {
+      const dy = a.boundingClientRect.top - b.boundingClientRect.top;
+      return Math.abs(dy) < ROW_TOLERANCE
+        ? a.boundingClientRect.left - b.boundingClientRect.left
+        : dy;
+    });
+  const step =
+    arriving.length > 1 ? Math.min(STAGGER_STEP_MS, STAGGER_SPAN_MS / (arriving.length - 1)) : 0;
+
+  arriving.forEach((entry, index) => {
+    const element = entry.target as HTMLElement;
+    element.style.setProperty('--reveal-stagger', `${Math.round(index * step)}ms`);
+    element.setAttribute('data-revealed', '');
+    observer.unobserve(element);
+  });
+}
+
 /**
  * One set of observers for the whole public site, instead of one per element:
- * - reveals `[data-reveal]` elements the first time they scroll into view;
+ * - plays `[data-reveal]` entrances the first time elements scroll into view, sequencing
+ *   whatever arrives together;
  * - pauses gradient-text shimmers while they're off screen (they repaint every frame);
  * - marks `<html>` with `is-scrolling` while the visitor scrolls, which pauses them mid-scroll.
  */
@@ -17,16 +48,10 @@ export function ScrollEffects() {
   const pathname = usePathname();
 
   useEffect(() => {
-    const reveals = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          entry.target.setAttribute('data-revealed', '');
-          reveals.unobserve(entry.target);
-        }
-      },
-      { rootMargin: '0px 0px -40px 0px', threshold: 0.15 },
-    );
+    const reveals = new IntersectionObserver(revealInOrder, {
+      rootMargin: '0px 0px -40px 0px',
+      threshold: 0.15,
+    });
     const shimmers = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {

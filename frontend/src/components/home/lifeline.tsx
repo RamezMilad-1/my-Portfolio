@@ -1,7 +1,7 @@
 import { Award, Briefcase, GraduationCap, type LucideIcon, Star } from 'lucide-react';
 import { Reveal } from '@/components/motion/reveal';
-import { DISTANCE, DURATION, STAGGER, staggerDelay } from '@/components/motion/tokens';
 import type { TimelineEntry, TimelineType } from '@/lib/types';
+import { LifelineRail } from './lifeline-rail';
 
 const TYPE_ICONS: Record<TimelineType, LucideIcon> = {
   education: GraduationCap,
@@ -12,24 +12,14 @@ const TYPE_ICONS: Record<TimelineType, LucideIcon> = {
 
 /**
  * Vertical timeline whose glowing rail draws itself as it scrolls through the viewport
- * (a CSS scroll-driven animation — no JavaScript). Entries run oldest to newest, so the last
- * one is marked "Latest".
+ * (`LifelineRail`). Entries run oldest to newest, so the last one is marked "Latest".
  */
 export function Lifeline({ entries }: { entries: TimelineEntry[] }) {
   if (entries.length === 0) return null;
 
   return (
-    <div className="lifeline relative mt-12">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute bottom-1 left-5 top-1 w-px sm:left-6"
-      >
-        <div className="absolute inset-0 w-px rounded-full bg-gradient-to-b from-white/[0.04] via-white/10 to-white/[0.04]" />
-        <div className="lifeline-progress absolute inset-0 w-[1.5px] origin-top rounded-full bg-gradient-to-b from-brand-indigo/90 via-brand-violet/85 to-brand-violet-soft/70" />
-        <div className="lifeline-head absolute inset-x-0 top-0 h-full">
-          <span className="absolute left-1/2 top-0 block h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-violet-soft shadow-[0_0_18px_4px_hsl(var(--brand-violet)/0.6),0_0_32px_8px_hsl(var(--brand-violet)/0.25)]" />
-        </div>
-      </div>
+    <div className="relative mt-12">
+      <LifelineRail />
 
       <span
         aria-hidden
@@ -42,14 +32,10 @@ export function Lifeline({ entries }: { entries: TimelineEntry[] }) {
         {entries.map((entry, index) => {
           const Icon = TYPE_ICONS[entry.type] ?? GraduationCap;
           const isLatest = index === entries.length - 1;
-          const delay = staggerDelay(index, STAGGER.base);
           return (
             <li key={entry._id} className="group relative">
               <Reveal
-                scale={0}
-                y={0}
-                duration={DURATION.base}
-                delay={delay + 0.1}
+                variant="pop"
                 className="absolute left-5 top-3 z-[5] -translate-x-1/2 sm:left-6"
               >
                 <span aria-hidden className="relative flex h-4 w-4 items-center justify-center">
@@ -67,8 +53,10 @@ export function Lifeline({ entries }: { entries: TimelineEntry[] }) {
                 </span>
               </Reveal>
 
-              <Reveal x={DISTANCE.md} y={DISTANCE.sm} duration={DURATION.slow} delay={delay}>
-                <div className="flex items-start gap-3 pl-12 sm:gap-5 sm:pl-16">
+              {/* The entry emerges from the rail, just after its dot (which sits further left,
+                  so a batch plays the dot first). */}
+              <Reveal x={-32} y={0} className="ml-12 sm:ml-16">
+                <div className="flex items-start gap-3 sm:gap-5">
                   <div className="flex flex-shrink-0 flex-col items-start pt-0.5">
                     <span
                       className="text-brand-gradient whitespace-nowrap font-display text-lg font-bold tracking-tight sm:text-xl"
