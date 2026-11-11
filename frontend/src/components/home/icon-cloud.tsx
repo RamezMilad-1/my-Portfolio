@@ -53,7 +53,8 @@ function IconCloudCanvas({ images }: { images: string[] }) {
       start: number;
       duration: number;
     } | null = null;
-    let pointer = { x: SIZE / 2, y: SIZE / 2 };
+    // Off-center start, so the cloud drifts on load; the pointer steers it once it moves.
+    let pointer = { x: 0, y: 0 };
     let drag: { x: number; y: number } | null = null;
     let frame = 0;
     let inView = false;
